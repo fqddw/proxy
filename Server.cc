@@ -1,6 +1,6 @@
 #include "Server.h"
 #include "InetSocketAddress.h"
-
+#include "CommonType.h"
 
 #include "stdio.h"
 #include "unistd.h"
@@ -22,6 +22,8 @@ int Server::Create()
 	int sockfd = GetEvent()->GetFD();
 	InetSocketAddress isa(m_iPort,INADDR_ANY);
 	struct sockaddr sa = isa.ToSockAddr();
+	int flag = TRUE;
+	setsockopt(sockfd,SOL_SOCKET,SO_REUSEADDR,(char*)&flag,sizeof(int));
 	bind(sockfd,&sa,isa.Size());
 	listen(sockfd,1024);
 	return true;
