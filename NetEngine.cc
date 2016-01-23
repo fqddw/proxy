@@ -1,0 +1,39 @@
+#include "NetEngine.h"
+#define MAX_WAIT 1024
+#define INFINITE -1
+int NetEngine::Init(){
+	m_iFD = epoll_create(m_iSize);
+	if(m_iFD)
+		return true;
+	else
+		return false;
+}
+
+int NetEngine::AddFileDescriptor(IOHandler* pHandler)
+{
+	EPOLLEVENT ee = {0};
+	ee = pHandler->GetEvent()->ToEpollEvent();
+	int ret = epoll_ctl(m_iFD,EPOLL_CTL_ADD,pHandler->GetEvent()->GetFD(),&ee);
+	return ret;
+}
+
+int NetEngine::SetSize(int size)
+{
+	m_iSize = size;
+	return true;
+}
+int NetEngine::Loop()
+{
+	EPOLLEVENT ees[MAX_WAIT] = {0};
+	while(1)
+	{
+		int nfds = epoll_wait(m_iFD, ees,MAX_WAIT, INFINITE);
+		int iterator = 0;
+		for(;iterator < nfds; iterator++)
+		{
+			IOHandler* pHandler = (IOHandler*)((ees+iterator)->data.ptr);
+			pHandler->Run();
+		}
+	}
+	return 0;
+}

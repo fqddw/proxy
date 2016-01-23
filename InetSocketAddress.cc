@@ -1,0 +1,41 @@
+#include "InetSocketAddress.h"
+
+InetSocketAddress::InetSocketAddress(int port,in_addr_t addr)
+{
+	m_ipv4 = addr;
+	m_iPort = port;
+}
+
+InetSocketAddress::InetSocketAddress()
+{
+}
+
+void InetSocketAddress::SetPort(int port)
+{
+	m_iPort = port;
+}
+
+struct sockaddr_in InetSocketAddress::ToSockAddrIn()
+{
+	struct sockaddr_in sa_i = {0};
+	sa_i.sin_family = AF_INET;
+	sa_i.sin_port = htons(m_iPort);
+	sa_i.sin_addr.s_addr = m_ipv4;
+	return sa_i;
+}
+int InetSocketAddress::ToIpV4Short()
+{
+	int ipv4 = ToSockAddrIn().sin_addr.s_addr;
+	return ipv4;
+}
+struct sockaddr InetSocketAddress::ToSockAddr()
+{
+	struct sockaddr_in sa = ToSockAddrIn();
+	return *(struct sockaddr*)&sa;
+}
+
+
+int InetSocketAddress::Size()
+{
+	return sizeof(struct sockaddr);
+}
