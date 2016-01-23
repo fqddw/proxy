@@ -37,3 +37,11 @@ int NetEngine::Loop()
 	}
 	return 0;
 }
+int NetEngine::RemoveFileDescriptor(IOHandler* pHandler)
+{
+	EPOLLEVENT ee = {0};
+	ee = pHandler->GetEvent()->ToEpollEvent();
+	int ret = epoll_ctl(m_iFD,EPOLL_CTL_DEL,pHandler->GetEvent()->GetFD(),&ee);
+	return ret;
+}
+

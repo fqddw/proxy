@@ -5,6 +5,7 @@
 #include "stdio.h"
 #include "unistd.h"
 #include "string.h"
+#include "fcntl.h"
 #include "ClientSide.h"
 void Server::SetPort(int port){
 	m_iPort = port;
@@ -39,6 +40,8 @@ int Server::Run()
 	struct sockaddr sa = {0};
 	socklen_t len = sizeof(sa);
 	int client = accept(GetEvent()->GetFD(),&sa,&len);
+	int cflags = fcntl(client,F_GETFL,0);
+	fcntl(client,F_SETFL, cflags|O_NONBLOCK);
 	ClientSide* pClientSideHandler = new ClientSide(client);
 	pClientSideHandler->GetEvent()->SetNetEngine(GetEvent()->GetNetEngine());
 	pClientSideHandler->GetEvent()->AddToEngine();

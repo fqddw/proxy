@@ -3,6 +3,7 @@
 #include "unistd.h"
 #include "stdio.h"
 #include "string.h"
+#include "errno.h"
 #include "sys/socket.h"
 ClientSide::ClientSide():IOHandler()
 {
@@ -19,12 +20,28 @@ ClientSide::ClientSide(int sockfd):IOHandler()
 
 int ClientSide::Proccess()
 {
-	char buffer[1024] = {'\0'};
-	int n = recv(GetEvent()->GetFD(),buffer,1024,0);
-	char* pContent = "HTTP/1.1 200 OK\r\nContent-Length: 20\r\n\r\n11111111111111111111";
-	send(GetEvent()->GetFD(),pContent,strlen(pContent),0);
+	while(1)
+	{
+		char buffer[1024] = {'\0'};
+		int n = recv(GetEvent()->GetFD(),buffer,1024,0);
+		if(n == -1)
+		{
+			if(errno == EAGAIN)
+			{
+				return TRUE;
+			}
+			else
+			{
+				GetEvent()->RemoveFromEngine();
+				return FALSE;
+			}
+		}
+		char* pContent = "HTTP/1.1 200 OK\r\nContent-Length: 20\r\n\r\n<title>vpn1g</title>";
+		send(GetEvent()->GetFD(),pContent,strlen(pContent),0);
+	}
 	return TRUE;
 }
+
 int ClientSide::Run()
 {
 	if(m_iState != CLIENT_STATE_IDLE)

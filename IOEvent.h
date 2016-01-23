@@ -17,6 +17,7 @@ class IOEvent
 		NetEngine* GetNetEngine();
 		void SetNetEngine(NetEngine* pNetEngine);
 		int AddToEngine();
+		int RemoveFromEngine();
 	private:
 		int m_iFD;
 		IOHandler* m_pHandler;

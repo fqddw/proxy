@@ -1,0 +1,4 @@
+Stream::GetData()
+{
+	return TRUE;
+}

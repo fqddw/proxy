@@ -45,3 +45,9 @@ int IOEvent::AddToEngine()
 	m_pEngine->AddFileDescriptor(m_pHandler);
 	return TRUE;
 }
+
+int IOEvent::RemoveFromEngine()
+{
+	m_pEngine->RemoveFileDescriptor(m_pHandler);
+	return TRUE;
+}
