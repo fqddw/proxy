@@ -2,6 +2,7 @@
 #include "ClientSideTask.h"
 #include "unistd.h"
 #include "stdio.h"
+#include "string.h"
 #include "sys/socket.h"
 ClientSide::ClientSide():IOHandler()
 {
@@ -20,9 +21,8 @@ int ClientSide::Proccess()
 {
 	char buffer[1024] = {'\0'};
 	int n = recv(GetEvent()->GetFD(),buffer,1024,0);
-	send(GetEvent()->GetFD(),buffer,n,0);
-	close(GetEvent()->GetFD());
-	printf("%s",buffer);
+	char* pContent = "HTTP/1.1 200 OK\r\nContent-Length: 20\r\n\r\n11111111111111111111";
+	send(GetEvent()->GetFD(),pContent,strlen(pContent),0);
 	return TRUE;
 }
 int ClientSide::Run()
