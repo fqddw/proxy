@@ -5,7 +5,8 @@
 #include "ServerConfig.h"
 #include "Server.h"
 #include "MasterThread.h"
-
+#include <signal.h>
+#include "MemList.h"
 void* threadProc(void* ptr)
 {
 	Task* pTaskWrapper = (Task*)ptr;
@@ -60,6 +61,7 @@ int Thread::SetTask(Task* pTask)
 	return TRUE;
 }
 
+MemList* pGlobalList = NULL;
 class ServerStartTask : public Task
 {
 	public:
@@ -90,6 +92,7 @@ int ServerStartTask::Run()
 {
 	ServerConfigDefault* pConfig = new ServerConfigDefault();
 	Server* pServer = new Server();
+	pGlobalList->Append(pServer);
 	pServer->GetEvent()->SetNetEngine(m_pEngine);
 	pServer->SetPort(pConfig->GetPort());
 	pServer->SetMasterThread(m_pMasterThread);
@@ -99,6 +102,8 @@ int ServerStartTask::Run()
 }
 int main(int argc,char** argv)
 {	
+	pGlobalList = new MemList();
+	signal(SIGPIPE,SIG_IGN);
 	NetEngine* pEngine = new NetEngine();
 	pEngine->SetSize(1024);
 	pEngine->Init();

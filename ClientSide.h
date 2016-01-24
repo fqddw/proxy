@@ -3,6 +3,7 @@
 #include "IOHandler.h"
 
 #define CLIENT_STATE_IDLE 1
+#define CLIENT_STATE_RUNNING 2
 class ClientSide : public IOHandler
 {
 	public:

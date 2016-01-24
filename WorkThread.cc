@@ -1,6 +1,9 @@
+#include "MasterThread.h"
 #include "WorkThread.h"
+
+#include "stdio.h"
 DWORD ThreadProc(LPVOID ptr);
-WorkThread::WorkThread(EventPump* ep) :ep_(ep), state_(STATE_RUNNING), tq_(new TaskQueue)
+WorkThread::WorkThread(EventPump* ep) :ep_(ep), state_(STATE_RUNNING), task_(NULL)
 {
 
 }
@@ -32,21 +35,32 @@ void WorkThread::EnterRunning()
 		ep_->WakeUp();
 	}
 }
+#include "MemList.h"
+extern MemList* pGlobalList;
 int WorkThread::Run()
 {
 	int flag = TRUE;
 	do
 	{
-		Task* pTask=tq_->PopLastestTask();
+		Task* pTask = task_;
 		if (pTask)
 		{
 			pTask->Run();
-			if(!pTask->Repeatable())
-				delete pTask;
+			if(!pTask->Repeatable()){
+				if(pGlobalList->Find(pTask))
+				{
+					printf("Task Mem FOUND %d\n",pTask);
+					pGlobalList->Delete(pTask);
+					delete pTask;
+				}
+				task_ = NULL;
+			}
 		}
 		else
 		{
-			EnterWaiting();
+			state_ = STATE_WAITING;
+			pMasterThread_->WakeUp();
+			ep_->WaitObjectForever();
 		}
 	}
 	while (flag == TRUE);
@@ -59,14 +73,14 @@ int WorkThread::SetMasterThread(MasterThread* pThread)
 	return 0;
 }
 
-int WorkThread::GetTaskCount()
+int WorkThread::HasTask()
 {
-	return this->tq_->GetSize();
+	return task_ == NULL;
 }
 
-int WorkThread::InsertTask(Task* pTask)
+int WorkThread::SetTask(Task* pTask)
 {
-	tq_->Insert(pTask);
+	task_ = pTask;
 	if (IsWaiting())
 		EnterRunning();
 	return 0;

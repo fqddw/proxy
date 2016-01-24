@@ -22,4 +22,7 @@ MasterThread* IOHandler::GetMasterThread()
 {
 	return m_pMasterThread;
 }
-
+IOHandler::~IOHandler()
+{
+	delete m_pEvent;
+}
