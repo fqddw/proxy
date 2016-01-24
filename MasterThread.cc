@@ -5,6 +5,9 @@
 #include "TimeLib.h"
 #include "CommonType.h"
 
+#define WORKTHREAD_BUSY 1
+#define WORKTHREAD_IDLE 2
+
 LPVOID ThreadProc(LPVOID ptr)
 {
 	MasterThread* pThread = (MasterThread*)ptr;
@@ -17,7 +20,7 @@ LPVOID WorkThreadProc(LPVOID ptr)
 	pThread->Run();
 	return 0;
 }
-MasterThread::MasterThread(EventPump* ep) :ep_(ep), pTaskQueue(new TaskQueue), state_(STATE_RUNNING)
+MasterThread::MasterThread(EventPump* ep) :ep_(ep), pTaskQueue(new TaskQueue), state_(STATE_RUNNING),workthread_busy(WORKTHREAD_IDLE)
 {
 
 }
@@ -57,15 +60,20 @@ int MasterThread::RunLoop()
 	Task* pNextTask = NULL;
 	while (1)
 	{
-		pNextTask = pTaskQueue->GetLastestTask();
-		if (pNextTask != NULL)
+		pNextTask = pTaskQueue->PopLastestTask();
+		if (pNextTask != NULL && workthread_busy != WORKTHREAD_BUSY)
 		{
 			struct timespec time = Time::GetNow();
 			int cmp = Time::Compare(time,pNextTask->GetTime());
 			if (cmp >= 0)
 			{
-				DispatchTask(pNextTask);
-				pTaskQueue->PopLastestTask();
+				int ret = DispatchTask(pNextTask);
+				if(!ret)
+				{
+					workthread_busy = WORKTHREAD_BUSY;
+					continue;
+				}
+				//pTaskQueue->PopLastestTask();
 			}
 			else
 			{
@@ -116,7 +124,7 @@ int MasterThread::DispatchTask(Task* pTask)
 	vector<WorkThread*>::iterator it = pWorkThread_.begin();
 	for (; it != pWorkThread_.end();it++)
 	{
-		if ((*it)->IsRunning())
+/*		if ((*it)->IsRunning())
 		{
 			int cur_count = (*it)->GetTaskCount();
 			if (flag == 0)
@@ -138,10 +146,13 @@ int MasterThread::DispatchTask(Task* pTask)
 		{
 			pWorkThreadMin = (*it);
 			break;
+		}*/
+		if (!(*it)->IsRunning()){
+			(*it)->SetTask(pTask);
+			return TRUE;
 		}
 	}
-	pWorkThreadMin->InsertTask(pTask);
-	return 0;
+	return FALSE;
 }
 
 int MasterThread::InsertTask(Task* pTask)
@@ -176,4 +187,9 @@ void MasterThread::EnterRunning()
 		state_ = STATE_RUNNING;
 		ep_->WakeUp();
 	}
+}
+int MasterThread::SetWorkThreadBusy(int state)
+{
+	workthread_busy = state;
+	return TRUE;
 }

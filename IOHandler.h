@@ -7,6 +7,7 @@ class IOHandler
 {
 	public:
 		IOHandler();
+		~IOHandler();
 		IOEvent* GetEvent();
 		int SetMasterThread(MasterThread*);
 		MasterThread* GetMasterThread();

@@ -22,6 +22,9 @@ int NetEngine::SetSize(int size)
 	m_iSize = size;
 	return true;
 }
+#include "MemList.h"
+#include "stdio.h"
+extern MemList* pGlobalList;
 int NetEngine::Loop()
 {
 	EPOLLEVENT ees[MAX_WAIT] = {0};
@@ -32,7 +35,10 @@ int NetEngine::Loop()
 		for(;iterator < nfds; iterator++)
 		{
 			IOHandler* pHandler = (IOHandler*)((ees+iterator)->data.ptr);
-			pHandler->Run();
+			if(pGlobalList->Find(pHandler))
+				pHandler->Run();
+			else
+				printf("Invalid Handler\n");
 		}
 	}
 	return 0;

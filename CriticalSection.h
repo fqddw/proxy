@@ -9,5 +9,6 @@ public:
 	CriticalSection();
 	void Enter();
 	void Leave();
+	~CriticalSection();
 };
 #endif
