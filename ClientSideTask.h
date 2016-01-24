@@ -1,7 +1,6 @@
 #include "Task.h"
 #include "ClientSide.h"
 
-class ClientSite;
 class ClientSideTask : public Task
 {
 	public:

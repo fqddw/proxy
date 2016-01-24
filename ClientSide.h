@@ -8,10 +8,12 @@ class ClientSide : public IOHandler
 {
 	public:
 		ClientSide();
+		~ClientSide();
 		ClientSide(int);
 		int Proccess();
 		int Run();
 	private:
 		int m_iState;
+		int m_iIndex;
 };
 #endif

@@ -38,7 +38,7 @@ int NetEngine::Loop()
 			if(pGlobalList->Find(pHandler))
 				pHandler->Run();
 			else
-				printf("Client Lost %d\n",iterator);
+				printf("Invalid Handler\n");
 		}
 	}
 	return 0;

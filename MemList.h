@@ -19,6 +19,7 @@ class MemList
 		int Append(void*);
 		int Find(void*);
 		int Delete(void*);
+		int Show();
 	private:
 		MemNode* m_pHead;
 		MemNode* m_pEnd;

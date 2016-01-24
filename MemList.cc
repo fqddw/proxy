@@ -63,15 +63,18 @@ int MemList::Find(void* pData)
 
 int MemList::Delete(void* pData)
 {
+	cs_->Enter();
 	MemNode* pNode = m_pHead;
+	if(pNode == NULL)
+	{
+		cs_->Leave();
+		return FALSE;
+	}
 	if(pNode->GetData() == pData)
 	{
 		m_pHead = m_pHead->GetNext();
-		if(m_pHead == m_pEnd)
-		{
-			m_pEnd = m_pHead;
-		}
 		delete pNode;
+		cs_->Leave();
 		return TRUE;
 	}
 	else
@@ -89,22 +92,15 @@ int MemList::Delete(void* pData)
 					{
 						m_pEnd = pPreNode;
 					}
+					delete pNode;
+					cs_->Leave();
+					return TRUE;
 				}
 			}
 		}while(pNode);
 	}
-	if(m_pHead == NULL)
-	{
-		m_pHead = new MemNode();
-		m_pHead->SetData(pData);
-		m_pEnd = m_pHead;
-	}
-	else
-	{
-		m_pEnd->Append(pData);
-		m_pEnd = m_pEnd->GetNext();
-	}
-	return TRUE;
+	cs_->Leave();
+	return FALSE;
 }
 
 MemNode* MemNode::GetNext()
@@ -114,5 +110,15 @@ MemNode* MemNode::GetNext()
 int MemNode::SetNext(MemNode* pNode)
 {
 	m_pNext = pNode;
+	return TRUE;
+}
+
+int MemList::Show()
+{
+	MemNode* pNode = m_pHead;
+	for(;pNode!=NULL;pNode=pNode->GetNext())
+	{
+		printf("ListData %d\n",pNode->GetData());
+	}
 	return TRUE;
 }

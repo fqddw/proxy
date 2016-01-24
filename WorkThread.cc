@@ -49,7 +49,6 @@ int WorkThread::Run()
 			if(!pTask->Repeatable()){
 				if(pGlobalList->Find(pTask))
 				{
-					printf("Task Mem FOUND %d\n",pTask);
 					pGlobalList->Delete(pTask);
 					delete pTask;
 				}

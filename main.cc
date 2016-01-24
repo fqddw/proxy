@@ -120,6 +120,13 @@ int main(int argc,char** argv)
 	pServerStartTask->SetNetEngine(pEngine);
 	pServerStartTask->SetMasterThread(pMasterThread);
 	pMasterThread->InsertTask(pServerStartTask);
-	getchar();
+	while(1)
+	{
+		int c = getchar();
+		if(c == 'l')
+		{
+			pGlobalList->Show(); 
+		}
+	}
 	return 0;
 }
