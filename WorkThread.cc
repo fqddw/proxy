@@ -47,9 +47,8 @@ int WorkThread::Run()
 		{
 			pTask->Run();
 			if(!pTask->Repeatable()){
-				if(pGlobalList->Find(pTask))
+				if(pGlobalList->Delete(pTask))
 				{
-					pGlobalList->Delete(pTask);
 					delete pTask;
 				}
 				task_ = NULL;
