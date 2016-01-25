@@ -47,7 +47,7 @@ int ClientSide::Proccess()
 				int sockfd = GetEvent()->GetFD();
 				//printf("CONNECT ERROR %d\n",sockfd);
 				GetEvent()->RemoveFromEngine();
-				if(pGlobalList->Delte(this))
+				if(pGlobalList->Delete(this))
 				{
 					m_iState = CLIENT_STATE_IDLE;
 					pGlobalList->Delete(this);
