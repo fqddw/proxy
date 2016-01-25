@@ -53,7 +53,10 @@ int Server::Run()
 		{
 			GetEvent()->RemoveFromEngine();
 			close(GetEvent()->GetFD());
-			delete this;
+			if(pGlobalList->Delete(this))
+			{
+				delete this;
+			}
 			return FALSE;
 		}
 		else
