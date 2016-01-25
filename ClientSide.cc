@@ -95,7 +95,7 @@ int ClientSide::Run()
 	}
 	else
 	{
-		m_iState = TRUE;
+		m_iState = CLIENT_STATE_RUNNING;
 		ClientSideTask* pTask = new ClientSideTask();
 		pGlobalList->Append(pTask);
 		pTask->SetClientSide(this);
