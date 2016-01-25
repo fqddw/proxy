@@ -51,7 +51,7 @@ int ClientSide::Proccess()
 					delete this;
 				}
 
-				close(GetEvent()->GetFD());
+				close(sockfd);
 				return FALSE;
 			}
 		}
