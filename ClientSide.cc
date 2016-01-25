@@ -26,7 +26,6 @@ ClientSide::ClientSide(int sockfd):IOHandler()
 
 int ClientSide::Proccess()
 {
-	m_iState = CLIENT_STATE_RUNNING;
 	while(1)
 	{
 		char buffer[1024] = {'\0'};
@@ -96,6 +95,7 @@ int ClientSide::Run()
 	}
 	else
 	{
+		m_iState = TRUE;
 		ClientSideTask* pTask = new ClientSideTask();
 		pGlobalList->Append(pTask);
 		pTask->SetClientSide(this);
