@@ -14,7 +14,6 @@ class ClientSide : public IOHandler
 		int Run();
 	private:
 		int m_iState;
-		int m_iIndex;
 		Stream* m_pStream;
 };
 #endif

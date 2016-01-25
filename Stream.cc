@@ -32,6 +32,9 @@ Stream::Stream():m_pData(NULL),m_iLength(0)
 Stream::~Stream()
 {
 	if(m_pData)
+	{
 		delete m_pData;
+		m_pData = NULL;
+	}
 	m_iLength = 0;
 }

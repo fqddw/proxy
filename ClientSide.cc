@@ -9,7 +9,6 @@
 extern MemList* pGlobalList;
 ClientSide::ClientSide():IOHandler(),m_pStream(new Stream())
 {
-	m_iIndex = 0;
 	GetEvent()->SetIOHandler(this);
 	m_iState = CLIENT_STATE_IDLE;
 }
@@ -19,7 +18,6 @@ ClientSide::~ClientSide()
 }
 ClientSide::ClientSide(int sockfd):IOHandler(),m_pStream(new Stream())
 {
-	m_iIndex = 0;
 	m_iState = CLIENT_STATE_IDLE;
 	GetEvent()->SetFD(sockfd);
 	GetEvent()->SetIOHandler(this);
