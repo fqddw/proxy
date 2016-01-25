@@ -57,18 +57,10 @@ int ClientSide::Proccess()
 		}
 		if(n == 0)
 		{
-			if(!pGlobalList->Find(this))
-			{
-				printf("ERROR IOHandler Memory\n");
-			}
-			printf("mIndex %d %d\n",GetEvent()->GetFD(),m_iIndex);
-			m_iIndex++;
-
 			int sockfd = GetEvent()->GetFD();
 			GetEvent()->RemoveFromEngine();
 			if(pGlobalList->Delete(this))
 			{
-				printf("SHOULDSHOWDELETE %d\n",this);
 				delete this;
 			}
 			close(sockfd);
@@ -86,7 +78,6 @@ int ClientSide::Run()
 {
 	if(m_iState != CLIENT_STATE_IDLE)
 	{
-		printf("BLOCK\n");
 		return FALSE;
 	}
 	else
