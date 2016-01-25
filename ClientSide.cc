@@ -26,7 +26,6 @@ ClientSide::ClientSide(int sockfd):IOHandler()
 
 int ClientSide::Proccess()
 {
-	m_iState = CLIENT_STATE_RUNNING;
 	while(1)
 	{
 		char buffer[1024] = {'\0'};
@@ -45,38 +44,26 @@ int ClientSide::Proccess()
 			else
 			{
 				int sockfd = GetEvent()->GetFD();
-				//printf("CONNECT ERROR %d\n",sockfd);
 				GetEvent()->RemoveFromEngine();
-				if(pGlobalList->Find(this))
+				if(pGlobalList->Delete(this))
 				{
 					m_iState = CLIENT_STATE_IDLE;
-					pGlobalList->Delete(this);
 					delete this;
 				}
 
-				close(GetEvent()->GetFD());
+				close(sockfd);
 				return FALSE;
 			}
 		}
 		if(n == 0)
 		{
-			if(!pGlobalList->Find(this))
-			{
-				printf("ERROR IOHandler Memory\n");
-			}
-			printf("mIndex %d %d\n",GetEvent()->GetFD(),m_iIndex);
-			m_iIndex++;
-
 			int sockfd = GetEvent()->GetFD();
 			GetEvent()->RemoveFromEngine();
-			if(pGlobalList->Find(this))
+			if(pGlobalList->Delete(this))
 			{
-				printf("SHOULDSHOWDELETE %d\n",this);
-				pGlobalList->Delete(this);
 				delete this;
 			}
 			close(sockfd);
-			m_iState = CLIENT_STATE_IDLE;
 			return FALSE;
 		}
 
@@ -91,11 +78,11 @@ int ClientSide::Run()
 {
 	if(m_iState != CLIENT_STATE_IDLE)
 	{
-		printf("BLOCK\n");
 		return FALSE;
 	}
 	else
 	{
+		m_iState = CLIENT_STATE_RUNNING;
 		ClientSideTask* pTask = new ClientSideTask();
 		pGlobalList->Append(pTask);
 		pTask->SetClientSide(this);
