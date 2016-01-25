@@ -72,7 +72,6 @@ int ClientSide::Proccess()
 				delete this;
 			}
 			close(sockfd);
-			m_iState = CLIENT_STATE_IDLE;
 			return FALSE;
 		}
 
