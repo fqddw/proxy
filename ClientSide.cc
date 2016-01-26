@@ -27,6 +27,18 @@ int ClientSide::Proccess()
 {
 	Stream* pStream = NULL;
 	GetDataStream(&pStream);
+	if(pStream)
+	{
+		m_pStream->Append(pStream->GetData(),pStream->GetLength());
+		if(!m_pHttpRequest)
+		{
+			m_pHttpRequest = new HttpRequest(m_pStream);
+			if(m_pHttpRequest->IsHeaderEnd())
+			{
+				int ret = m_pHttpRequest->LoadHttpHeader();
+			};
+		}
+	}
 	return TRUE;
 }
 
