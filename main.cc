@@ -108,6 +108,7 @@ int main(int argc,char** argv)
 	pEngine->SetSize(1024);
 	pEngine->Init();
 	NetEngineInitTask* pNetEngineInitTask = new NetEngineInitTask();
+	pNetEngineInitTask->CancelRepeatable();
 	pNetEngineInitTask->SetNetEngine(pEngine);
 	Thread* pThread = new Thread();
 	pThread->SetTask(pNetEngineInitTask);
@@ -117,6 +118,7 @@ int main(int argc,char** argv)
 	pMasterThread->SetWorkerCount(8);
 	pMasterThread->Create();
 	ServerStartTask* pServerStartTask = new ServerStartTask();
+	pServerStartTask->CancelRepeatable();
 	pServerStartTask->SetNetEngine(pEngine);
 	pServerStartTask->SetMasterThread(pMasterThread);
 	pMasterThread->InsertTask(pServerStartTask);

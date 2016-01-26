@@ -1,3 +1,5 @@
+#ifndef __STREAM_H__
+#define __STREAM_H__
 class Stream
 {
 	public:
@@ -10,3 +12,4 @@ class Stream
 		char* m_pData;
 		int m_iLength;
 };
+#endif
