@@ -33,13 +33,9 @@ int Server::Create()
 	return true;
 }
 
-int Server::ProccessRequest()
-{
-	return 0;
-}
 #include "MemList.h"
 extern MemList* pGlobalList;
-int Server::Run()
+int Server::Proccess()
 {
 	struct sockaddr sa = {0};
 	socklen_t len = sizeof(sa);

@@ -3,16 +3,23 @@
 #include "IOEvent.h"
 #include "CommonType.h"
 #include "MasterThread.h"
-class IOHandler
+#define HANDLER_IDLE 1
+#define HANDLER_RUNNING 2
+class IOHandler:public Task
 {
 	public:
 		IOHandler();
 		~IOHandler();
 		IOEvent* GetEvent();
+		int GetRunningStatus();
+		void SetRunningStatus(int);
 		int SetMasterThread(MasterThread*);
 		MasterThread* GetMasterThread();
-		virtual int Run();
+		int Run();
+		virtual int Proccess();
+		int Dispatch();
 	private:
+		int m_iStatus;
 		IOEvent* m_pEvent;
 		MasterThread* m_pMasterThread;
 };

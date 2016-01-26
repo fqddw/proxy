@@ -36,7 +36,9 @@ int NetEngine::Loop()
 		{
 			IOHandler* pHandler = (IOHandler*)((ees+iterator)->data.ptr);
 			if(pGlobalList->Find(pHandler))
-				pHandler->Run();
+			{
+				pHandler->Dispatch();
+			}
 			else
 				printf("Invalid Handler\n");
 		}

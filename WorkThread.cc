@@ -51,8 +51,8 @@ int WorkThread::Run()
 				{
 					delete pTask;
 				}
-				task_ = NULL;
 			}
+			task_ = NULL;
 		}
 		else
 		{
