@@ -6,6 +6,7 @@
 #include "errno.h"
 #include "sys/socket.h"
 #include "MemList.h"
+#include "netdb.h"
 extern MemList* pGlobalList;
 ClientSide::ClientSide():DataIOHandler(),m_pStream(new Stream())
 {
@@ -36,6 +37,19 @@ int ClientSide::Proccess()
 			if(m_pHttpRequest->IsHeaderEnd())
 			{
 				int ret = m_pHttpRequest->LoadHttpHeader();
+				HttpHeader* pHttpHeader = m_pHttpRequest->GetHeader();
+				char* pHostName = pHttpHeader->GetRequestLine()->GetUrl()->GetHost();
+				struct addrinfo hints;
+				hints.ai_family = AF_INET;
+				hints.ai_socktype = SOCK_STREAM;
+				hints.ai_protocol = IPPROTO_IP;
+				struct addrinfo* ptr,*result;
+				getaddrinfo(pHostName,NULL,&hints,&result);
+
+				for(ptr = result;ptr!=NULL;ptr = ptr->ai_next)
+				{
+
+				}
 			};
 		}
 	}
