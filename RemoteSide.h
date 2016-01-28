@@ -14,7 +14,7 @@ class RemoteSide:public DataIOHandler
 		int SetState(int);
 		int WriteData();
 		int Writeable();
-		int Run();
+		int Proccess();
 	private:
 		int m_iSocket;
 		int m_iState;
