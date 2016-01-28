@@ -1,5 +1,5 @@
 #include "InetSocketAddress.h"
-
+#include "CommonType.h"
 InetSocketAddress::InetSocketAddress(int port,in_addr_t addr)
 {
 	m_ipv4 = addr;
@@ -38,4 +38,12 @@ struct sockaddr InetSocketAddress::ToSockAddr()
 int InetSocketAddress::Size()
 {
 	return sizeof(struct sockaddr);
+}
+
+int InetSocketAddress::Equal(InetSocketAddress* pAddr)
+{
+	if(m_ipv4 == pAddr->m_ipv4 && m_iPort == pAddr->m_iPort)
+		return TRUE;
+	else
+		return FALSE;
 }

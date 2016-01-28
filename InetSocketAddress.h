@@ -14,6 +14,7 @@ class InetSocketAddress
 		int GetPort();
 		void SetPort(int);
 		int Size();
+		int Equal(InetSocketAddress*);
 	private:
 		int m_iPort;
 		unsigned int m_ipv4;

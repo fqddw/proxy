@@ -61,7 +61,9 @@ int Thread::SetTask(Task* pTask)
 	return TRUE;
 }
 
-MemList* pGlobalList = NULL;
+MemList<void*>* pGlobalList = NULL;
+#include "RemoteSide.h"
+extern MemList<RemoteSide*>* g_pGlobalSocketPool;
 class ServerStartTask : public Task
 {
 	public:
@@ -102,7 +104,8 @@ int ServerStartTask::Run()
 }
 int main(int argc,char** argv)
 {	
-	pGlobalList = new MemList();
+	pGlobalList = new MemList<void*>();
+	g_pGlobalSocketPool = new MemList<RemoteSide*>();
 	signal(SIGPIPE,SIG_IGN);
 	NetEngine* pEngine = new NetEngine();
 	pEngine->SetSize(1024);

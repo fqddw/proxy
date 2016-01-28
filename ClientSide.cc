@@ -7,7 +7,7 @@
 #include "sys/socket.h"
 #include "MemList.h"
 #include "netdb.h"
-extern MemList* pGlobalList;
+extern MemList<void*>* pGlobalList;
 ClientSide::ClientSide():DataIOHandler(),m_pStream(new Stream())
 {
 	GetEvent()->SetIOHandler(this);
@@ -38,21 +38,20 @@ int ClientSide::Proccess()
 			{
 				int ret = m_pHttpRequest->LoadHttpHeader();
 				HttpHeader* pHttpHeader = m_pHttpRequest->GetHeader();
-				char* pHostName = pHttpHeader->GetRequestLine()->GetUrl()->GetHost();
-				struct addrinfo hints;
-				hints.ai_family = AF_INET;
-				hints.ai_socktype = SOCK_STREAM;
-				hints.ai_protocol = IPPROTO_IP;
-				struct addrinfo* ptr,*result;
-				getaddrinfo(pHostName,NULL,&hints,&result);
-
-				for(ptr = result;ptr!=NULL;ptr = ptr->ai_next)
+				RemoteSide* pRemoteSide = GetRemoteSide();
+				if(pRemoteSide->Writeable())
 				{
-
+					pRemoteSide->WriteData();
 				}
 			};
 		}
 	}
 	return TRUE;
+}
+extern MemList<RemoteSide*>* g_pGlobalRemoteSidePool;
+
+RemoteSide* ClientSide::GetRemoteSide()
+{
+	return NULL;
 }
 

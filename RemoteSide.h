@@ -1,5 +1,10 @@
+#ifndef __REMOTESIDE_H__
+#define __REMOTESIDE_H__
+
 #include "CommonType.h"
 #include "DataIOHandler.h"
+#include "ClientSide.h"
+class ClientSide;
 class RemoteSide:public DataIOHandler
 {
 	public:
@@ -7,11 +12,13 @@ class RemoteSide:public DataIOHandler
 		~RemoteSide();
 		int GetState();
 		int SetState(int);
+		int WriteData();
+		int Writeable();
 		int Run();
 	private:
 		int m_iSocket;
 		int m_iState;
 		Stream* m_pStream;
-		ClientWSide* m_pClientSide;
+		ClientSide* m_pClientSide;
 };
-
+#endif

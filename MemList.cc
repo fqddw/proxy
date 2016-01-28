@@ -1,36 +1,42 @@
 #include "MemList.h"
 #include "CommonType.h"
-MemNode::MemNode():m_pData(NULL),m_pNext(NULL)
+template <typename T>
+MemNode<T>::MemNode():m_pData(NULL),m_pNext(NULL)
 {
 }
 
-void* MemNode::GetData()
+template<typename T>
+T MemNode<T>::GetData()
 {
 	return m_pData;
 }
-void MemNode::SetData(void* pData)
+template<typename T>
+void MemNode<T>::SetData(T pData)
 {
 	m_pData = pData;
 }
 
-int MemNode::Append(void* pData)
+template<typename T>
+int MemNode<T>::Append(T pData)
 {
-	MemNode* pNode = new MemNode();
+	MemNode<T>* pNode = new MemNode();
 	pNode->SetData(pData);
 	SetNext(pNode);
 	return TRUE;
 }
 
-MemList::MemList():m_pHead(NULL),m_pEnd(NULL),cs_(new CriticalSection())
+template<typename T>
+MemList<T>::MemList():m_pHead(NULL),m_pEnd(NULL),cs_(new CriticalSection())
 {
 }
 
-int MemList::Append(void* pData)
+template<typename T>
+int MemList<T>::Append(T pData)
 {
 	cs_->Enter();
 	if(m_pHead == NULL)
 	{
-		m_pHead = new MemNode();
+		m_pHead = new MemNode<T>();
 		m_pHead->SetData(pData);
 		m_pEnd = m_pHead;
 	}
@@ -43,10 +49,11 @@ int MemList::Append(void* pData)
 	return TRUE;
 }
 #include "stdio.h"
-int MemList::Find(void* pData)
+template<typename T>
+int MemList<T>::Find(T pData)
 {
 	cs_->Enter();
-	MemNode* pNode = m_pHead;
+	MemNode<T>* pNode = m_pHead;
 	if(!pNode)
 		return FALSE;
 	for(;pNode!=NULL;pNode = pNode->GetNext())
@@ -61,10 +68,11 @@ int MemList::Find(void* pData)
 	return FALSE;
 }
 
-int MemList::Delete(void* pData)
+template<typename T>
+int MemList<T>::Delete(T pData)
 {
 	cs_->Enter();
-	MemNode* pNode = m_pHead;
+	MemNode<T>* pNode = m_pHead;
 	if(pNode == NULL)
 	{
 		cs_->Leave();
@@ -81,7 +89,7 @@ int MemList::Delete(void* pData)
 	{
 		do
 		{
-			MemNode* pPreNode = pNode;
+			MemNode<T>* pPreNode = pNode;
 			pNode = pNode->GetNext();
 			if(pNode != NULL)
 			{
@@ -103,22 +111,38 @@ int MemList::Delete(void* pData)
 	return FALSE;
 }
 
-MemNode* MemNode::GetNext()
+template<typename T>
+MemNode<T>* MemNode<T>::GetNext()
 {
 	return m_pNext;
 }
-int MemNode::SetNext(MemNode* pNode)
+template<typename T>
+int MemNode<T>::SetNext(MemNode<T>* pNode)
 {
 	m_pNext = pNode;
 	return TRUE;
 }
 
-int MemList::Show()
+template<typename T>
+int MemList<T>::Show()
 {
-	MemNode* pNode = m_pHead;
+	MemNode<T>* pNode = m_pHead;
 	for(;pNode!=NULL;pNode=pNode->GetNext())
 	{
 		printf("ListData %d\n",pNode->GetData());
 	}
+	return TRUE;
+}
+
+template<typename T>
+int MemList<T>::Lock()
+{
+	cs_->Enter();
+	return TRUE;
+}
+template<typename T>
+int MemList<T>::Unlock()
+{
+	cs_->Leave();
 	return TRUE;
 }

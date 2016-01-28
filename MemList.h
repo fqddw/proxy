@@ -1,27 +1,30 @@
 #include "CriticalSection.h"
-class MemNode
+template<typename T> class MemNode
 {
 	public:
 		MemNode();
-		void* GetData();
-		void SetData(void*);
-		int Append(void*);
-		MemNode* GetNext();
+		T GetData();
+		void SetData(T);
+		int Append(T);
+		MemNode<T>* GetNext();
 		int SetNext(MemNode*);
 	private:
-		void* m_pData;
-		MemNode* m_pNext;
+		T m_pData;
+		MemNode<T>* m_pNext;
 };
-class MemList
+template<typename T> class MemList
 {
 	public:
 		MemList();
-		int Append(void*);
-		int Find(void*);
-		int Delete(void*);
+		int Lock();
+		int Unlock();
+
+		int Append(T);
+		int Find(T);
+		int Delete(T);
 		int Show();
 	private:
-		MemNode* m_pHead;
-		MemNode* m_pEnd;
+		MemNode<T>* m_pHead;
+		MemNode<T>* m_pEnd;
 		CriticalSection* cs_;
 };
