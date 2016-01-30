@@ -30,7 +30,6 @@ ClientSide::ClientSide(int sockfd):DataIOHandler(),m_pStream(new Stream())
 
 int ClientSide::Proccess()
 {
-	printf("%s\n","hhhhhh");
 	Stream* pStream = NULL;
 	GetDataStream(&pStream);
 	if(pStream)
@@ -48,16 +47,10 @@ int ClientSide::Proccess()
 				int ret = m_pHttpRequest->LoadHttpHeader();
 				HttpHeader* pHttpHeader = m_pHttpRequest->GetHeader();
 				InetSocketAddress *pAddr = new InetSocketAddress();
-				pAddr->InitByHostAndPort(pHttpHeader->GetRequestLine()->GetUrl()->GetHost(),pHttpHeader->GetRequestLine()->GetUrl()->GetPort());
+				char* pHostName = pHttpHeader->GetRequestLine()->GetUrl()->GetHost();
+				int port = pHttpHeader->GetRequestLine()->GetUrl()->GetPort();
+				pAddr->InitByHostAndPort(pHostName,port);
 				RemoteSide* pRemoteSide = GetRemoteSide(pAddr);
-				if(!pRemoteSide)
-				{
-					printf("NULL RemoteSide\n");
-				}
-				else
-				{
-					printf("Have Connection\n");
-				}
 				if(pRemoteSide->Writeable())
 				{
 					pRemoteSide->WriteData();
@@ -74,6 +67,7 @@ extern MemList<RemoteSide*>* g_pGlobalRemoteSidePool;
 RemoteSide* ClientSide::GetRemoteSide(InetSocketAddress* pAddr)
 {
 	g_pGlobalRemoteSidePool->Lock();
+	RemoteSide* pRemoteSide=NULL;
 	MemNode<RemoteSide*>* pSocketPool = g_pGlobalRemoteSidePool->GetHead();
 	for(;pSocketPool!=NULL;pSocketPool = pSocketPool->GetNext())
 	{
@@ -85,7 +79,13 @@ RemoteSide* ClientSide::GetRemoteSide(InetSocketAddress* pAddr)
 			return pSide;
 		}
 	}
+	if(!pRemoteSide)
+	{
+		pRemoteSide = new RemoteSide(pAddr);
+		int ret = pRemoteSide->Connect();
+	}
+
 	g_pGlobalRemoteSidePool->Unlock();
-	return NULL;
+	return pRemoteSide;
 }
 

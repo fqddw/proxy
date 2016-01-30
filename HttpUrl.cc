@@ -26,7 +26,7 @@ int HttpUrl::Parse()
 	int port = 80;
 	string strHost;
 	int portpos = strHostFull.find(":");
-	if(portpos)
+	if(portpos != string::npos)
 	{
 		strHost = strHostFull.substr(0,portpos);
 		string strPort = strHostFull.substr(portpos+1);

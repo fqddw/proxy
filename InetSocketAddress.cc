@@ -1,5 +1,6 @@
 #include "InetSocketAddress.h"
 #include "CommonType.h"
+#include "stdio.h"
 InetSocketAddress::InetSocketAddress(int port,in_addr_t addr)
 {
 	m_ipv4 = addr;
@@ -72,4 +73,9 @@ int InetSocketAddress::InitByHostAndPort(char* pHost,int port)
 int InetSocketAddress::GetIPV4()
 {
 	return m_ipv4;
+}
+
+int InetSocketAddress::GetPort()
+{
+	return m_iPort;
 }

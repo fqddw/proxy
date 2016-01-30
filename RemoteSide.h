@@ -11,7 +11,9 @@ class RemoteSide:public DataIOHandler
 {
 	public:
 		RemoteSide();
+		RemoteSide(InetSocketAddress*);
 		~RemoteSide();
+		int Connect();
 		int GetState();
 		int SetState(int);
 		int WriteData();
