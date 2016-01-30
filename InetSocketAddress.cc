@@ -47,3 +47,29 @@ int InetSocketAddress::Equal(InetSocketAddress* pAddr)
 	else
 		return FALSE;
 }
+int InetSocketAddress::InitByHostAndPort(char* pHost,int port)
+{
+	struct addrinfo hints,*res;
+	hints.ai_family = AF_INET;
+	hints.ai_socktype = SOCK_STREAM;
+	int ret=getaddrinfo(pHost,NULL,&hints,&res);
+	if(!ret)
+	{
+		return FALSE;
+	}
+	struct addrinfo* ptr = res;
+	for(;ptr!=NULL;ptr=ptr->ai_next)
+	{
+		if(ptr->ai_family == AF_INET)
+		{
+			m_iPort = port;
+			m_ipv4 = ((struct sockaddr_in*)(ptr->ai_addr))->sin_addr.s_addr;
+			return TRUE;
+		}
+	}
+	return TRUE;
+}
+int InetSocketAddress::GetIPV4()
+{
+	return m_ipv4;
+}

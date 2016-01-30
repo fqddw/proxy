@@ -101,8 +101,12 @@ int ServerStartTask::Run()
 	pServer->GetEvent()->AddToEngine();
 	return TRUE;
 }
+
+MemList<RemoteSide*>* g_pGlobalRemoteSidePool;
+
 int main(int argc,char** argv)
 {	
+	g_pGlobalRemoteSidePool = new MemList<RemoteSide*>();
 	pGlobalList = new MemList<void*>();
 	signal(SIGPIPE,SIG_IGN);
 	NetEngine* pEngine = new NetEngine();
@@ -128,7 +132,6 @@ int main(int argc,char** argv)
 		int c = getchar();
 		if(c == 'l')
 		{
-			pGlobalList->Show(); 
 		}
 	}
 	return 0;

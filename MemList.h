@@ -23,6 +23,7 @@ template<typename T> class MemList
 		int Find(T);
 		int Delete(T);
 		int Show();
+		MemNode<T>* GetHead();
 	private:
 		MemNode<T>* m_pHead;
 		MemNode<T>* m_pEnd;
@@ -153,17 +154,6 @@ int MemNode<T>::SetNext(MemNode<T>* pNode)
 }
 
 template<typename T>
-int MemList<T>::Show()
-{
-	MemNode<T>* pNode = m_pHead;
-	for(;pNode!=NULL;pNode=pNode->GetNext())
-	{
-		printf("ListData %d\n",pNode->GetData());
-	}
-	return TRUE;
-}
-
-template<typename T>
 int MemList<T>::Lock()
 {
 	cs_->Enter();
@@ -174,4 +164,9 @@ int MemList<T>::Unlock()
 {
 	cs_->Leave();
 	return TRUE;
+}
+template<typename T>
+MemNode<T>* MemList<T>::GetHead()
+{
+	return m_pHead;
 }

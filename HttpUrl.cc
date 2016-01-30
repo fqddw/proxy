@@ -23,7 +23,6 @@ int HttpUrl::Parse()
 	}
 	int iHostEndPos = strUrl.find("/",offset);
 	string strHostFull = strUrl.substr(offset,iHostEndPos-offset);
-	printf("%d\n",iHostEndPos);
 	int port = 80;
 	string strHost;
 	int portpos = strHostFull.find(":");
@@ -58,6 +57,10 @@ HttpUrl::HttpUrl()
 char* HttpUrl::GetHost()
 {
 	return (char*)m_pHost.c_str();
+}
+int HttpUrl::GetPort()
+{
+	return m_iPort;
 }
 char* HttpUrl::ToString()
 {
