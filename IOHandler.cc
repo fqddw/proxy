@@ -1,5 +1,5 @@
 #include "IOHandler.h"
-IOHandler::IOHandler():m_pEvent(new IOEvent),m_iStatus(HANDLER_IDLE),Task()
+IOHandler::IOHandler():m_pEvent(new IOEvent),Task()
 {
 }
 IOEvent* IOHandler::GetEvent()
@@ -9,9 +9,7 @@ IOEvent* IOHandler::GetEvent()
 
 int IOHandler::Run()
 {
-	SetRunningStatus(HANDLER_RUNNING);
 	Proccess();
-	SetRunningStatus(HANDLER_IDLE);
 	return TRUE;
 }
 
@@ -29,23 +27,9 @@ IOHandler::~IOHandler()
 {
 	delete m_pEvent;
 }
-int IOHandler::GetRunningStatus()
-{
-	return m_iStatus;
-}
-
-void IOHandler::SetRunningStatus(int status)
-{
-	m_iStatus = status;
-}
-
 int IOHandler::Dispatch()
 {
-	if(GetRunningStatus() == HANDLER_IDLE)
-	{
-		SetRunningStatus(HANDLER_RUNNING);
-		GetMasterThread()->InsertTask(this);
-	}
+	GetMasterThread()->InsertTask(this);
 	return TRUE;
 }
 

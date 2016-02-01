@@ -2,6 +2,7 @@
 #include "InetSocketAddress.h"
 #include "fcntl.h"
 #include "stdio.h"
+#include "errno.h"
 int RemoteSide::Proccess()
 {
 	return TRUE;
@@ -30,8 +31,9 @@ InetSocketAddress* RemoteSide::GetAddr()
 RemoteSide::RemoteSide()
 {
 }
-RemoteSide::RemoteSide(InetSocketAddress*)
+RemoteSide::RemoteSide(InetSocketAddress* pAddr)
 {
+	m_pAddr = pAddr;
 	int sockfd = socket(AF_INET,SOCK_STREAM,0);
 	m_iSocket = sockfd;
 	int cflags = fcntl(sockfd,F_GETFL,0);
@@ -40,8 +42,7 @@ RemoteSide::RemoteSide(InetSocketAddress*)
 }
 int RemoteSide::Connect()
 {
-	printf("%d\n",m_pAddr->GetPort());
 	struct sockaddr sa = m_pAddr->ToSockAddr();
-	int ret = connect(m_iState,&sa,sizeof(sa));
+	int ret = connect(m_iSocket,&sa,sizeof(sa));
 	return ret;
 }

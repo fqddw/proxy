@@ -76,9 +76,11 @@ RemoteSide* ClientSide::GetRemoteSide(InetSocketAddress* pAddr)
 		{
 			pSide->SetStatusBlocking();
 			g_pGlobalRemoteSidePool->Unlock();
-			return pSide;
+			pRemoteSide = pSide;
+			break;
 		}
 	}
+
 	if(!pRemoteSide)
 	{
 		pRemoteSide = new RemoteSide(pAddr);

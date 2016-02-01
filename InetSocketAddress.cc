@@ -50,11 +50,11 @@ int InetSocketAddress::Equal(InetSocketAddress* pAddr)
 }
 int InetSocketAddress::InitByHostAndPort(char* pHost,int port)
 {
-	struct addrinfo hints,*res;
+	struct addrinfo hints = {0},*res=NULL;
 	hints.ai_family = AF_INET;
 	hints.ai_socktype = SOCK_STREAM;
-	int ret=getaddrinfo(pHost,NULL,&hints,&res);
-	if(!ret)
+	int ret=getaddrinfo(pHost,"2048",&hints,&res);
+	if(ret)
 	{
 		return FALSE;
 	}
@@ -68,7 +68,7 @@ int InetSocketAddress::InitByHostAndPort(char* pHost,int port)
 			return TRUE;
 		}
 	}
-	return TRUE;
+	return FALSE;
 }
 int InetSocketAddress::GetIPV4()
 {
