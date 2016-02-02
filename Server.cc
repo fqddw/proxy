@@ -34,7 +34,7 @@ int Server::Create()
 }
 
 #include "MemList.h"
-extern MemList* pGlobalList;
+extern MemList<void*>* pGlobalList;
 int Server::Proccess()
 {
 	struct sockaddr sa = {0};

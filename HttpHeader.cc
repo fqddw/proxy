@@ -1,8 +1,12 @@
-class HttpHeader
+#include "HttpHeader.h"
+#include "CommonType.h"
+int HttpHeader::SetRequestLine(HttpRequestLine* pHttpRequestLine)
 {
-	private:
-		HttpRequestLine* m_pRequestLine;
-		HttpKeyValueList* m_pKeyValueList;
-	public:
-
+	m_pRequestLine = pHttpRequestLine;
+	return TRUE;
 }
+HttpRequestLine* HttpHeader::GetRequestLine()
+{
+	return m_pRequestLine;
+}
+

@@ -24,7 +24,7 @@ int NetEngine::SetSize(int size)
 }
 #include "MemList.h"
 #include "stdio.h"
-extern MemList* pGlobalList;
+extern MemList<void*>* pGlobalList;
 int NetEngine::Loop()
 {
 	EPOLLEVENT ees[MAX_WAIT] = {0};

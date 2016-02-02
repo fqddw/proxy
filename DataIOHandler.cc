@@ -5,7 +5,7 @@
 #include "errno.h"
 #include "MemList.h"
 #include "Stream.h"
-extern MemList* pGlobalList;
+extern MemList<void*>* pGlobalList;
 DataIOHandler::DataIOHandler():IOHandler()
 {
 }

@@ -11,15 +11,12 @@ class IOHandler:public Task
 		IOHandler();
 		~IOHandler();
 		IOEvent* GetEvent();
-		int GetRunningStatus();
-		void SetRunningStatus(int);
 		int SetMasterThread(MasterThread*);
 		MasterThread* GetMasterThread();
 		int Run();
 		virtual int Proccess();
 		int Dispatch();
 	private:
-		int m_iStatus;
 		IOEvent* m_pEvent;
 		MasterThread* m_pMasterThread;
 };

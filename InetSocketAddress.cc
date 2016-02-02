@@ -1,5 +1,6 @@
 #include "InetSocketAddress.h"
-
+#include "CommonType.h"
+#include "stdio.h"
 InetSocketAddress::InetSocketAddress(int port,in_addr_t addr)
 {
 	m_ipv4 = addr;
@@ -38,4 +39,43 @@ struct sockaddr InetSocketAddress::ToSockAddr()
 int InetSocketAddress::Size()
 {
 	return sizeof(struct sockaddr);
+}
+
+int InetSocketAddress::Equal(InetSocketAddress* pAddr)
+{
+	if(m_ipv4 == pAddr->m_ipv4 && m_iPort == pAddr->m_iPort)
+		return TRUE;
+	else
+		return FALSE;
+}
+int InetSocketAddress::InitByHostAndPort(char* pHost,int port)
+{
+	struct addrinfo hints = {0},*res=NULL;
+	hints.ai_family = AF_INET;
+	hints.ai_socktype = SOCK_STREAM;
+	int ret=getaddrinfo(pHost,"2048",&hints,&res);
+	if(ret)
+	{
+		return FALSE;
+	}
+	struct addrinfo* ptr = res;
+	for(;ptr!=NULL;ptr=ptr->ai_next)
+	{
+		if(ptr->ai_family == AF_INET)
+		{
+			m_iPort = port;
+			m_ipv4 = ((struct sockaddr_in*)(ptr->ai_addr))->sin_addr.s_addr;
+			return TRUE;
+		}
+	}
+	return FALSE;
+}
+int InetSocketAddress::GetIPV4()
+{
+	return m_ipv4;
+}
+
+int InetSocketAddress::GetPort()
+{
+	return m_iPort;
 }

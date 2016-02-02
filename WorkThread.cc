@@ -36,7 +36,7 @@ void WorkThread::EnterRunning()
 	}
 }
 #include "MemList.h"
-extern MemList* pGlobalList;
+extern MemList<void*>* pGlobalList;
 int WorkThread::Run()
 {
 	int flag = TRUE;
