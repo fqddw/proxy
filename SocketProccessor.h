@@ -1,3 +1,6 @@
+#ifndef __SOCKETPROCCESSOR_H__
+#define __SOCKETPROCCESSOR_H__
+class IOHandler;
 class SocketProccessor
 {
 	public:
@@ -9,3 +12,4 @@ class SocketProccessor
 		int m_iState;
 		IOHandler* m_pIOHandler;
 };
+#endif
