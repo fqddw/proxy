@@ -3,7 +3,8 @@
 #include "IOEvent.h"
 #include "CommonType.h"
 #include "MasterThread.h"
-#include "SocketProccessor.h"
+#include "ReceiveProccessor.h"
+#include "SendProccessor.h"
 #define HANDLER_IDLE 1
 #define HANDLER_RUNNING 2
 class IOHandler:public Task
@@ -20,8 +21,8 @@ class IOHandler:public Task
 	private:
 		IOEvent* m_pEvent;
 		MasterThread* m_pMasterThread;
-		SocketProccessor* m_pRecvProc;
-		SocketProccessor* m_pSendProc;
+		ReceiveProccessor* m_pRecvProc;
+		SendProccessor* m_pSendProc;
 };
 
 
