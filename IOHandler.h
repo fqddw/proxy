@@ -19,6 +19,8 @@ class IOHandler:public Task
 	private:
 		IOEvent* m_pEvent;
 		MasterThread* m_pMasterThread;
+		SocketProccessor* m_pRecvProc;
+		SocketProccessor* m_pSendProc;
 };
 
 
