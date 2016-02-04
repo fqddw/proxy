@@ -27,6 +27,7 @@ public:
 	int IsRunning();
 	int InsertTask(Task* pTask);
 	void SetWorkerCount(int);
+	int SetWorkThreadBusy(int);
 	int GetWorkerCount();
 private:
 	EventPump* ep_;
@@ -34,5 +35,6 @@ private:
 	vector<WorkThread*> pWorkThread_;
 	int state_;
 	int m_iWorkCount;
+	int workthread_busy;
 };
 #endif

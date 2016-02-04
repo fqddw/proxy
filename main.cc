@@ -5,7 +5,8 @@
 #include "ServerConfig.h"
 #include "Server.h"
 #include "MasterThread.h"
-
+#include <signal.h>
+#include "MemList.h"
 void* threadProc(void* ptr)
 {
 	Task* pTaskWrapper = (Task*)ptr;
@@ -60,6 +61,8 @@ int Thread::SetTask(Task* pTask)
 	return TRUE;
 }
 
+MemList<void*>* pGlobalList = NULL;
+#include "RemoteSide.h"
 class ServerStartTask : public Task
 {
 	public:
@@ -90,6 +93,7 @@ int ServerStartTask::Run()
 {
 	ServerConfigDefault* pConfig = new ServerConfigDefault();
 	Server* pServer = new Server();
+	pGlobalList->Append(pServer);
 	pServer->GetEvent()->SetNetEngine(m_pEngine);
 	pServer->SetPort(pConfig->GetPort());
 	pServer->SetMasterThread(m_pMasterThread);
@@ -97,12 +101,19 @@ int ServerStartTask::Run()
 	pServer->GetEvent()->AddToEngine();
 	return TRUE;
 }
+
+MemList<RemoteSide*>* g_pGlobalRemoteSidePool;
+
 int main(int argc,char** argv)
 {	
+	g_pGlobalRemoteSidePool = new MemList<RemoteSide*>();
+	pGlobalList = new MemList<void*>();
+	signal(SIGPIPE,SIG_IGN);
 	NetEngine* pEngine = new NetEngine();
 	pEngine->SetSize(1024);
 	pEngine->Init();
 	NetEngineInitTask* pNetEngineInitTask = new NetEngineInitTask();
+	pNetEngineInitTask->CancelRepeatable();
 	pNetEngineInitTask->SetNetEngine(pEngine);
 	Thread* pThread = new Thread();
 	pThread->SetTask(pNetEngineInitTask);
@@ -112,9 +123,16 @@ int main(int argc,char** argv)
 	pMasterThread->SetWorkerCount(8);
 	pMasterThread->Create();
 	ServerStartTask* pServerStartTask = new ServerStartTask();
+	pServerStartTask->CancelRepeatable();
 	pServerStartTask->SetNetEngine(pEngine);
 	pServerStartTask->SetMasterThread(pMasterThread);
 	pMasterThread->InsertTask(pServerStartTask);
-	getchar();
+	while(1)
+	{
+		int c = getchar();
+		if(c == 'l')
+		{
+		}
+	}
 	return 0;
 }

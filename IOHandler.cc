@@ -1,5 +1,5 @@
 #include "IOHandler.h"
-IOHandler::IOHandler():m_pEvent(new IOEvent)
+IOHandler::IOHandler():m_pEvent(new IOEvent),Task()
 {
 }
 IOEvent* IOHandler::GetEvent()
@@ -9,6 +9,7 @@ IOEvent* IOHandler::GetEvent()
 
 int IOHandler::Run()
 {
+	Proccess();
 	return TRUE;
 }
 
@@ -22,4 +23,17 @@ MasterThread* IOHandler::GetMasterThread()
 {
 	return m_pMasterThread;
 }
+IOHandler::~IOHandler()
+{
+	delete m_pEvent;
+}
+int IOHandler::Dispatch()
+{
+	GetMasterThread()->InsertTask(this);
+	return TRUE;
+}
 
+int IOHandler::Proccess()
+{
+	return TRUE;
+}

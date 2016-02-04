@@ -14,3 +14,8 @@ void CriticalSection::Leave()
 {
 	pthread_mutex_unlock(&cs);
 }
+CriticalSection::~CriticalSection()
+{
+	pthread_mutex_destroy(&cs);
+}
+

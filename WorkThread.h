@@ -14,7 +14,7 @@ public:
 	~WorkThread();
 private:
 	EventPump* ep_;
-	TaskQueue* tq_;
+	Task* task_;
 	int state_;
 	MasterThread* pMasterThread_;
 public:
@@ -25,7 +25,7 @@ public:
 	int IsWaiting();
 	int IsRunning();
 	int SetMasterThread(MasterThread*);
-	int GetTaskCount();
-	int InsertTask(Task*);
+	int HasTask();
+	int SetTask(Task*);
 };
 #endif

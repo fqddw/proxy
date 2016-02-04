@@ -1,3 +1,5 @@
+#include "HttpUrl.h"
+
 class HttpRequestLine
 {
 	public:
@@ -10,9 +12,12 @@ class HttpRequestLine
 		int FromString(char*);
 		int AppendString(char*,int);
 		int GetMethodId(char*);
+		HttpUrl* GetUrl();
+		int GetMajorVer();
+		int GetSeniorVer();
 	private:
 		int m_iMethod;
-		char* m_pUrl;
+		HttpUrl* m_pUrl;
 		int m_iMajorVer;
 		int m_iSeniorVer;
 		char* m_pString;

@@ -3,14 +3,18 @@
 #include "string.h"
 #include "unistd.h"
 #include "HttpRequestLine.h"
-
+#include "CommonType.h"
 HttpRequestLine::HttpRequestLine():m_pString(0),m_iStringLength(0)
 {
+}
+HttpUrl* HttpRequestLine::GetUrl()
+{
+	return m_pUrl;
 }
 char* HttpRequestLine::ToString()
 {
 	char* pMethod = GetMethodString();
-	char* pUrl = m_pUrl;
+	char* pUrl = m_pUrl->ToString();
 	char* pRequestString = new char[strlen(pMethod)+1+strlen(pUrl)+1+8+1];
 	memcpy(pRequestString,pMethod,strlen(pMethod));
 	memcpy(pRequestString+strlen(pMethod)," ",1);
@@ -27,10 +31,18 @@ char* HttpRequestLine::GetMethodString()
 {
 	return (char*)"GET";
 }
+int HttpRequestLine::GetMajorVer()
+{
+	return m_iMajorVer;
+}
+int HttpRequestLine::GetSeniorVer()
+{
+	return m_iSeniorVer;
+}
 
 int HttpRequestLine::SetUrl(char* pUrl)
 {
-	m_pUrl = pUrl;
+	m_pUrl = new HttpUrl(pUrl);
 	return 0;
 }
 
@@ -40,14 +52,9 @@ int HttpRequestLine::SetVersion(int major,int senior)
 	m_iSeniorVer = senior;
 	return 0;
 }
-int HttpRequestLine::GetState()
-{
-	return m_State;
-}
+
 int HttpRequestLine::Parse()
 {
-	int state = 0;
-	m_iState = state;
 	int offset = 0;
 	char* pString = m_pString;
 	int index=0;
@@ -70,7 +77,6 @@ int HttpRequestLine::Parse()
 	int urlstart = index;
 	for(;index<m_iStringLength;index++){
 		if(*(pString+index) == ' '){
-			state = 2;
 			break;
 		}
 	}
@@ -79,14 +85,26 @@ int HttpRequestLine::Parse()
 	char* pUrl = new char[len+1];
 	memset(pUrl,'\0',len+1);
 	memcpy(pUrl,pString+urlstart,len);
-	m_pUrl = pUrl;
-	state = 3;
+	m_pUrl = new HttpUrl(pUrl);
 	for(;index<m_iStringLength;index++){
 		if(*(pString+index) != ' '){
 			break;
 		}
 	}
 
+	if(*(pString+index++) == 'H' && *(pString+index++) == 'T' && *(pString+index++) == 'T' && *(pString+index++) == 'P' && *(pString+index++) == '/')
+	{	
+		char mVer[2] = {'\0'};
+		mVer[0] = *(pString+index);
+		m_iMajorVer = atoi(mVer);
+		index++;
+		if(*(pString+index)!='.')
+			return FALSE;
+		index++;
+		char sVer[2]= {'\0'};
+		sVer[0] = *(pString+index);
+		m_iSeniorVer = atoi(sVer);
+	}
 	return 0;
 }
 

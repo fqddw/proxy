@@ -11,9 +11,12 @@ class InetSocketAddress
 		struct sockaddr ToSockAddr();
 		struct sockaddr_in ToSockAddrIn();
 		int ToIpV4Short();
+		int GetIPV4();
 		int GetPort();
 		void SetPort(int);
 		int Size();
+		int Equal(InetSocketAddress*);
+		int InitByHostAndPort(char*,int);
 	private:
 		int m_iPort;
 		unsigned int m_ipv4;

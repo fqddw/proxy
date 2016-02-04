@@ -5,14 +5,24 @@
 #include "string.h"
 #include "errno.h"
 #include "sys/socket.h"
-ClientSide::ClientSide():IOHandler()
+#include "MemList.h"
+#include "netdb.h"
+#include "InetSocketAddress.h"
+extern MemList<void*>* pGlobalList;
+#define HEADER_NOTFOUND 0
+ClientSide::ClientSide():DataIOHandler(),m_pStream(new Stream())
 {
 	GetEvent()->SetIOHandler(this);
 	m_iState = CLIENT_STATE_IDLE;
+	m_iTransState = HEADER_NOTFOUND;
 }
-
-ClientSide::ClientSide(int sockfd):IOHandler()
+ClientSide::~ClientSide()
 {
+	delete m_pStream;
+}
+ClientSide::ClientSide(int sockfd):DataIOHandler(),m_pStream(new Stream())
+{
+	m_iTransState = HEADER_NOTFOUND;
 	m_iState = CLIENT_STATE_IDLE;
 	GetEvent()->SetFD(sockfd);
 	GetEvent()->SetIOHandler(this);
@@ -20,39 +30,64 @@ ClientSide::ClientSide(int sockfd):IOHandler()
 
 int ClientSide::Proccess()
 {
-	while(1)
+	Stream* pStream = NULL;
+	GetDataStream(&pStream);
+	if(pStream)
 	{
-		char buffer[1024] = {'\0'};
-		int n = recv(GetEvent()->GetFD(),buffer,1024,0);
-		if(n == -1)
+		m_pStream->Append(pStream->GetData(),pStream->GetLength());
+		if(!m_pHttpRequest)
 		{
-			if(errno == EAGAIN)
-			{
-				return TRUE;
-			}
-			else
-			{
-				GetEvent()->RemoveFromEngine();
-				return FALSE;
-			}
+			m_pHttpRequest = new HttpRequest(m_pStream);
+			m_iTransState == HEADER_NOTFOUND;
 		}
-		char* pContent = "HTTP/1.1 200 OK\r\nContent-Length: 20\r\n\r\n<title>vpn1g</title>";
-		send(GetEvent()->GetFD(),pContent,strlen(pContent),0);
-	}
-	return TRUE;
-}
-
-int ClientSide::Run()
-{
-	if(m_iState != CLIENT_STATE_IDLE)
-	{
-		return FALSE;
+		if(m_iTransState == HEADER_NOTFOUND)
+		{
+			if(m_pHttpRequest->IsHeaderEnd())
+			{
+				int ret = m_pHttpRequest->LoadHttpHeader();
+				HttpHeader* pHttpHeader = m_pHttpRequest->GetHeader();
+				InetSocketAddress *pAddr = new InetSocketAddress();
+				char* pHostName = pHttpHeader->GetRequestLine()->GetUrl()->GetHost();
+				int port = pHttpHeader->GetRequestLine()->GetUrl()->GetPort();
+				pAddr->InitByHostAndPort(pHostName,port);
+				RemoteSide* pRemoteSide = GetRemoteSide(pAddr);
+				if(pRemoteSide->Writeable())
+				{
+					pRemoteSide->WriteData();
+				}
+			};
+		}
+		return TRUE;
 	}
 	else
+		return FALSE;
+}
+extern MemList<RemoteSide*>* g_pGlobalRemoteSidePool;
+
+RemoteSide* ClientSide::GetRemoteSide(InetSocketAddress* pAddr)
+{
+	g_pGlobalRemoteSidePool->Lock();
+	RemoteSide* pRemoteSide=NULL;
+	MemNode<RemoteSide*>* pSocketPool = g_pGlobalRemoteSidePool->GetHead();
+	for(;pSocketPool!=NULL;pSocketPool = pSocketPool->GetNext())
 	{
-		ClientSideTask* pTask = new ClientSideTask();
-		pTask->SetClientSide(this);
-		GetMasterThread()->InsertTask(pTask);
+		RemoteSide* pSide = pSocketPool->GetData();
+		if(pSide->GetAddr()->Equal(pAddr))
+		{
+			pSide->SetStatusBlocking();
+			g_pGlobalRemoteSidePool->Unlock();
+			pRemoteSide = pSide;
+			break;
+		}
 	}
-	return TRUE;
-};
+
+	if(!pRemoteSide)
+	{
+		pRemoteSide = new RemoteSide(pAddr);
+		int ret = pRemoteSide->Connect();
+	}
+
+	g_pGlobalRemoteSidePool->Unlock();
+	return pRemoteSide;
+}
+
