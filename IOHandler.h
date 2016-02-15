@@ -17,7 +17,7 @@ class IOHandler:public Task
 		MasterThread* GetMasterThread();
 		int Run();
 		virtual int Proccess();
-		int Dispatch();
+		int Dispatch(int);
 	private:
 		IOEvent* m_pEvent;
 		MasterThread* m_pMasterThread;

@@ -27,9 +27,18 @@ IOHandler::~IOHandler()
 {
 	delete m_pEvent;
 }
-int IOHandler::Dispatch()
+int IOHandler::Dispatch(int events)
 {
 	GetMasterThread()->InsertTask(this);
+	if(events & EPOLLIN)
+	{
+	}
+	if(events & EPOLLOUT)
+	{
+	}
+	if(events & EPOLLOUT)
+	{
+	}
 	return TRUE;
 }
 
