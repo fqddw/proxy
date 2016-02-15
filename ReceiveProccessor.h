@@ -1,4 +1,5 @@
-class ReceiveProccessor
+#include "Task.h"
+class ReceiveProccessor : public Task
 {
 	public:
 		ReceiveProccessor();
