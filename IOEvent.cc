@@ -13,10 +13,10 @@ int IOEvent::SetIOHandler(IOHandler* pHandler)
 	return TRUE;
 }
 
-struct epoll_event IOEvent::ToEpollEvent()
+struct epoll_event IOEvent::ToEpollEvent(int events)
 {
 	struct epoll_event ee = {0};
-	ee.events = EPOLLIN | EPOLLET;
+	ee.events = events;
 	ee.data.ptr = m_pHandler;
 	return ee;
 }
@@ -40,9 +40,9 @@ void IOEvent::SetNetEngine(NetEngine* pNetEngine)
 	m_pEngine = pNetEngine;
 }
 
-int IOEvent::AddToEngine()
+int IOEvent::AddToEngine(int events)
 {
-	m_pEngine->AddFileDescriptor(m_pHandler);
+	m_pEngine->AddFileDescriptor(m_pHandler,events);
 	return TRUE;
 }
 

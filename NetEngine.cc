@@ -9,10 +9,10 @@ int NetEngine::Init(){
 		return false;
 }
 
-int NetEngine::AddFileDescriptor(IOHandler* pHandler)
+int NetEngine::AddFileDescriptor(IOHandler* pHandler,int events)
 {
 	EPOLLEVENT ee = {0};
-	ee = pHandler->GetEvent()->ToEpollEvent();
+	ee = pHandler->GetEvent()->ToEpollEvent(events);
 	int ret = epoll_ctl(m_iFD,EPOLL_CTL_ADD,pHandler->GetEvent()->GetFD(),&ee);
 	return ret;
 }
@@ -48,7 +48,7 @@ int NetEngine::Loop()
 int NetEngine::RemoveFileDescriptor(IOHandler* pHandler)
 {
 	EPOLLEVENT ee = {0};
-	ee = pHandler->GetEvent()->ToEpollEvent();
+	ee = pHandler->GetEvent()->ToEpollEvent(EPOLLIN|EPOLLOUT|EPOLLERR);
 	int ret = epoll_ctl(m_iFD,EPOLL_CTL_DEL,pHandler->GetEvent()->GetFD(),&ee);
 	return ret;
 }
