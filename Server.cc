@@ -63,7 +63,7 @@ int Server::Proccess()
 		ClientSide* pClientSideHandler = new ClientSide(client);
 		pGlobalList->Append(pClientSideHandler);
 		pClientSideHandler->GetEvent()->SetNetEngine(GetEvent()->GetNetEngine());
-		pClientSideHandler->GetEvent()->AddToEngine();
+		pClientSideHandler->GetEvent()->AddToEngine(EPOLLIN|EPOLLOUT|EPOLLERR);
 		pClientSideHandler->SetMasterThread(GetMasterThread());
 	}
 	return TRUE;

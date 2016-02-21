@@ -13,10 +13,10 @@ class IOEvent
 		void SetFD(int);
 		int GetFD();
 		IOHandler* GetHandler();
-		struct epoll_event ToEpollEvent();
+		struct epoll_event ToEpollEvent(int);
 		NetEngine* GetNetEngine();
 		void SetNetEngine(NetEngine* pNetEngine);
-		int AddToEngine();
+		int AddToEngine(int);
 		int RemoveFromEngine();
 	private:
 		int m_iFD;

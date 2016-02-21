@@ -9,7 +9,7 @@ class NetEngine
 		int Init();
 		int SetSize(int);
 		int Loop();
-		int AddFileDescriptor(IOHandler*);
+		int AddFileDescriptor(IOHandler*,int);
 		int RemoveFileDescriptor(IOHandler*);
 	private:
 		int m_iFD;
