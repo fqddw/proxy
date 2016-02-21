@@ -5,9 +5,10 @@
 #include "MasterThread.h"
 #include "ReceiveProccessor.h"
 #include "SendProccessor.h"
+#include "Stream.h"
 #define HANDLER_IDLE 1
 #define HANDLER_RUNNING 2
-class IOHandler:public Task
+class IOHandler
 {
 	public:
 		IOHandler();
@@ -18,6 +19,9 @@ class IOHandler:public Task
 		int Run();
 		virtual int Proccess();
 		int Dispatch(int);
+		int ProccessReceive(Stream*);
+		int ProccessSend();
+		int ProccessConnectionReset();
 	private:
 		IOEvent* m_pEvent;
 		MasterThread* m_pMasterThread;
