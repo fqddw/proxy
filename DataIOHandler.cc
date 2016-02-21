@@ -29,14 +29,6 @@ int DataIOHandler::GetDataStream(Stream** pStream)
 			}
 			else
 			{
-				int sockfd = GetEvent()->GetFD();
-				GetEvent()->RemoveFromEngine();
-				if(pGlobalList->Delete(this))
-				{
-					delete this;
-				}
-
-				close(sockfd);
 				return FALSE;
 			}
 		}

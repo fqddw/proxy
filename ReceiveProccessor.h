@@ -11,6 +11,7 @@ class ReceiveProccessor : public Task
 	public:
 		int Run();
 	private:
+		IOHandler* m_pIOHandler;
 		int m_iState;
 };
 #endif
