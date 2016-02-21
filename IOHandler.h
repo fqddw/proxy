@@ -8,6 +8,8 @@
 #include "Stream.h"
 #define HANDLER_IDLE 1
 #define HANDLER_RUNNING 2
+class SendProccessor;
+class ReceiveProccessor;
 class IOHandler
 {
 	public:
