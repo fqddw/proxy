@@ -2,6 +2,7 @@
 #define __RECEIVEPROCCESSOR_H__
 #include "Task.h"
 #include "IOHandler.h"
+#include "Stream.h"
 class ReceiveProccessor : public Task
 {
 	public:
@@ -10,6 +11,8 @@ class ReceiveProccessor : public Task
 		~ReceiveProccessor();
 	public:
 		int Run();
+	private:
+		int GetDataStream(Stream** pStream);
 	private:
 		IOHandler* m_pIOHandler;
 		int m_iState;
