@@ -32,6 +32,12 @@ int ClientSide::Proccess()
 {
 		return FALSE;
 }
+int ClientSide::ProccessReceive(Stream* pStream)
+{
+		printf("%s",pStream->GetData());
+		return FALSE;
+}
+
 extern MemList<RemoteSide*>* g_pGlobalRemoteSidePool;
 
 RemoteSide* ClientSide::GetRemoteSide(InetSocketAddress* pAddr)

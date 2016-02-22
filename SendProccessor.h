@@ -8,9 +8,9 @@ class SendProccessor : public Task
 		SendProccessor();
 		SendProccessor(IOHandler*);
 		~SendProccessor();
-
 	private:
 		IOHandler* m_pIOHandler;
+		int m_iState;
 	public:
 		int Run();
 };

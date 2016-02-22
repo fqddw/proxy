@@ -2,7 +2,7 @@
 #define __REMOTESIDE_H__
 
 #include "CommonType.h"
-#include "DataIOHandler.h"
+#include "IOHandler.h"
 #include "ClientSide.h"
 #include "InetSocketAddress.h"
 #define STATUS_BLOCKING 1

@@ -1,6 +1,6 @@
 #ifndef __CLIENTSIDE_H__
 #define __CLIENTSIDE_H__
-#include "DataIOHandler.h"
+#include "IOHandler.h"
 #include "Stream.h"
 #include "RemoteSide.h"
 #include "HttpRequest.h"
@@ -16,6 +16,7 @@ class ClientSide : public IOHandler
 		ClientSide(int);
 		int Proccess();
 		RemoteSide* GetRemoteSide(InetSocketAddress*);
+		int ProccessReceive(Stream*);
 	private:
 		int m_iState;
 		int m_iTransState;

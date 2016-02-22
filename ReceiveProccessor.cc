@@ -14,9 +14,7 @@ int ReceiveProccessor::Run()
 {
 		Stream* pStream = NULL;
 		if(m_pIOHandler->IsServer()){
-				printf("HERE\n");
 		}else{
-				printf("RECIVE DATA HERE\n");
 				GetDataStream(&pStream);
 		}
 		m_pIOHandler->ProccessReceive(pStream);

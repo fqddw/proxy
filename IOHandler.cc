@@ -9,7 +9,6 @@ IOEvent* IOHandler::GetEvent()
 
 int IOHandler::Run()
 {
-	Proccess();
 	return TRUE;
 }
 
@@ -32,17 +31,14 @@ int IOHandler::Dispatch(int events)
 {
 	if(events & EPOLLIN)
 	{
-//			printf("show server epollin\n");
 		GetMasterThread()->InsertTask(m_pRecvProc);
 	}
 	if(events & EPOLLOUT)
 	{
-			printf("show server epollout\n");
 		GetMasterThread()->InsertTask(m_pSendProc);
 	}
 	if(events & EPOLLERR)
 	{
-			printf("show server epollerr\n");
 	}
 	return TRUE;
 }

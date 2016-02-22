@@ -37,7 +37,6 @@ int NetEngine::Loop()
 			IOHandler* pHandler = (IOHandler*)((ees+iterator)->data.ptr);
 			if(pGlobalList->Find(pHandler))
 			{
-				printf("NetEngine * %d\n",pHandler->IsServer());
 				pHandler->Dispatch((ees+iterator)->events);
 			}
 			else
