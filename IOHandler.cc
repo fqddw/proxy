@@ -39,6 +39,7 @@ int IOHandler::Dispatch(int events)
 	}
 	if(events & EPOLLERR)
 	{
+			printf("EPOLLERR\n");
 	}
 	return TRUE;
 }

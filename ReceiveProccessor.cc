@@ -14,10 +14,13 @@ int ReceiveProccessor::Run()
 {
 		Stream* pStream = NULL;
 		if(m_pIOHandler->IsServer()){
+				m_pIOHandler->ProccessReceive(pStream);
 		}else{
 				GetDataStream(&pStream);
+				if(pStream)
+						m_pIOHandler->ProccessReceive(pStream);
+
 		}
-		m_pIOHandler->ProccessReceive(pStream);
 		return 0;
 }
 
@@ -28,7 +31,6 @@ int ReceiveProccessor::GetDataStream(Stream** pStream)
 	{
 		char buffer[256*1024] = {'\0'};
 		int n = recv(m_pIOHandler->GetEvent()->GetFD(),buffer,256*1024,0);
-		printf("Recvlength %d\n",n);
 		if(n < 0)
 		{
 			if(errno == EAGAIN)

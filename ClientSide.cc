@@ -1,5 +1,4 @@
 #include "ClientSide.h"
-#include "ClientSideTask.h"
 #include "unistd.h"
 #include "stdio.h"
 #include "string.h"
@@ -10,11 +9,12 @@
 #include "InetSocketAddress.h"
 extern MemList<void*>* pGlobalList;
 #define HEADER_NOTFOUND 0
+#define HEADER_FOUND 1
 ClientSide::ClientSide():IOHandler(),m_pStream(new Stream())
 {
 	GetEvent()->SetIOHandler(this);
-	m_iState = CLIENT_STATE_IDLE;
-	m_iTransState = HEADER_NOTFOUND;
+	m_iState = HEADER_NOTFOUND;
+	m_iTransState = CLIENT_STATE_IDLE;
 }
 ClientSide::~ClientSide()
 {
@@ -22,10 +22,11 @@ ClientSide::~ClientSide()
 }
 ClientSide::ClientSide(int sockfd):IOHandler(),m_pStream(new Stream())
 {
-	m_iTransState = HEADER_NOTFOUND;
-	m_iState = CLIENT_STATE_IDLE;
+	m_iTransState = CLIENT_STATE_IDLE;
+	m_iState = HEADER_NOTFOUND;
 	GetEvent()->SetFD(sockfd);
 	GetEvent()->SetIOHandler(this);
+	m_pHttpRequest = new HttpRequest(m_pStream);
 }
 
 int ClientSide::Proccess()
@@ -34,7 +35,15 @@ int ClientSide::Proccess()
 }
 int ClientSide::ProccessReceive(Stream* pStream)
 {
-		printf("%s",pStream->GetData());
+		m_pStream->Append(pStream->GetData(),pStream->GetLength());
+		if(m_iState == HEADER_NOTFOUND)
+		{
+				if(m_pHttpRequest->IsHeaderEnd())
+				{
+						m_pHttpRequest->LoadHttpHeader();
+						m_iState = HEADER_FOUND;
+				}
+		}
 		return FALSE;
 }
 
