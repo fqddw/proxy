@@ -21,9 +21,10 @@ class IOHandler
 		int Run();
 		virtual int Proccess();
 		int Dispatch(int);
-		int ProccessReceive(Stream*);
-		int ProccessSend();
-		int ProccessConnectionReset();
+		virtual int ProccessReceive(Stream*);
+		virtual int ProccessSend();
+		virtual int ProccessConnectionReset();
+		virtual int IsServer();
 	private:
 		IOEvent* m_pEvent;
 		MasterThread* m_pMasterThread;

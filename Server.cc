@@ -35,9 +35,8 @@ int Server::Create()
 
 #include "MemList.h"
 extern MemList<void*>* pGlobalList;
-int Server::ProccessReceive()
+int Server::ProccessReceive(Stream* pStream)
 {
-printf("--ACCEPT\r\n");
 	struct sockaddr sa = {0};
 	socklen_t len = sizeof(sa);
 	int flag = TRUE;
@@ -64,9 +63,13 @@ printf("--ACCEPT\r\n");
 		ClientSide* pClientSideHandler = new ClientSide(client);
 		pGlobalList->Append(pClientSideHandler);
 		pClientSideHandler->GetEvent()->SetNetEngine(GetEvent()->GetNetEngine());
-		pClientSideHandler->GetEvent()->AddToEngine(EPOLLIN|EPOLLOUT|EPOLLERR);
+		pClientSideHandler->GetEvent()->AddToEngine(EPOLLIN|EPOLLOUT|EPOLLERR|EPOLLET);
 		pClientSideHandler->SetMasterThread(GetMasterThread());
 	}
 	return TRUE;
 }
 
+int Server::IsServer()
+{
+		return TRUE;
+}

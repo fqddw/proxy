@@ -46,3 +46,18 @@ int RemoteSide::Connect()
 	int ret = connect(m_iSocket,&sa,sizeof(sa));
 	return ret;
 }
+int RemoteSide::ProccessSend()
+{
+	return TRUE;
+}
+
+int RemoteSide::ProccessConnectionReset()
+{
+	return TRUE;
+}
+int RemoteSide::ProccessReceive(Stream* pStream)
+{
+	return TRUE;
+}
+
+

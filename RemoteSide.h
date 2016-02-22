@@ -7,7 +7,7 @@
 #include "InetSocketAddress.h"
 #define STATUS_BLOCKING 1
 class ClientSide;
-class RemoteSide:public DataIOHandler
+class RemoteSide:public IOHandler
 {
 	public:
 		RemoteSide();
@@ -21,6 +21,9 @@ class RemoteSide:public DataIOHandler
 		int Proccess();
 		int SetStatusBlocking();
 		InetSocketAddress* GetAddr();
+		virtual int ProccessReceive(Stream*);
+		virtual int ProccessSend();
+		virtual int ProccessConnectionReset();
 	private:
 		int m_iSocket;
 		int m_iState;

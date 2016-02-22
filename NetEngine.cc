@@ -37,6 +37,7 @@ int NetEngine::Loop()
 			IOHandler* pHandler = (IOHandler*)((ees+iterator)->data.ptr);
 			if(pGlobalList->Find(pHandler))
 			{
+				printf("NetEngine * %d\n",pHandler->IsServer());
 				pHandler->Dispatch((ees+iterator)->events);
 			}
 			else
@@ -48,7 +49,7 @@ int NetEngine::Loop()
 int NetEngine::RemoveFileDescriptor(IOHandler* pHandler)
 {
 	EPOLLEVENT ee = {0};
-	ee = pHandler->GetEvent()->ToEpollEvent(EPOLLIN|EPOLLOUT|EPOLLERR);
+	ee = pHandler->GetEvent()->ToEpollEvent(EPOLLIN|EPOLLOUT|EPOLLERR|EPOLLET);
 	int ret = epoll_ctl(m_iFD,EPOLL_CTL_DEL,pHandler->GetEvent()->GetFD(),&ee);
 	return ret;
 }
