@@ -10,7 +10,7 @@ class Server : public IOHandler
 		Server();
 		int Create();
 		void SetPort(int);
-		int Proccess();
+		int ProccessReceive();
 		int AddToNetEngine();
 	private:
 		int m_iPort;

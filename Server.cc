@@ -35,8 +35,9 @@ int Server::Create()
 
 #include "MemList.h"
 extern MemList<void*>* pGlobalList;
-int Server::Proccess()
+int Server::ProccessReceive()
 {
+printf("--ACCEPT\r\n");
 	struct sockaddr sa = {0};
 	socklen_t len = sizeof(sa);
 	int flag = TRUE;
