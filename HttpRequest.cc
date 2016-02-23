@@ -44,5 +44,6 @@ int HttpRequest::LoadHttpHeader()
 	pHeader->SetRequestLine(pLine);
 	HttpUrl* pHttpUrl = pLine->GetUrl();
 	pHttpUrl->Parse();
+	pHeader->SetUrl(pHttpUrl);
 	return TRUE;
 }

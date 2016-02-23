@@ -8,38 +8,41 @@ int HttpUrl::Parse()
 {
 	int offset = 0;
 	string strUrl = m_pUrl;
-	if(strUrl.substr(0,8) == string("https://"))
+	int iHostEndPos=0;
+	if(strUrl[0] != '/')
 	{
-		m_iScheme = PROTOCOL_HTTPS;
-		offset = 8;
+			if(strUrl.substr(0,8) == string("https://"))
+			{
+					m_iScheme = PROTOCOL_HTTPS;
+					offset = 8;
+			}
+			else
+			{
+					if(strUrl.substr(0,7) == string("http://"));
+					{
+							m_iScheme = PROTOCOL_HTTP;
+							offset = 7;
+					}
+			}
+			iHostEndPos = strUrl.find("/",offset);
+			string strHostFull = strUrl.substr(offset,iHostEndPos-offset);
+			int port = 80;
+			string strHost;
+			int portpos = strHostFull.find(":");
+			if(portpos != string::npos)
+			{
+					strHost = strHostFull.substr(0,portpos);
+					string strPort = strHostFull.substr(portpos+1);
+					port = atoi(strPort.c_str()); 
+			}
+			else
+			{
+					strHost = strHostFull;
+					port = 80;
+			}
+			m_iPort = port;
+			m_pHost = strHost;
 	}
-	else
-	{
-		if(strUrl.substr(0,7) == string("http://"));
-		{
-			m_iScheme = PROTOCOL_HTTP;
-			offset = 7;
-		}
-	}
-	int iHostEndPos = strUrl.find("/",offset);
-	string strHostFull = strUrl.substr(offset,iHostEndPos-offset);
-	int port = 80;
-	string strHost;
-	int portpos = strHostFull.find(":");
-	if(portpos != string::npos)
-	{
-		strHost = strHostFull.substr(0,portpos);
-		string strPort = strHostFull.substr(portpos+1);
-		port = atoi(strPort.c_str()); 
-	}
-	else
-	{
-		strHost = strHostFull;
-		port = 80;
-	}
-	m_iPort = port;
-	m_pHost = strHost;
-
 	m_pRequestString = strUrl.substr(iHostEndPos);
 	return TRUE;
 }
@@ -48,6 +51,7 @@ int HttpUrl::Parse()
 HttpUrl::HttpUrl(char* pUrl)
 {
 	m_pUrl = string(pUrl);
+	m_iPort = 80;
 }
 
 HttpUrl::HttpUrl()

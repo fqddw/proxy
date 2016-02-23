@@ -1,5 +1,5 @@
 #include "IOHandler.h"
-IOHandler::IOHandler():m_pEvent(new IOEvent),m_pSendProc(new SendProccessor(this)),m_pRecvProc(new ReceiveProccessor(this))
+IOHandler::IOHandler():m_pEvent(new IOEvent),m_pSendProc(new SendProccessor(this)),m_pRecvProc(new ReceiveProccessor(this)),m_bCanRead(TRUE)
 {
 }
 IOEvent* IOHandler::GetEvent()
@@ -31,7 +31,8 @@ int IOHandler::Dispatch(int events)
 {
 	if(events & EPOLLIN)
 	{
-		GetMasterThread()->InsertTask(m_pRecvProc);
+			if(m_bCanRead)
+					GetMasterThread()->InsertTask(m_pRecvProc);
 	}
 	if(events & EPOLLOUT)
 	{

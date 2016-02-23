@@ -42,8 +42,11 @@ int ClientSide::ProccessReceive(Stream* pStream)
 				{
 						m_pHttpRequest->LoadHttpHeader();
 						m_iState = HEADER_FOUND;
+						RemoteSide* pRemoteSide = GetRemoteSide(NULL);
+						m_pRemoteSide = pRemoteSide;
 				}
 		}
+
 		return FALSE;
 }
 

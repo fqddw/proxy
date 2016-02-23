@@ -30,6 +30,7 @@ class IOHandler
 		MasterThread* m_pMasterThread;
 		ReceiveProccessor* m_pRecvProc;
 		SendProccessor* m_pSendProc;
+		int m_bCanRead;
 };
 
 

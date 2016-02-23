@@ -20,6 +20,7 @@ class IOEvent
 		int RemoveFromEngine();
 	private:
 		int m_iFD;
+		int m_bCanWrite;
 		IOHandler* m_pHandler;
 		NetEngine* m_pEngine;
 };
