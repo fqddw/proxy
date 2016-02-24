@@ -1,7 +1,7 @@
 #include "NetUtils.h"
-InetSocketAddress* NetUtils::GetHostByName()
+#include "CommonType.h"
+InetSocketAddress* NetUtils::GetHostByName(char* pHostName,int port)
 {
-	char* pHostName = pHttpHeader->GetRequestLine()->GetUrl()->GetHost();
 	struct addrinfo hints;
 	hints.ai_family = AF_INET;
 	hints.ai_socktype = SOCK_STREAM;
@@ -14,7 +14,7 @@ InetSocketAddress* NetUtils::GetHostByName()
 		if(ptr->ai_family == AF_INET)
 		{
 			struct sockaddr_in *psa = (struct sockaddr_in*)ptr->ai_addr;
-			return new InetSocketAddress(psa->sin_addr.s_addr,htons(psa->sin_port));
+			return new InetSocketAddress(port,psa->sin_addr.s_addr);
 		}
 	}
 }

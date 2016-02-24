@@ -9,7 +9,7 @@ HttpRequestLine* HttpHeader::GetRequestLine()
 {
 	return m_pRequestLine;
 }
-char* HttpHeader::ToHeader()
+Stream* HttpHeader::ToHeader()
 {
 		return NULL;
 }
@@ -22,4 +22,8 @@ int HttpHeader::SetUrl(HttpUrl* pUrl)
 {
 		m_pUrl = pUrl;
 		return TRUE;
+}
+HttpUrl* HttpHeader::GetUrl()
+{
+		return m_pUrl;
 }

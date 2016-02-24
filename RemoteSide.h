@@ -20,6 +20,8 @@ class RemoteSide:public IOHandler
 		int Writeable();
 		int Proccess();
 		int SetStatusBlocking();
+		int OnCanSend();
+		Stream* GetSendStream();
 		InetSocketAddress* GetAddr();
 		virtual int ProccessReceive(Stream*);
 		virtual int ProccessSend();
@@ -28,6 +30,7 @@ class RemoteSide:public IOHandler
 		int m_iSocket;
 		int m_iState;
 		Stream* m_pStream;
+		Stream* m_pSendStream;
 		InetSocketAddress* m_pAddr;
 		ClientSide* m_pClientSide;
 };

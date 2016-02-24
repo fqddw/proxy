@@ -38,7 +38,6 @@ RemoteSide::RemoteSide(InetSocketAddress* pAddr)
 	m_iSocket = sockfd;
 	int cflags = fcntl(sockfd,F_GETFL,0);
 	fcntl(sockfd,F_SETFL, cflags|O_NONBLOCK);
-
 }
 int RemoteSide::Connect()
 {
@@ -60,4 +59,7 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 	return TRUE;
 }
 
-
+Stream* RemoteSide::GetSendStream()
+{
+		return m_pSendStream;
+}

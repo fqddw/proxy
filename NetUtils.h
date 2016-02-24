@@ -6,7 +6,6 @@ class NetUtils
 	public:
 		NetUtils();
 		~NetUtils();
-	private:
-		InetSocketAddress* GetHostByName(char*);
+		static InetSocketAddress* GetHostByName(char*,int);
 };
 #endif

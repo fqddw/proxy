@@ -7,6 +7,7 @@
 #include "MemList.h"
 #include "netdb.h"
 #include "InetSocketAddress.h"
+#include "NetUtils.h"
 extern MemList<void*>* pGlobalList;
 #define HEADER_NOTFOUND 0
 #define HEADER_FOUND 1
@@ -42,9 +43,28 @@ int ClientSide::ProccessReceive(Stream* pStream)
 				{
 						m_pHttpRequest->LoadHttpHeader();
 						m_iState = HEADER_FOUND;
-						RemoteSide* pRemoteSide = GetRemoteSide(NULL);
+						InetSocketAddress* pAddr = NetUtils::GetHostByName(m_pHttpRequest->GetHeader()->GetUrl()->GetHost(),m_pHttpRequest->GetHeader()->GetUrl()->GetPort());
+						RemoteSide* pRemoteSide = GetRemoteSide(pAddr);
 						m_pRemoteSide = pRemoteSide;
+						Stream* pHeaderStream = m_pHttpRequest->GetHeader()->ToHeader(); 
+						pRemoteSide->GetSendStream()->Append(pHeaderStream->GetData(),pHeaderStream->GetLength());
+						int hasBody = m_pHttpRequest->HasBody();
+						if(!hasBody)
+								m_iState == HEADER_NOTFOUND;
+						else
+						{
+								m_pHttpRequest->LoadBody();
+								Stream* pBodyStream = m_pHttpRequest->GetBody()->ToStream(pStream);
+								pRemoteSide->GetSendStream()->Append(pStream->GetData(),pBodyStream->GetLength());
+						}
 				}
+		}
+		else
+		{
+				if(m_pHttpRequest->GetBody()->IsEnd())
+						m_iState = HEADER_NOTFOUND;
+				m_pRemoteSide->GetSendStream()->Append(pStream->GetData(),pStream->GetLength());
+				m_pRemoteSide->WriteData();
 		}
 
 		return FALSE;
@@ -72,6 +92,9 @@ RemoteSide* ClientSide::GetRemoteSide(InetSocketAddress* pAddr)
 	if(!pRemoteSide)
 	{
 		pRemoteSide = new RemoteSide(pAddr);
+		pRemoteSide->GetEvent()->SetNetEngine(GetEvent()->GetNetEngine());
+		pRemoteSide->GetEvent()->AddToEngine(EPOLLIN|EPOLLOUT|EPOLLERR|EPOLLET|EPOLLRDHUP);
+		pRemoteSide->SetMasterThread(GetMasterThread());
 		int ret = pRemoteSide->Connect();
 	}
 

@@ -47,3 +47,15 @@ int HttpRequest::LoadHttpHeader()
 	pHeader->SetUrl(pHttpUrl);
 	return TRUE;
 }
+HttpBody* HttpRequest::GetBody()
+{
+		return m_pHttpBody;
+}
+int HttpRequest::LoadBody()
+{
+		return TRUE;
+}
+int HttpRequest::HasBody()
+{
+		return FALSE;
+}
