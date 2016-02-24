@@ -5,6 +5,7 @@
 #include "IOHandler.h"
 #include "ClientSide.h"
 #include "InetSocketAddress.h"
+#include "HttpResponse.h"
 #define STATUS_BLOCKING 1
 class ClientSide;
 class RemoteSide:public IOHandler
@@ -32,6 +33,7 @@ class RemoteSide:public IOHandler
 		Stream* m_pStream;
 		Stream* m_pSendStream;
 		InetSocketAddress* m_pAddr;
+		HttpResponse* m_pHttpResponse;
 		ClientSide* m_pClientSide;
 };
 #endif
