@@ -47,6 +47,7 @@ int RemoteSide::Connect()
 }
 int RemoteSide::ProccessSend()
 {
+		printf("Send\n");
 		int totalSend = 0;
 		int flag = TRUE;
 		while(flag)
@@ -79,10 +80,9 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 						m_pHttpResponse->LoadHttpHeader();
 						m_iState = HEADER_FOUND;
 						InetSocketAddress* pAddr = NetUtils::GetHostByName(m_pHttpResponse->GetHeader()->GetUrl()->GetHost(),m_pHttpResponse->GetHeader()->GetUrl()->GetPort());
-						RemoteSide* pRemoteSide = GetRemoteSide(pAddr);
-						m_pRemoteSide = pRemoteSide;
+						RemoteSide* pClientSide = m_pClientSide;
 						Stream* pHeaderStream = m_pHttpResponse->GetHeader()->ToHeader(); 
-						pRemoteSide->GetSendStream()->Append(pHeaderStream->GetData(),pHeaderStream->GetLength());
+						pClientSide->GetSendStream()->Append(pHeaderStream->GetData(),pHeaderStream->GetLength());
 						int hasBody = m_pHttpResponse->HasBody();
 						if(!hasBody)
 								m_iState == HEADER_NOTFOUND;
@@ -98,8 +98,8 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 		{
 				if(m_pHttpResponse->GetBody()->IsEnd())
 						m_iState = HEADER_NOTFOUND;
-				m_pRemoteSide->GetSendStream()->Append(pStream->GetData(),pStream->GetLength());
-				m_pRemoteSide->WriteData();
+				m_pClientSide->GetSendStream()->Append(pStream->GetData(),pStream->GetLength());
+				m_pClientSide->WriteData();
 		}
 
 	return TRUE;

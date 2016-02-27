@@ -6,5 +6,7 @@ class HttpResponse
 		public:
 				HttpResponse();
 				int IsHeaderEnd();
+				HttpHeader* GetHeader();
+				int LoadHttpHeader();
 };
 #endif
