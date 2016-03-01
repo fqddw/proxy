@@ -17,10 +17,13 @@ class ClientSide : public IOHandler
 		int Proccess();
 		RemoteSide* GetRemoteSide(InetSocketAddress*);
 		int ProccessReceive(Stream*);
+		Stream* GetSendStream();
+		int WriteData();
 	private:
 		int m_iState;
 		int m_iTransState;
 		Stream* m_pStream;
+		Stream* m_pSendStream;
 		HttpRequest* m_pHttpRequest;
 		RemoteSide* m_pRemoteSide;
 };

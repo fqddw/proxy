@@ -3,6 +3,9 @@
 #include "fcntl.h"
 #include "stdio.h"
 #include "errno.h"
+#include "NetUtils.h"
+#define HEADER_NOTFOUND 0
+#define HEADER_FOUND 1
 int RemoteSide::Proccess()
 {
 	return TRUE;
@@ -80,7 +83,7 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 						m_pHttpResponse->LoadHttpHeader();
 						m_iState = HEADER_FOUND;
 						InetSocketAddress* pAddr = NetUtils::GetHostByName(m_pHttpResponse->GetHeader()->GetUrl()->GetHost(),m_pHttpResponse->GetHeader()->GetUrl()->GetPort());
-						RemoteSide* pClientSide = m_pClientSide;
+						ClientSide* pClientSide = m_pClientSide;
 						Stream* pHeaderStream = m_pHttpResponse->GetHeader()->ToHeader(); 
 						pClientSide->GetSendStream()->Append(pHeaderStream->GetData(),pHeaderStream->GetLength());
 						int hasBody = m_pHttpResponse->HasBody();
@@ -90,7 +93,7 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 						{
 								m_pHttpResponse->LoadBody();
 								Stream* pBodyStream = m_pHttpResponse->GetBody()->ToStream(pStream);
-								pRemoteSide->GetSendStream()->Append(pStream->GetData(),pBodyStream->GetLength());
+								pClientSide->GetSendStream()->Append(pStream->GetData(),pBodyStream->GetLength());
 						}
 				}
 		}

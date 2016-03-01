@@ -38,3 +38,12 @@ Stream::~Stream()
 	}
 	m_iLength = 0;
 }
+int Stream::Sub(int offset)
+{
+	int newLength = m_iLength - offset;
+	char* pNewData = new char[newLength];
+	memcpy(pNewData, m_pData+offset, newLength);
+	delete m_pData;
+	m_pData = pNewData;
+	return TRUE;
+}

@@ -8,6 +8,7 @@ class Stream
 		int GetLength();
 		char* GetData();
 		int Append(char*,int);
+		int Sub(int);
 	private:
 		char* m_pData;
 		int m_iLength;

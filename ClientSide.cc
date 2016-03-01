@@ -102,3 +102,11 @@ RemoteSide* ClientSide::GetRemoteSide(InetSocketAddress* pAddr)
 	return pRemoteSide;
 }
 
+Stream* ClientSide::GetSendStream(){
+	return m_pSendStream;
+}
+
+int ClientSide::WriteData()
+{
+	return 0;
+}
