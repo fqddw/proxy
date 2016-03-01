@@ -64,7 +64,7 @@ int ClientSide::ProccessReceive(Stream* pStream)
 				if(m_pHttpRequest->GetBody()->IsEnd())
 						m_iState = HEADER_NOTFOUND;
 				m_pRemoteSide->GetSendStream()->Append(pStream->GetData(),pStream->GetLength());
-				m_pRemoteSide->WriteData();
+				m_pRemoteSide->ProccessSend();
 		}
 
 		return FALSE;
@@ -106,7 +106,3 @@ Stream* ClientSide::GetSendStream(){
 	return m_pSendStream;
 }
 
-int ClientSide::WriteData()
-{
-	return 0;
-}

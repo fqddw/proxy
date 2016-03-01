@@ -16,11 +16,6 @@ int RemoteSide::Writeable()
 	return TRUE;
 }
 
-int RemoteSide::WriteData()
-{
-	return TRUE;
-}
-
 int RemoteSide::SetStatusBlocking()
 {
 	m_iState = STATUS_BLOCKING; 
@@ -102,7 +97,7 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 				if(m_pHttpResponse->GetBody()->IsEnd())
 						m_iState = HEADER_NOTFOUND;
 				m_pClientSide->GetSendStream()->Append(pStream->GetData(),pStream->GetLength());
-				m_pClientSide->WriteData();
+				m_pClientSide->ProccessSend();
 		}
 
 	return TRUE;

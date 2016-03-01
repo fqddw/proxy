@@ -17,7 +17,6 @@ class RemoteSide:public IOHandler
 		int Connect();
 		int GetState();
 		int SetState(int);
-		int WriteData();
 		int Writeable();
 		int Proccess();
 		int SetStatusBlocking();

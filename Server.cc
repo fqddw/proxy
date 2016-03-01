@@ -71,5 +71,5 @@ int Server::ProccessReceive(Stream* pStream)
 
 int Server::IsServer()
 {
-		return TRUE;
+	return TRUE;
 }
