@@ -1,3 +1,5 @@
+#ifndef __MEMLIST_H__
+#define __MEMLIST_H__
 #include "CriticalSection.h"
 template<typename T> class MemNode
 {
@@ -170,3 +172,4 @@ MemNode<T>* MemList<T>::GetHead()
 {
 	return m_pHead;
 }
+#endif

@@ -31,8 +31,10 @@ int IOHandler::Dispatch(int events)
 {
 	if(events & EPOLLIN)
 	{
-			if(m_bCanRead)
-					GetMasterThread()->InsertTask(m_pRecvProc);
+		if(m_bCanRead)
+		{
+			GetMasterThread()->InsertTask(m_pRecvProc);
+		}
 	}
 	if(events & EPOLLOUT)
 	{

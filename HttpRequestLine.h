@@ -1,3 +1,5 @@
+#ifndef __HTTP_REQUEST_LINE_H__
+#define __HTTP_REQUEST_LINE_H__
 #include "HttpUrl.h"
 
 class HttpRequestLine
@@ -27,4 +29,4 @@ class HttpRequestLine
 class HttpProxyRequestLine
 {
 };
-
+#endif

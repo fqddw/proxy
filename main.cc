@@ -98,7 +98,7 @@ int ServerStartTask::Run()
 	pServer->SetPort(pConfig->GetPort());
 	pServer->SetMasterThread(m_pMasterThread);
 	pServer->Create();
-	pServer->GetEvent()->AddToEngine(EPOLLIN|EPOLLOUT|EPOLLERR);
+	pServer->GetEvent()->AddToEngine(EPOLLET|EPOLLIN|EPOLLOUT|EPOLLERR);
 	return TRUE;
 }
 

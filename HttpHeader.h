@@ -1,12 +1,11 @@
-#ifndef __HTTP_HEADER__
-#define __HTTP_HEADER__
+#ifndef __HTTP_HEADER_H__
+#define __HTTP_HEADER_H__
 #include "HttpRequestLine.h"
 #include "string"
 #include "Stream.h"
+#include "MemList.h"
 using namespace std;
-class HttpKeyValueList
-{
-};
+typedef MemList<pair<string,string> > HttpKeyValueList;
 class HttpHeader
 {
 	public:
