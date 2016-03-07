@@ -58,5 +58,6 @@ int HttpRequest::LoadBody()
 }
 int HttpRequest::HasBody()
 {
+	m_pHttpHeader->GetMethod();
 		return FALSE;
 }

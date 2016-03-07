@@ -1,7 +1,7 @@
 #ifndef __HTTP_REQUEST_LINE_H__
 #define __HTTP_REQUEST_LINE_H__
 #include "HttpUrl.h"
-
+#include "HttpRequestMethod.h"
 class HttpRequestLine
 {
 	public:
@@ -14,6 +14,7 @@ class HttpRequestLine
 		int FromString(char*);
 		int AppendString(char*,int);
 		int GetMethodId(char*);
+		int GetMethod();
 		HttpUrl* GetUrl();
 		int GetMajorVer();
 		int GetSeniorVer();

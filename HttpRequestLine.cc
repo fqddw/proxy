@@ -113,6 +113,10 @@ int HttpRequestLine::GetMethodId(char* pMethod)
 	
 }
 
+int HttpRequestLine::GetMethod()
+{
+	return m_iMethod;
+}
 int HttpRequestLine::AppendString(char* pString, int iLength)
 {
 	char* pNewString = new char[m_iStringLength+iLength+1];

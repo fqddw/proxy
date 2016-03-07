@@ -15,6 +15,7 @@ class HttpHeader
 		char* ToProxyHeader();
 		int SetUrl(HttpUrl*);
 		HttpUrl* GetUrl();
+		int GetMethod();
 	private:
 		HttpRequestLine* m_pRequestLine;
 		HttpKeyValueList* m_pKeyValueList;

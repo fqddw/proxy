@@ -27,3 +27,9 @@ HttpUrl* HttpHeader::GetUrl()
 {
 		return m_pUrl;
 }
+
+int HttpHeader::GetMethod()
+{
+	return
+	m_pRequestLine->GetMethod();
+}
