@@ -71,7 +71,6 @@ int RemoteSide::ProccessConnectionReset()
 int RemoteSide::ProccessReceive(Stream* pStream)
 {
 		m_pStream->Append(pStream->GetData(),pStream->GetLength());
-		printf("%s\n",pStream->GetData());
 		if(m_iState == HEADER_NOTFOUND)
 		{
 				if(m_pHttpResponse->IsHeaderEnd())
