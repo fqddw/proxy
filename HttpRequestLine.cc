@@ -110,7 +110,17 @@ int HttpRequestLine::Parse()
 
 int HttpRequestLine::GetMethodId(char* pMethod)
 {
-	
+	if(strlen(pMethod) == 3)
+	{
+		if(pMethod[0] == 'G' && pMethod[1] == 'E' && pMethod[2] == 'T')
+			return HTTP_METHOD_GET;
+	}
+	if(strlen(pMethod) == 4)
+	{
+		if(pMethod[0] == 'P' && pMethod[1] == 'O' && pMethod[2] == 'S' && pMethod[3] == 'T')
+			return HTTP_METHOD_POST;
+	}
+	return HTTP_METHOD_GET;
 }
 
 int HttpRequestLine::GetMethod()

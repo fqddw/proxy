@@ -26,16 +26,19 @@ InetSocketAddress* RemoteSide::GetAddr()
 {
 	return m_pAddr;
 }
-RemoteSide::RemoteSide()
+RemoteSide::RemoteSide():IOHandler(),m_pSendStream(new Stream)
 {
+	GetEvent()->SetIOHandler(this);
 }
-RemoteSide::RemoteSide(InetSocketAddress* pAddr)
+RemoteSide::RemoteSide(InetSocketAddress* pAddr):IOHandler(),m_pSendStream(new Stream)
 {
+	GetEvent()->SetIOHandler(this);
 	m_pAddr = pAddr;
 	int sockfd = socket(AF_INET,SOCK_STREAM,0);
 	m_iSocket = sockfd;
 	int cflags = fcntl(sockfd,F_GETFL,0);
 	fcntl(sockfd,F_SETFL, cflags|O_NONBLOCK);
+	GetEvent()->SetFD(sockfd);
 }
 int RemoteSide::Connect()
 {
@@ -46,6 +49,8 @@ int RemoteSide::Connect()
 int RemoteSide::ProccessSend()
 {
 		printf("Send\n");
+		int nSent = send(GetEvent()->GetFD(),m_pSendStream->GetData(),m_pSendStream->GetLength(),0);
+		return 0;
 		int totalSend = 0;
 		int flag = TRUE;
 		while(flag)

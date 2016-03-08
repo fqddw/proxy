@@ -38,7 +38,7 @@ int IOHandler::Dispatch(int events)
 	}
 	if(events & EPOLLOUT)
 	{
-		printf("EPOLLOUT\n");
+		printf("FD %d\n",GetEvent()->GetFD());
 		GetMasterThread()->InsertTask(m_pSendProc);
 	}
 	if(events & EPOLLERR)

@@ -36,8 +36,10 @@ int HttpRequest::LoadHttpHeader()
 	m_pHttpHeader = pHeader;
 	string String_Stream;
 	String_Stream.assign(m_pStream->GetData(),m_pStream->GetLength());
-	string strHeaderString = String_Stream.substr(0,String_Stream.find("\r\n\r\n"));
-	string stringHttpRequestLine = strHeaderString.substr(0,strHeaderString.find("\r\n"));
+	int posHeaderEnd = String_Stream.find("\r\n\r\n");
+	string strHeaderString = String_Stream.substr(0,posHeaderEnd);
+	int nLineEnd = strHeaderString.find("\r\n");
+	string stringHttpRequestLine = strHeaderString.substr(0,nLineEnd);
 	HttpRequestLine* pLine = new HttpRequestLine();
 	pLine->AppendString((char*)stringHttpRequestLine.data(),stringHttpRequestLine.size());
 	pLine->Parse();
@@ -46,6 +48,8 @@ int HttpRequest::LoadHttpHeader()
 	pHttpUrl->Parse();
 	pHeader->SetUrl(pHttpUrl);
 
+	int nInfoBegin = nLineEnd + 2;
+	
 	return TRUE;
 }
 HttpBody* HttpRequest::GetBody()
@@ -58,6 +62,6 @@ int HttpRequest::LoadBody()
 }
 int HttpRequest::HasBody()
 {
-	m_pHttpHeader->GetMethod();
+	//m_pHttpHeader->GetMethod();
 		return FALSE;
 }

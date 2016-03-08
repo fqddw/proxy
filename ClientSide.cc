@@ -36,6 +36,7 @@ int ClientSide::Proccess()
 }
 int ClientSide::ProccessReceive(Stream* pStream)
 {
+	if(!pStream)return 0;
 		m_pStream->Append(pStream->GetData(),pStream->GetLength());
 
 		if(m_iState == HEADER_NOTFOUND)
@@ -45,8 +46,11 @@ int ClientSide::ProccessReceive(Stream* pStream)
 				m_pHttpRequest->LoadHttpHeader();
 				m_iState = HEADER_FOUND;
 				InetSocketAddress* pAddr = NetUtils::GetHostByName(m_pHttpRequest->GetHeader()->GetUrl()->GetHost(),m_pHttpRequest->GetHeader()->GetUrl()->GetPort());
+
 				RemoteSide* pRemoteSide = GetRemoteSide(pAddr);
 				m_pRemoteSide = pRemoteSide;
+				pRemoteSide->GetSendStream()->Append(pStream->GetData(),pStream->GetLength());
+				return 0;
 				Stream* pHeaderStream = m_pHttpRequest->GetHeader()->ToHeader(); 
 				pRemoteSide->GetSendStream()->Append(pHeaderStream->GetData(),pHeaderStream->GetLength());
 				int hasBody = m_pHttpRequest->HasBody();

@@ -35,7 +35,7 @@ int NetEngine::Loop()
 		for(;iterator < nfds; iterator++)
 		{
 			IOHandler* pHandler = (IOHandler*)((ees+iterator)->data.ptr);
-			if(pGlobalList->Find(pHandler))
+			if(1)//pGlobalList->Find(pHandler))
 			{
 				pHandler->Dispatch((ees+iterator)->events);
 			}
