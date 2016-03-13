@@ -33,3 +33,9 @@ int HttpHeader::GetMethod()
 	return
 	m_pRequestLine->GetMethod();
 }
+
+int HttpHeader::SetKeyValueList(HttpKeyValueList* pKeyValueList)
+{
+	m_pKeyValueList = pKeyValueList;
+	return TRUE;
+}

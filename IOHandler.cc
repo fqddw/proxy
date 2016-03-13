@@ -31,6 +31,7 @@ int IOHandler::Dispatch(int events)
 {
 	if(events & EPOLLIN)
 	{
+		printf("EPOLLIN\n");
 		if(m_bCanRead)
 		{
 			GetMasterThread()->InsertTask(m_pRecvProc);
@@ -38,7 +39,7 @@ int IOHandler::Dispatch(int events)
 	}
 	if(events & EPOLLOUT)
 	{
-		printf("FD %d\n",GetEvent()->GetFD());
+		printf("EPOLLOUT\n");
 		GetMasterThread()->InsertTask(m_pSendProc);
 	}
 	if(events & EPOLLERR)

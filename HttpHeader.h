@@ -5,7 +5,7 @@
 #include "Stream.h"
 #include "MemList.h"
 using namespace std;
-typedef MemList<pair<string,string> > HttpKeyValueList;
+typedef MemList<pair<string,string>* > HttpKeyValueList;
 class HttpHeader
 {
 	public:
@@ -16,6 +16,7 @@ class HttpHeader
 		int SetUrl(HttpUrl*);
 		HttpUrl* GetUrl();
 		int GetMethod();
+		int SetKeyValueList(HttpKeyValueList*);
 	private:
 		HttpRequestLine* m_pRequestLine;
 		HttpKeyValueList* m_pKeyValueList;

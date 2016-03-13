@@ -48,8 +48,12 @@ int RemoteSide::Connect()
 }
 int RemoteSide::ProccessSend()
 {
-		printf("Send\n");
+	if(m_pSendStream->GetLength()>0)
+	{
 		int nSent = send(GetEvent()->GetFD(),m_pSendStream->GetData(),m_pSendStream->GetLength(),0);
+		m_pSendStream->Sub(nSent);
+		printf("Send Length %d\n",m_pSendStream->GetLength());
+	}
 		return 0;
 		int totalSend = 0;
 		int flag = TRUE;
@@ -75,6 +79,7 @@ int RemoteSide::ProccessConnectionReset()
 }
 int RemoteSide::ProccessReceive(Stream* pStream)
 {
+		printf("%s\n",pStream->GetData());return 0;
 		m_pStream->Append(pStream->GetData(),pStream->GetLength());
 		if(m_iState == HEADER_NOTFOUND)
 		{
@@ -111,4 +116,10 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 Stream* RemoteSide::GetSendStream()
 {
 		return m_pSendStream;
+}
+
+int RemoteSide::SetSendStream(Stream* pStream)
+{
+	m_pSendStream = pStream;
+	return TRUE;
 }

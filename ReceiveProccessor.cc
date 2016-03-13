@@ -61,6 +61,7 @@ int ReceiveProccessor::GetDataStream(Stream** pStream)
 		if(*pStream == NULL)
 			*pStream = new Stream();
 		(*pStream)->Append(buffer,n);
+		printf("Receive StreamLength %d",n);
 
 	}
 	return TRUE;

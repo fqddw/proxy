@@ -26,6 +26,7 @@ class RemoteSide:public IOHandler
 		virtual int ProccessReceive(Stream*);
 		virtual int ProccessSend();
 		virtual int ProccessConnectionReset();
+		int SetSendStream(Stream*);
 	private:
 		int m_iSocket;
 		int m_iState;

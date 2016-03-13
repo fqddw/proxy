@@ -48,7 +48,28 @@ int HttpRequest::LoadHttpHeader()
 	pHttpUrl->Parse();
 	pHeader->SetUrl(pHttpUrl);
 
-	int nInfoBegin = nLineEnd + 2;
+	HttpKeyValueList* pKeyValueList = new HttpKeyValueList();
+	pHeader->SetKeyValueList(pKeyValueList);
+	int curPos = String_Stream.find("\r\n") + 2;
+	while(curPos < posHeaderEnd)
+	{
+		curPos = String_Stream.find("\r\n",curPos);
+		if(curPos == posHeaderEnd)
+		{
+			return TRUE;
+		}
+		int start = curPos + 2;
+		int nKeyPosStart = start;
+		int nKeyPosEnd = String_Stream.find(":",nKeyPosStart);
+		string key = String_Stream.substr(nKeyPosStart,nKeyPosEnd-nKeyPosStart);
+		start = nKeyPosEnd+1;
+		int nValueStart = String_Stream.find_first_not_of(" ",start);
+		int nValueEnd = String_Stream.find("\r\n",nValueStart);
+		string value = String_Stream.substr(nValueStart,nValueEnd-nValueStart);
+		pair<string,string> *keyvalue = new pair<string,string>(key,value);
+		pKeyValueList->Append(keyvalue);
+		curPos = curPos + 2;
+	}
 	
 	return TRUE;
 }
