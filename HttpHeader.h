@@ -35,6 +35,6 @@ class HttpResponseHeader : public HttpHeader
 		HttpResponseine* GetResponseLine();
 		Stream* ToHeader();
 	private:
-		HttpResponseHeader* m_pHttpResponseLine*;
+		HttpResponseLine* m_pHttpResponseLine;
 };
 #endif

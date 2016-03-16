@@ -34,6 +34,8 @@ HttpBody* HttpResponse::GetBody()
 #define PS_SPACE_BEFORE_STATUS_TEXT 3
 #define PS_STATUS_TEXT 4
 #define PS_MAJORVER 5
+#define PS_BEFORE_MAJORVER 6
+#define PS_BEFORE_SENIORVER 7
 int HttpResponse::LoadHttpHeader()
 {
 	char* pData = m_pStream->GetData();
