@@ -32,7 +32,7 @@ HttpHeader* HttpRequest::GetHeader()
 }
 int HttpRequest::LoadHttpHeader()
 {
-	HttpHeader* pHeader = new HttpHeader();
+	HttpRequestHeader* pHeader = new HttpRequestHeader();
 	m_pHttpHeader = pHeader;
 	string String_Stream;
 	String_Stream.assign(m_pStream->GetData(),m_pStream->GetLength());

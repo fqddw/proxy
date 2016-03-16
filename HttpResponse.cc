@@ -68,9 +68,10 @@ int HttpResponse::LoadHttpHeader()
 				if(pData[it] == '.')
 				{
 					int len = it-nStart;
-					char* pMajorVer = new char[len];
-					pMajorVer[len-1]='\0';
-
+					char* pMajorVer = new char[len+1];
+					pMajorVer[len]='\0';
+					memcpy(pMajorVer,pData+nStart,len);
+					int nMajorVer = atoi(pMajorVer);
 					state = PS_BEFORE_SENIORVER;
 				}
 			}

@@ -1,11 +1,11 @@
 #include "HttpHeader.h"
 #include "CommonType.h"
-int HttpHeader::SetRequestLine(HttpRequestLine* pHttpRequestLine)
+int HttpRequestHeader::SetRequestLine(HttpRequestLine* pHttpRequestLine)
 {
 	m_pRequestLine = pHttpRequestLine;
 	return TRUE;
 }
-HttpRequestLine* HttpHeader::GetRequestLine()
+HttpRequestLine* HttpRequestHeader::GetRequestLine()
 {
 	return m_pRequestLine;
 }
@@ -18,17 +18,17 @@ char* HttpHeader::ToProxyHeader()
 {
 		return NULL;
 }
-int HttpHeader::SetUrl(HttpUrl* pUrl)
+int HttpRequestHeader::SetUrl(HttpUrl* pUrl)
 {
 		m_pUrl = pUrl;
 		return TRUE;
 }
-HttpUrl* HttpHeader::GetUrl()
+HttpUrl* HttpRequestHeader::GetUrl()
 {
 		return m_pUrl;
 }
 
-int HttpHeader::GetMethod()
+int HttpRequestHeader::GetMethod()
 {
 	return
 	m_pRequestLine->GetMethod();

@@ -10,16 +10,31 @@ class HttpHeader
 {
 	public:
 		int SetRequestLine(HttpRequestLine*);
-		HttpRequestLine* GetRequestLine();
-		Stream* ToHeader();
+		virtual Stream* ToHeader() = 0;
 		char* ToProxyHeader();
-		int SetUrl(HttpUrl*);
-		HttpUrl* GetUrl();
-		int GetMethod();
 		int SetKeyValueList(HttpKeyValueList*);
 	private:
-		HttpRequestLine* m_pRequestLine;
 		HttpKeyValueList* m_pKeyValueList;
+};
+
+class HttpRequestHeader : public HttpHeader
+{
+	public:
+		HttpUrl* GetUrl();
+		int GetMethod();
+		HttpRequestLine* GetRequestLine();
+		int SetUrl(HttpUrl*);
+	private:
+		HttpRequestLine* m_pRequestLine;
 		HttpUrl* m_pUrl;
+};
+
+class HttpResponseHeader : public HttpHeader
+{
+	public:
+		HttpResponseine* GetResponseLine();
+		Stream* ToHeader();
+	private:
+		HttpResponseHeader* m_pHttpResponseLine*;
 };
 #endif
