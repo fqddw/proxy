@@ -1,4 +1,8 @@
 #include "HttpResponse.h"
+#include "stdio.h"
+#include "unistd.h"
+#include "memory.h"
+#include "stdlib.h"
 HttpResponse::HttpResponse()
 {
 }
@@ -43,7 +47,7 @@ int HttpResponse::LoadHttpHeader()
 	int state = PS_PROTOCOL;
 	if(!m_pHeader)
 		m_pHeader = new HttpHeader();
-	int pStart = 0;
+	int nStart = 0;
 	while(1)
 	{
 		for(;it <m_pStream->GetLength();it++)

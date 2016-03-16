@@ -1,6 +1,7 @@
 #ifndef __HTTP_HEADER_H__
 #define __HTTP_HEADER_H__
 #include "HttpRequestLine.h"
+#include "HttpResponseLine.h"
 #include "string"
 #include "Stream.h"
 #include "MemList.h"
@@ -32,7 +33,7 @@ class HttpRequestHeader : public HttpHeader
 class HttpResponseHeader : public HttpHeader
 {
 	public:
-		HttpResponseine* GetResponseLine();
+		HttpResponseLine* GetResponseLine();
 		Stream* ToHeader();
 	private:
 		HttpResponseLine* m_pHttpResponseLine;
