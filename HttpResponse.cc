@@ -1,4 +1,11 @@
 #include "HttpResponse.h"
+HttpResponse::HttpResponse()
+{
+}
+HttpResponse::HttpResponse(Stream* pStream):m_pStream(pStream),m_pHeader(NULL)
+{
+}
+
 HttpHeader* HttpResponse::GetHeader()
 {
 	return m_pHeader;
@@ -21,9 +28,94 @@ HttpBody* HttpResponse::GetBody()
 {
 	return m_pBody;
 }
-
+#define PS_PROTOCOL 0
+#define PS_SPACE_BEFORE_CODE 1
+#define PS_CODE 2
+#define PS_SPACE_BEFORE_STATUS_TEXT 3
+#define PS_STATUS_TEXT 4
+#define PS_MAJORVER 5
 int HttpResponse::LoadHttpHeader()
 {
+	char* pData = m_pStream->GetData();
+	int it = 0;
+	int state = PS_PROTOCOL;
+	if(!m_pHeader)
+		m_pHeader = new HttpHeader();
+	int pStart = 0;
+	while(1)
+	{
+		for(;it <m_pStream->GetLength();it++)
+		{
+			if(state == PS_PROTOCOL)
+			{
+				if(pData[it] == '/')
+				{
+					state = PS_BEFORE_MAJORVER;
+				}
+			}
+
+			if(state == PS_BEFORE_MAJORVER)
+			{
+				if(pData[it] != '/')
+				{
+					nStart = it;
+					state = PS_MAJORVER;
+				}
+			}
+
+			if(state == PS_MAJORVER)
+			{
+				if(pData[it] == '.')
+				{
+					int len = it-nStart;
+					char* pMajorVer = new char[len];
+					pMajorVer[len-1]='\0';
+
+					state = PS_BEFORE_SENIORVER;
+				}
+			}
+			if(state == PS_BEFORE_SENIORVER)
+			{
+				if(pData[it] != ' ')
+				{
+					char* 
+					state = PS_SPACE_BEFORE_CODE;
+				}
+			}
+
+			if(state == PS_SPACE_BEFORE_CODE)
+			{
+				if(pData[it] != ' ')
+				{
+					state = PS_CODE;
+				}
+			}
+			if(state == PS_CODE)
+			{
+				if(pData[it] == ' ')
+				{
+					state = PS_SPACE_BEFORE_STATUS_TEXT;
+				}
+				else
+				{
+
+				}
+			}
+			if(state == PS_SPACE_BEFORE_STATUS_TEXT)
+			{
+				if(pData[it] != ' ')
+				{
+					state = PS_STATUS_TEXT;
+				}
+			}
+			if(state == PS_STATUS_TEXT)
+			{
+				if(pData[it] == '\r')
+				{
+				}
+			}
+		}
+	}
 	return 0;
 }
 

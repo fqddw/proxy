@@ -7,6 +7,7 @@ class HttpResponse
 {
 		public:
 				HttpResponse();
+				HttpResponse(Stream*);
 				int IsHeaderEnd();
 				HttpHeader* GetHeader();
 				int LoadHttpHeader();

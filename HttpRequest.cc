@@ -83,6 +83,16 @@ int HttpRequest::LoadBody()
 }
 int HttpRequest::HasBody()
 {
-	//m_pHttpHeader->GetMethod();
+	int nMethod = m_pHttpHeader->GetMethod();
+	if(nMethod == HTTP_METHOD_GET)
+	{
 		return FALSE;
+	}
+
+	if(nMethod == HTTP_METHOD_POST)
+	{
+		return TRUE;
+	}
+
+	return FALSE;
 }

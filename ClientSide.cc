@@ -37,7 +37,6 @@ int ClientSide::Proccess()
 int ClientSide::ProccessReceive(Stream* pStream)
 {
 	if(!pStream)return 0;
-	printf("Receive HttpHeader %d\n",pStream->GetLength());
 		m_pStream->Append(pStream->GetData(),pStream->GetLength());
 
 		if(m_iState == HEADER_NOTFOUND)

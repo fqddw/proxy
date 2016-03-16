@@ -26,11 +26,11 @@ InetSocketAddress* RemoteSide::GetAddr()
 {
 	return m_pAddr;
 }
-RemoteSide::RemoteSide():IOHandler(),m_pSendStream(new Stream)
+RemoteSide::RemoteSide():IOHandler(),m_pSendStream(new Stream),m_pStream(new Stream)
 {
 	GetEvent()->SetIOHandler(this);
 }
-RemoteSide::RemoteSide(InetSocketAddress* pAddr):IOHandler(),m_pSendStream(new Stream)
+RemoteSide::RemoteSide(InetSocketAddress* pAddr):IOHandler(),m_pSendStream(new Stream),m_pStream(new Stream)
 {
 	GetEvent()->SetIOHandler(this);
 	m_pAddr = pAddr;
@@ -39,6 +39,7 @@ RemoteSide::RemoteSide(InetSocketAddress* pAddr):IOHandler(),m_pSendStream(new S
 	int cflags = fcntl(sockfd,F_GETFL,0);
 	fcntl(sockfd,F_SETFL, cflags|O_NONBLOCK);
 	GetEvent()->SetFD(sockfd);
+	m_pHttpResponse = new HttpResponse(m_pStream);
 }
 int RemoteSide::Connect()
 {
@@ -52,7 +53,6 @@ int RemoteSide::ProccessSend()
 	{
 		int nSent = send(GetEvent()->GetFD(),m_pSendStream->GetData(),m_pSendStream->GetLength(),0);
 		m_pSendStream->Sub(nSent);
-		printf("Send Length %d\n",m_pSendStream->GetLength());
 	}
 		return 0;
 		int totalSend = 0;
@@ -79,13 +79,15 @@ int RemoteSide::ProccessConnectionReset()
 }
 int RemoteSide::ProccessReceive(Stream* pStream)
 {
-		printf("%s\n",pStream->GetData());return 0;
 		m_pStream->Append(pStream->GetData(),pStream->GetLength());
+		m_pHttpResponse->LoadHttpHeader();
+		return TRUE;
 		if(m_iState == HEADER_NOTFOUND)
 		{
 				if(m_pHttpResponse->IsHeaderEnd())
 				{
 						m_pHttpResponse->LoadHttpHeader();
+						return TRUE;
 						m_iState = HEADER_FOUND;
 						InetSocketAddress* pAddr = NetUtils::GetHostByName(m_pHttpResponse->GetHeader()->GetUrl()->GetHost(),m_pHttpResponse->GetHeader()->GetUrl()->GetPort());
 						ClientSide* pClientSide = m_pClientSide;
