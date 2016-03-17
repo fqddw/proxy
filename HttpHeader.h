@@ -10,9 +10,7 @@ typedef MemList<pair<string,string>* > HttpKeyValueList;
 class HttpHeader
 {
 	public:
-		int SetRequestLine(HttpRequestLine*);
 		virtual Stream* ToHeader() = 0;
-		char* ToProxyHeader();
 		int SetKeyValueList(HttpKeyValueList*);
 	private:
 		HttpKeyValueList* m_pKeyValueList;
@@ -23,6 +21,8 @@ class HttpRequestHeader : public HttpHeader
 	public:
 		HttpUrl* GetUrl();
 		int GetMethod();
+		Stream* ToHeader();
+		int SetRequestLine(HttpRequestLine*);
 		HttpRequestLine* GetRequestLine();
 		int SetUrl(HttpUrl*);
 	private:
@@ -35,6 +35,7 @@ class HttpResponseHeader : public HttpHeader
 	public:
 		HttpResponseLine* GetResponseLine();
 		Stream* ToHeader();
+		int SetResponseLine(HttpResponseLine*);
 	private:
 		HttpResponseLine* m_pHttpResponseLine;
 };

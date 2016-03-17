@@ -14,10 +14,6 @@ Stream* HttpHeader::ToHeader()
 		return NULL;
 }
 
-char* HttpHeader::ToProxyHeader()
-{
-		return NULL;
-}
 int HttpRequestHeader::SetUrl(HttpUrl* pUrl)
 {
 		m_pUrl = pUrl;
@@ -38,4 +34,22 @@ int HttpHeader::SetKeyValueList(HttpKeyValueList* pKeyValueList)
 {
 	m_pKeyValueList = pKeyValueList;
 	return TRUE;
+}
+Stream* HttpRequestHeader::ToHeader()
+{
+		return NULL;
+}
+Stream* HttpResponseHeader::ToHeader()
+{
+		return NULL;
+}
+
+HttpResponseLine* HttpResponseHeader::GetResponseLine()
+{
+	return m_pHttpResponseLine;
+}
+
+int HttpResponseHeader::SetResponseLine(HttpResponseLine* pResponseLine)
+{
+	m_pHttpResponseLine = pResponseLine;
 }

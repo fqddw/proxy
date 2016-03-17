@@ -9,13 +9,13 @@ class HttpResponse
 				HttpResponse();
 				HttpResponse(Stream*);
 				int IsHeaderEnd();
-				HttpHeader* GetHeader();
+				HttpResponseHeader* GetHeader();
 				int LoadHttpHeader();
 				int LoadBody();
 				HttpBody* GetBody();
 				int HasBody();
 		private:
-				HttpHeader* m_pHeader;
+				HttpResponseHeader* m_pHeader;
 				Stream* m_pStream;
 				HttpBody* m_pBody;
 };

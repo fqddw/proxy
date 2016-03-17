@@ -79,49 +79,25 @@ int RemoteSide::ProccessConnectionReset()
 }
 int RemoteSide::ProccessReceive(Stream* pStream)
 {
-		m_pStream->Append(pStream->GetData(),pStream->GetLength());
-		m_pHttpResponse->LoadHttpHeader();
-		return TRUE;
-		if(m_iState == HEADER_NOTFOUND)
-		{
-				if(m_pHttpResponse->IsHeaderEnd())
-				{
-						m_pHttpResponse->LoadHttpHeader();
-						return TRUE;
-						m_iState = HEADER_FOUND;
-						InetSocketAddress* pAddr = NetUtils::GetHostByName(m_pHttpResponse->GetHeader()->GetUrl()->GetHost(),m_pHttpResponse->GetHeader()->GetUrl()->GetPort());
-						ClientSide* pClientSide = m_pClientSide;
-						Stream* pHeaderStream = m_pHttpResponse->GetHeader()->ToHeader(); 
-						pClientSide->GetSendStream()->Append(pHeaderStream->GetData(),pHeaderStream->GetLength());
-						int hasBody = m_pHttpResponse->HasBody();
-						if(!hasBody)
-								m_iState == HEADER_NOTFOUND;
-						else
-						{
-								m_pHttpResponse->LoadBody();
-								Stream* pBodyStream = m_pHttpResponse->GetBody()->ToStream(pStream);
-								pClientSide->GetSendStream()->Append(pStream->GetData(),pBodyStream->GetLength());
-						}
-				}
-		}
-		else
-		{
-				if(m_pHttpResponse->GetBody()->IsEnd())
-						m_iState = HEADER_NOTFOUND;
-				m_pClientSide->GetSendStream()->Append(pStream->GetData(),pStream->GetLength());
-				m_pClientSide->ProccessSend();
-		}
-
+	m_pStream->Append(pStream->GetData(),pStream->GetLength());
+	m_pHttpResponse->LoadHttpHeader();
+	send(m_pClientSide->GetEvent()->GetFD(),pStream->GetData(),pStream->GetLength(),0);
 	return TRUE;
 }
 
 Stream* RemoteSide::GetSendStream()
 {
-		return m_pSendStream;
+	return m_pSendStream;
 }
 
 int RemoteSide::SetSendStream(Stream* pStream)
 {
 	m_pSendStream = pStream;
+	return TRUE;
+}
+
+int RemoteSide::SetClientSide(ClientSide* pClientSide)
+{
+	m_pClientSide = pClientSide;
 	return TRUE;
 }

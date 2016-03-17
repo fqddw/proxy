@@ -47,3 +47,9 @@ int HttpResponseLine::SetMajorVersion(int iMajorVersion)
 	return TRUE;
 }
 
+int HttpResponseLine::SetSeniorVersion(int iSeniorVersion)
+{
+	m_iSeniorVersion = iSeniorVersion;
+	return TRUE;
+}
+

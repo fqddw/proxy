@@ -48,6 +48,7 @@ int ClientSide::ProccessReceive(Stream* pStream)
 				InetSocketAddress* pAddr = NetUtils::GetHostByName(m_pHttpRequest->GetHeader()->GetUrl()->GetHost(),m_pHttpRequest->GetHeader()->GetUrl()->GetPort());
 
 				RemoteSide* pRemoteSide = GetRemoteSide(pAddr);
+				pRemoteSide->SetClientSide(this);
 				m_pRemoteSide = pRemoteSide;
 				pRemoteSide->SetSendStream(pStream);
 				return 0;

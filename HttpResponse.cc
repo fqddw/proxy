@@ -10,7 +10,7 @@ HttpResponse::HttpResponse(Stream* pStream):m_pStream(pStream),m_pHeader(NULL)
 {
 }
 
-HttpHeader* HttpResponse::GetHeader()
+HttpResponseHeader* HttpResponse::GetHeader()
 {
 	return m_pHeader;
 }
@@ -40,13 +40,23 @@ HttpBody* HttpResponse::GetBody()
 #define PS_MAJORVER 5
 #define PS_BEFORE_MAJORVER 6
 #define PS_BEFORE_SENIORVER 7
+#define PS_SENIORVER 8
+#define PS_BEFORE_LF 9
+#define PS_KEY 10
+#define PS_BEFORE_KV_SEP 11
+#define PS_BEFORE_VALUE 12
+#define PS_VALUE 13
 int HttpResponse::LoadHttpHeader()
 {
 	char* pData = m_pStream->GetData();
 	int it = 0;
 	int state = PS_PROTOCOL;
+	char* pKey = NULL;
+	char* pValue = NULL;
+	HttpKeyValueList* pKeyValueList = new HttpKeyValueList();
 	if(!m_pHeader)
-		m_pHeader = new HttpHeader();
+		m_pHeader = new HttpResponseHeader();
+	m_pHeader->SetKeyValueList(pKeyValueList);
 	int nStart = 0;
 	while(1)
 	{
@@ -74,18 +84,31 @@ int HttpResponse::LoadHttpHeader()
 				if(pData[it] == '.')
 				{
 					int len = it-nStart;
-					char* pMajorVer = new char[len+1];
-					pMajorVer[len]='\0';
+					char pMajorVer[4] = {'\0'};
 					memcpy(pMajorVer,pData+nStart,len);
 					int nMajorVer = atoi(pMajorVer);
 					state = PS_BEFORE_SENIORVER;
+					m_pHeader->SetResponseLine(new HttpResponseLine());
+					m_pHeader->GetResponseLine()->SetMajorVersion(nMajorVer);
 				}
 			}
 			if(state == PS_BEFORE_SENIORVER)
 			{
-				if(pData[it] != ' ')
+				if(pData[it] != '.')
 				{
-					char* 
+					nStart = it;
+					state = PS_SENIORVER;
+				}
+			}
+			if(state == PS_SENIORVER)
+			{
+				if(pData[it] == ' ')
+				{
+					int len =it-nStart;
+					char pSeniorVer[4] = "\0";
+					memcpy(pSeniorVer,pData+nStart,len);
+					int nSeniorVer = atoi(pSeniorVer);
+					m_pHeader->GetResponseLine()->SetMajorVersion(nSeniorVer);
 					state = PS_SPACE_BEFORE_CODE;
 				}
 			}
@@ -94,6 +117,7 @@ int HttpResponse::LoadHttpHeader()
 			{
 				if(pData[it] != ' ')
 				{
+					nStart = it;
 					state = PS_CODE;
 				}
 			}
@@ -101,25 +125,85 @@ int HttpResponse::LoadHttpHeader()
 			{
 				if(pData[it] == ' ')
 				{
+					int len =it-nStart;
+					char pCode[4] = "\0";
+					memcpy(pCode,pData+nStart,len);
+					int iCode = atoi(pCode);
+					m_pHeader->GetResponseLine()->SetCode(iCode);
 					state = PS_SPACE_BEFORE_STATUS_TEXT;
-				}
-				else
-				{
-
 				}
 			}
 			if(state == PS_SPACE_BEFORE_STATUS_TEXT)
 			{
 				if(pData[it] != ' ')
 				{
+					nStart = it;
 					state = PS_STATUS_TEXT;
 				}
 			}
 			if(state == PS_STATUS_TEXT)
 			{
+				if(pData[it] == '\r' || pData[it] == ' ')
+				{
+					int len  = it-nStart;
+					char* pStatusText = new char[len+1];
+					memcpy(pStatusText,pData+nStart,len);
+					pStatusText[len]='\0';
+					m_pHeader->GetResponseLine()->SetStatusText(pStatusText);
+					state = PS_BEFORE_LF;
+				}
+			}
+			if(state == PS_BEFORE_LF)
+			{
+				if(pData[it] == '\n')
+				{
+					state = PS_KEY;
+					nStart = it;
+				}
+			}
+			if(state == PS_KEY)
+			{
+				if(pData[it] == '\r')
+					return TRUE;
+				else
+				{
+					if(pData[it] == ' ' || pData[it] == ':')
+					{
+						int len = it - nStart;
+						pKey = new char[len+1];
+						pKey[len] = '\0';
+						memcpy(pKey,pData+nStart,len);
+						state = PS_BEFORE_KV_SEP;
+					}
+				}
+			}
+			if(state == PS_BEFORE_KV_SEP)
+			{
+				if(pData[it] == ':')
+					state = PS_BEFORE_VALUE;
+			}
+			if(state == PS_BEFORE_VALUE)
+			{
+				if(pData[it] != ' ' && pData[it] != ':')
+				{
+					nStart = it;
+					state = PS_VALUE;
+				}
+			}
+			if(state == PS_VALUE)
+			{
 				if(pData[it] == '\r')
 				{
+					int len = it-nStart;
+					pValue = new char[len+1];
+					pValue[len] = '\0';
+					memcpy(pValue,pData+nStart,len);
+					state = PS_BEFORE_LF;
+					pKeyValueList->Append(new pair<string,string>(pKey,pValue));printf("%s %s\n",pKey,pValue);
+					delete pKey;
+					delete pValue;
 				}
+
 			}
 		}
 	}

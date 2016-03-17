@@ -26,7 +26,7 @@ int HttpRequest::IsHeaderEnd()
 	}
 	return FALSE;
 }
-HttpHeader* HttpRequest::GetHeader()
+HttpRequestHeader* HttpRequest::GetHeader()
 {
 	return m_pHttpHeader;
 }

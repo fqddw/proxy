@@ -8,12 +8,12 @@ class HttpRequest
 		HttpRequest(Stream*);
 		int IsHeaderEnd();
 		int LoadHttpHeader();
-		HttpHeader* GetHeader();
+		HttpRequestHeader* GetHeader();
 		HttpBody* GetBody();
 		int HasBody();
 		int LoadBody();
 	private:
-		HttpHeader* m_pHttpHeader;
+		HttpRequestHeader* m_pHttpHeader;
 		HttpBody* m_pHttpBody;
 		Stream* m_pStream;
 };

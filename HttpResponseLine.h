@@ -1,5 +1,5 @@
-#ifndef __HTTPRESPONSE_H__
-#define __HTTPRESPONSE_H__
+#ifndef __HTTPRESPONSE_LINE_H__
+#define __HTTPRESPONSE_LINE_H__
 class HttpResponseLine
 {
 	public:
@@ -12,8 +12,8 @@ class HttpResponseLine
 		int SetStatusText(char*);
 		int GetMajorVersion();
 		int GetSeniorVersion();
-		int SetMajorVersion();
-		int SetSeniorVersion();
+		int SetMajorVersion(int);
+		int SetSeniorVersion(int);
 	private:
 		int m_iCode;
 		char* m_pStatusText;
