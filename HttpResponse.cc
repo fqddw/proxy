@@ -6,7 +6,7 @@
 HttpResponse::HttpResponse()
 {
 }
-HttpResponse::HttpResponse(Stream* pStream):m_pStream(pStream),m_pHeader(NULL)
+HttpResponse::HttpResponse(Stream* pStream):m_pStream(pStream),m_pHeader(NULL),m_iState(HEADER_NOTFOUND)
 {
 }
 
@@ -46,6 +46,7 @@ HttpBody* HttpResponse::GetBody()
 #define PS_BEFORE_KV_SEP 11
 #define PS_BEFORE_VALUE 12
 #define PS_VALUE 13
+#define PS_BEFORE_KEY 14
 int HttpResponse::LoadHttpHeader()
 {
 	char* pData = m_pStream->GetData();
@@ -157,10 +158,18 @@ int HttpResponse::LoadHttpHeader()
 			{
 				if(pData[it] == '\n')
 				{
+					state = PS_BEFORE_KEY;
+				}
+			}
+			if(state == PS_BEFORE_KEY)
+			{
+				if(pData[it] != '\n')
+				{
 					state = PS_KEY;
 					nStart = it;
 				}
 			}
+
 			if(state == PS_KEY)
 			{
 				if(pData[it] == '\r')
@@ -199,9 +208,17 @@ int HttpResponse::LoadHttpHeader()
 					pValue[len] = '\0';
 					memcpy(pValue,pData+nStart,len);
 					state = PS_BEFORE_LF;
-					pKeyValueList->Append(new pair<string,string>(pKey,pValue));printf("%s %s\n",pKey,pValue);
-					delete pKey;
-					delete pValue;
+					pKeyValueList->Append(new pair<string,string>(pKey,pValue));
+					if(pKey != NULL)
+					{
+						delete [] pKey;
+						pKey = NULL;
+					}
+					if(pValue != NULL)
+					{
+						delete [] pValue;
+						pValue = NULL;
+					}
 				}
 
 			}
@@ -209,9 +226,34 @@ int HttpResponse::LoadHttpHeader()
 	}
 	return 0;
 }
-
+#define RESPONSE_CODE_NOT_MODIFIED 304
 int HttpResponse::HasBody()
-{}
+{
+	if(m_pHeader->GetResponseLine()->GetCode() == RESPONSE_CODE_NOT_MODIFIED)
+	{
+		return FALSE;
+	}
+
+	char* pContentLength = m_pHeader->GetField(HTTP_CONTENT_LENGTH);
+	if(pContentLength)
+	{
+		if(atoi(pContentLength) == 0)
+		{
+			return FALSE;
+		}
+	}
+	return TRUE;
+}
 
 int HttpResponse::LoadBody()
 {}
+
+int HttpResponse::GetState()
+{
+	return m_iState;
+}
+
+int HttpResponse::SetState(int state)
+{
+	return m_iState=state;
+}

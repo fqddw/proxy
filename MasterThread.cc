@@ -5,8 +5,6 @@
 #include "TimeLib.h"
 #include "CommonType.h"
 
-#define WORKTHREAD_BUSY 1
-#define WORKTHREAD_IDLE 2
 
 LPVOID ThreadProc(LPVOID ptr)
 {

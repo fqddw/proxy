@@ -4,8 +4,6 @@
 #include "stdio.h"
 #include "errno.h"
 #include "NetUtils.h"
-#define HEADER_NOTFOUND 0
-#define HEADER_FOUND 1
 int RemoteSide::Proccess()
 {
 	return TRUE;
@@ -52,7 +50,8 @@ int RemoteSide::ProccessSend()
 	if(m_pSendStream->GetLength()>0)
 	{
 		int nSent = send(GetEvent()->GetFD(),m_pSendStream->GetData(),m_pSendStream->GetLength(),0);
-		m_pSendStream->Sub(nSent);
+		if(nSent > 0)
+			m_pSendStream->Sub(nSent);
 	}
 		return 0;
 		int totalSend = 0;
@@ -80,8 +79,18 @@ int RemoteSide::ProccessConnectionReset()
 int RemoteSide::ProccessReceive(Stream* pStream)
 {
 	m_pStream->Append(pStream->GetData(),pStream->GetLength());
-	m_pHttpResponse->LoadHttpHeader();
-	send(m_pClientSide->GetEvent()->GetFD(),pStream->GetData(),pStream->GetLength(),0);
+	if(m_pHttpResponse->GetState() == HEADER_NOTFOUND)
+	{
+		m_pHttpResponse->SetState(HEADER_FOUND);
+		if(m_pHttpResponse->IsHeaderEnd())
+		{
+			m_pHttpResponse->LoadHttpHeader();
+			if(m_pHttpResponse->HasBody())
+			{
+			}
+		}
+	}
+	int ret=send(m_pClientSide->GetEvent()->GetFD(),pStream->GetData(),pStream->GetLength(),0);
 	return TRUE;
 }
 

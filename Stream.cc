@@ -18,7 +18,8 @@ int Stream::Append(char* pData,int length)
 	if(m_pData)
 	{
 		memcpy(pNewData,m_pData,m_iLength);
-		delete m_pData;
+		delete [] m_pData;
+		m_pData = NULL;
 	}
 	memcpy(pNewData+m_iLength,pData,length);
 	m_pData = pNewData;
@@ -33,17 +34,28 @@ Stream::~Stream()
 {
 	if(m_pData)
 	{
-		delete m_pData;
+		delete [] m_pData;
 		m_pData = NULL;
 	}
 	m_iLength = 0;
 }
+#include "stdio.h"
 int Stream::Sub(int offset)
 {
 	int newLength = m_iLength - offset;
+	if(newLength == 0)
+	{
+		if(m_pData != NULL)
+		{
+			delete [] m_pData;
+		}
+		m_iLength = 0;
+		m_pData = NULL;
+		return TRUE;
+	}
 	char* pNewData = new char[newLength];
 	memcpy(pNewData, m_pData+offset, newLength);
-	delete m_pData;
+	delete [] m_pData;
 	m_pData = pNewData;
 	return TRUE;
 }

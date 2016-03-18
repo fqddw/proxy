@@ -68,5 +68,5 @@ int HttpUrl::GetPort()
 }
 char* HttpUrl::ToString()
 {
-	return NULL;
+	return (char*)m_pRequestString.c_str();
 }

@@ -37,4 +37,7 @@ private:
 	int m_iWorkCount;
 	int workthread_busy;
 };
+#define WORKTHREAD_BUSY 1
+#define WORKTHREAD_IDLE 2
+
 #endif

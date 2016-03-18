@@ -48,9 +48,12 @@ int ClientSide::ProccessReceive(Stream* pStream)
 				InetSocketAddress* pAddr = NetUtils::GetHostByName(m_pHttpRequest->GetHeader()->GetUrl()->GetHost(),m_pHttpRequest->GetHeader()->GetUrl()->GetPort());
 
 				RemoteSide* pRemoteSide = GetRemoteSide(pAddr);
-				pRemoteSide->SetClientSide(this);
 				m_pRemoteSide = pRemoteSide;
-				pRemoteSide->SetSendStream(pStream);
+				Stream* pSendStream = m_pHttpRequest->GetHeader()->ToHeader();
+				pRemoteSide->GetSendStream()->Append(pSendStream->GetData(),pSendStream->GetLength());
+				delete pSendStream;
+				m_pStream->Sub(0);
+				m_iState = HEADER_NOTFOUND;
 				return 0;
 				Stream* pHeaderStream = m_pHttpRequest->GetHeader()->ToHeader(); 
 				pRemoteSide->GetSendStream()->Append(pHeaderStream->GetData(),pHeaderStream->GetLength());
@@ -106,6 +109,8 @@ RemoteSide* ClientSide::GetRemoteSide(InetSocketAddress* pAddr)
 		pRemoteSide->GetEvent()->SetNetEngine(GetEvent()->GetNetEngine());
 		pRemoteSide->GetEvent()->AddToEngine(EPOLLIN|EPOLLOUT|EPOLLERR|EPOLLET|EPOLLRDHUP);
 		pRemoteSide->SetMasterThread(GetMasterThread());
+		pRemoteSide->SetClientSide(this);
+		//g_pGlobalRemoteSidePool->Append(pRemoteSide);
 		int ret = pRemoteSide->Connect();
 	}
 

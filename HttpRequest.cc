@@ -50,7 +50,7 @@ int HttpRequest::LoadHttpHeader()
 
 	HttpKeyValueList* pKeyValueList = new HttpKeyValueList();
 	pHeader->SetKeyValueList(pKeyValueList);
-	int curPos = String_Stream.find("\r\n") + 2;
+	int curPos = 0;
 	while(curPos < posHeaderEnd)
 	{
 		curPos = String_Stream.find("\r\n",curPos);

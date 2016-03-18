@@ -6,12 +6,18 @@
 #include "Stream.h"
 #include "MemList.h"
 using namespace std;
+
+#define HTTP_CONTENT_LENGTH 100
+#define HTTP_SERVER 101
+
 typedef MemList<pair<string,string>* > HttpKeyValueList;
 class HttpHeader
 {
 	public:
 		virtual Stream* ToHeader() = 0;
 		int SetKeyValueList(HttpKeyValueList*);
+		HttpKeyValueList* GetKeyValueList();
+		char* GetField(int);
 	private:
 		HttpKeyValueList* m_pKeyValueList;
 };

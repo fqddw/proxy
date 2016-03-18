@@ -57,6 +57,7 @@ int WorkThread::Run()
 		else
 		{
 			state_ = STATE_WAITING;
+			pMasterThread_->SetWorkThreadBusy(WORKTHREAD_IDLE);
 			pMasterThread_->WakeUp();
 			ep_->WaitObjectForever();
 		}
