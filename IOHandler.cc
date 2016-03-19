@@ -1,5 +1,5 @@
 #include "IOHandler.h"
-IOHandler::IOHandler():m_pEvent(new IOEvent),m_pSendProc(new SendProccessor(this)),m_pRecvProc(new ReceiveProccessor(this)),m_bCanRead(TRUE)
+IOHandler::IOHandler():m_pEvent(new IOEvent),m_pSendProc(new SendProccessor(this)),m_pRecvProc(new ReceiveProccessor(this)),m_bCanRead(TRUE),m_pConnResetProc(new ConnectionResetProccessor(this))
 {
 }
 IOEvent* IOHandler::GetEvent()
@@ -25,6 +25,8 @@ MasterThread* IOHandler::GetMasterThread()
 IOHandler::~IOHandler()
 {
 	delete m_pEvent;
+	delete m_pRecvProc;
+	delete m_pConnResetProc;
 }
 #include "stdio.h"
 int IOHandler::Dispatch(int events)
@@ -42,7 +44,7 @@ int IOHandler::Dispatch(int events)
 	}
 	if(events & EPOLLERR)
 	{
-			printf("EPOLLERR\n");
+		//GetMasterThread()->InsertTask(m_pConnResetProc);
 	}
 	return TRUE;
 }

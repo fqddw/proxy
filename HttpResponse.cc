@@ -144,7 +144,7 @@ int HttpResponse::LoadHttpHeader()
 			}
 			if(state == PS_STATUS_TEXT)
 			{
-				if(pData[it] == '\r' || pData[it] == ' ')
+				if(pData[it] == '\r')
 				{
 					int len  = it-nStart;
 					char* pStatusText = new char[len+1];

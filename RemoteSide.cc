@@ -47,13 +47,6 @@ int RemoteSide::Connect()
 }
 int RemoteSide::ProccessSend()
 {
-	if(m_pSendStream->GetLength()>0)
-	{
-		int nSent = send(GetEvent()->GetFD(),m_pSendStream->GetData(),m_pSendStream->GetLength(),0);
-		if(nSent > 0)
-			m_pSendStream->Sub(nSent);
-	}
-		return 0;
 		int totalSend = 0;
 		int flag = TRUE;
 		while(flag)
@@ -66,9 +59,13 @@ int RemoteSide::ProccessSend()
 				else
 				{
 						totalSend += nSent;
+						m_pSendStream->Sub(nSent);
+						if(m_pSendStream->GetLength() == 0)
+						{
+							flag = FALSE;
+						}
 				}
 		}
-		m_pSendStream->Sub(totalSend);
 	return TRUE;
 }
 
@@ -87,10 +84,37 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 			m_pHttpResponse->LoadHttpHeader();
 			if(m_pHttpResponse->HasBody())
 			{
+				m_pHttpResponse->LoadBody();
 			}
 		}
 	}
-	int ret=send(m_pClientSide->GetEvent()->GetFD(),pStream->GetData(),pStream->GetLength(),0);
+	else
+	{
+		
+	}
+	int flag = TRUE;
+	while(flag)
+	{
+		int nSent = send(m_pClientSide->GetEvent()->GetFD(),pStream->GetData(),pStream->GetLength(),0);
+		if(nSent == -1)
+		{
+			if(errno == EAGAIN)
+			{
+				printf("Check Length %d",pStream->GetLength());
+				m_pClientSide->GetSendStream()->Append(pStream->GetData(),pStream->GetLength());
+			}
+			flag = FALSE;
+		}
+		else
+		{
+			pStream->Sub(nSent);
+			if(pStream->GetLength() == 0)
+			{
+				flag = FALSE;
+			}
+		}
+	}
+
 	return TRUE;
 }
 

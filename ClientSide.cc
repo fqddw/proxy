@@ -11,7 +11,7 @@
 extern MemList<void*>* pGlobalList;
 #define HEADER_NOTFOUND 0
 #define HEADER_FOUND 1
-ClientSide::ClientSide():IOHandler(),m_pStream(new Stream())
+ClientSide::ClientSide():IOHandler(),m_pStream(new Stream()),m_pSendStream(new Stream())
 {
 	GetEvent()->SetIOHandler(this);
 	m_iState = HEADER_NOTFOUND;
@@ -21,7 +21,7 @@ ClientSide::~ClientSide()
 {
 	delete m_pStream;
 }
-ClientSide::ClientSide(int sockfd):IOHandler(),m_pStream(new Stream())
+ClientSide::ClientSide(int sockfd):IOHandler(),m_pStream(new Stream()),m_pSendStream(new Stream())
 {
 	m_iTransState = CLIENT_STATE_IDLE;
 	m_iState = HEADER_NOTFOUND;
@@ -52,7 +52,7 @@ int ClientSide::ProccessReceive(Stream* pStream)
 				Stream* pSendStream = m_pHttpRequest->GetHeader()->ToHeader();
 				pRemoteSide->GetSendStream()->Append(pSendStream->GetData(),pSendStream->GetLength());
 				delete pSendStream;
-				m_pStream->Sub(0);
+				m_pStream->Sub(m_pStream->GetLength());
 				m_iState = HEADER_NOTFOUND;
 				return 0;
 				Stream* pHeaderStream = m_pHttpRequest->GetHeader()->ToHeader(); 
@@ -123,3 +123,30 @@ Stream* ClientSide::GetSendStream(){
 }
 
 
+int ClientSide::ProccessSend()
+{
+		int totalSend = 0;
+		int flag = TRUE;
+		while(flag)
+		{
+			if(m_pSendStream->GetLength()==0)
+				return FALSE;
+				int nSent = send(GetEvent()->GetFD(),m_pSendStream->GetData(),m_pSendStream->GetLength(),0);
+				printf("Client Trigger Here %d %d\n",nSent,m_pSendStream->GetLength());
+				if(nSent == -1)
+				{
+						flag = FALSE;
+				}
+				else
+				{
+						totalSend += nSent;
+						m_pSendStream->Sub(nSent);
+						if(m_pSendStream->GetLength() == 0)
+						{
+							flag = FALSE;
+						}
+				}
+		}
+	return TRUE;
+
+}
