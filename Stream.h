@@ -1,5 +1,6 @@
 #ifndef __STREAM_H__
 #define __STREAM_H__
+#include "CriticalSection.h"
 class Stream
 {
 	public:
@@ -12,5 +13,6 @@ class Stream
 	private:
 		char* m_pData;
 		int m_iLength;
+		CriticalSection* cs_;
 };
 #endif

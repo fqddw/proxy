@@ -9,6 +9,7 @@ int HttpUrl::Parse()
 	int offset = 0;
 	string strUrl = m_pUrl;
 	int iHostEndPos=0;
+	int isConnect = FALSE;
 	if(strUrl[0] != '/')
 	{
 			if(strUrl.substr(0,8) == string("https://"))
@@ -18,13 +19,21 @@ int HttpUrl::Parse()
 			}
 			else
 			{
-					if(strUrl.substr(0,7) == string("http://"));
+					if(strUrl.substr(0,7) == string("http://"))
 					{
 							m_iScheme = PROTOCOL_HTTP;
 							offset = 7;
 					}
+					else
+					{
+							m_iScheme = PROTOCOL_HTTP;
+							isConnect = TRUE;
+					}
 			}
-			iHostEndPos = strUrl.find("/",offset);
+			if(!isConnect)
+				iHostEndPos = strUrl.find("/",offset);
+			else
+				iHostEndPos = strUrl.length();
 			string strHostFull = strUrl.substr(offset,iHostEndPos-offset);
 			int port = 80;
 			string strHost;

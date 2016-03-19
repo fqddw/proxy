@@ -14,6 +14,7 @@ int Stream::Append(char* pData,int length)
 {
 	if(!length)
 		return FALSE;
+	cs_->Enter();
 	char* pNewData = new char[m_iLength+length];
 	if(m_pData)
 	{
@@ -24,9 +25,10 @@ int Stream::Append(char* pData,int length)
 	memcpy(pNewData+m_iLength,pData,length);
 	m_pData = pNewData;
 	m_iLength += length;
+	cs_->Leave();
 	return TRUE;
 }
-Stream::Stream():m_pData(NULL),m_iLength(0)
+Stream::Stream():m_pData(NULL),m_iLength(0),cs_(new CriticalSection())
 {
 }
 
@@ -42,6 +44,7 @@ Stream::~Stream()
 #include "stdio.h"
 int Stream::Sub(int offset)
 {
+	cs_->Enter();
 	int newLength = m_iLength - offset;
 	if(newLength == 0)
 	{
@@ -51,11 +54,13 @@ int Stream::Sub(int offset)
 		}
 		m_iLength = 0;
 		m_pData = NULL;
+		cs_->Leave();
 		return TRUE;
 	}
 	char* pNewData = new char[newLength];
 	memcpy(pNewData, m_pData+offset, newLength);
 	delete [] m_pData;
 	m_pData = pNewData;
+	cs_->Leave();
 	return TRUE;
 }
