@@ -107,8 +107,8 @@ RemoteSide* ClientSide::GetRemoteSide(InetSocketAddress* pAddr)
 	{
 		pRemoteSide = new RemoteSide(pAddr);
 		pRemoteSide->GetEvent()->SetNetEngine(GetEvent()->GetNetEngine());
-		pRemoteSide->GetEvent()->AddToEngine(EPOLLIN|EPOLLOUT|EPOLLERR|EPOLLET|EPOLLRDHUP);
 		pRemoteSide->SetMasterThread(GetMasterThread());
+		pRemoteSide->GetEvent()->AddToEngine(EPOLLIN|EPOLLOUT|EPOLLERR|EPOLLET|EPOLLRDHUP);
 		pRemoteSide->SetClientSide(this);
 		//g_pGlobalRemoteSidePool->Append(pRemoteSide);
 		int ret = pRemoteSide->Connect();
