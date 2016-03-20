@@ -40,6 +40,7 @@ Stream::~Stream()
 		m_pData = NULL;
 	}
 	m_iLength = 0;
+	delete cs_;
 }
 #include "stdio.h"
 int Stream::Sub(int offset)
@@ -61,6 +62,7 @@ int Stream::Sub(int offset)
 	memcpy(pNewData, m_pData+offset, newLength);
 	delete [] m_pData;
 	m_pData = pNewData;
+	m_iLength = newLength;
 	cs_->Leave();
 	return TRUE;
 }

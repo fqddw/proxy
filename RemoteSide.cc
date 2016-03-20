@@ -54,6 +54,8 @@ int RemoteSide::ProccessSend()
 				int nSent = send(GetEvent()->GetFD(),m_pSendStream->GetData(),m_pSendStream->GetLength(),0);
 				if(nSent == -1)
 				{
+					if(errno != EAGAIN)
+						close(m_pClientSide->GetEvent()->GetFD());
 						flag = FALSE;
 				}
 				else

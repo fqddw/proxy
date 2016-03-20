@@ -132,7 +132,6 @@ int ClientSide::ProccessSend()
 			if(m_pSendStream->GetLength()==0)
 				return FALSE;
 				int nSent = send(GetEvent()->GetFD(),m_pSendStream->GetData(),m_pSendStream->GetLength(),0);
-				printf("Client Trigger Here %d %d\n",nSent,m_pSendStream->GetLength());
 				if(nSent == -1)
 				{
 						flag = FALSE;
