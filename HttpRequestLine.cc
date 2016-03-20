@@ -68,13 +68,14 @@ int HttpRequestLine::Parse()
 	int len = index;
 	char* pMethod = new char[len+1];
 	memset(pMethod,'\0',len+1);
-	memcpy(pMethod,pString,len);
+	memcpy(pMethod,pString,len);printf("pMethod %s\n",pMethod);
 	m_iMethod = GetMethodId(pMethod);
 	for(;index<m_iStringLength;index++){
 		if(*(pString+index) != ' '){
 			break;
 		}
 	}
+	printf("%s\n",pString);
 	int urlstart = index;
 	for(;index<m_iStringLength;index++){
 		if(*(pString+index) == ' '){

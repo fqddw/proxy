@@ -76,9 +76,12 @@ int RemoteSide::ProccessConnectionReset()
 int RemoteSide::ProccessReceive(Stream* pStream)
 {
 	//m_pStream->Append(pStream->GetData(),pStream->GetLength());
+	if(pStream)
+	{
+	}
 	if(m_pHttpResponse->GetState() == HEADER_NOTFOUND)
 	{
-		m_pHttpResponse->SetState(HEADER_FOUND);
+		/*m_pHttpResponse->SetState(HEADER_FOUND);
 		if(m_pHttpResponse->IsHeaderEnd())
 		{
 			m_pHttpResponse->LoadHttpHeader();
@@ -86,7 +89,7 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 			{
 				m_pHttpResponse->LoadBody();
 			}
-		}
+		}*/
 	}
 	else
 	{
@@ -100,7 +103,6 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 		{
 			if(errno == EAGAIN)
 			{
-				printf("Check Length %d",pStream->GetLength());
 				m_pClientSide->GetSendStream()->Append(pStream->GetData(),pStream->GetLength());
 			}
 			flag = FALSE;
