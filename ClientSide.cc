@@ -74,8 +74,7 @@ int ClientSide::ProccessReceive(Stream* pStream)
 		}
 		else
 		{
-			return TRUE;
-				if(m_pHttpRequest->GetBody()->IsEnd())
+				if(m_pHttpRequest->GetBody()->IsEnd(pStream))
 						m_iState = HEADER_NOTFOUND;
 				m_pRemoteSide->GetSendStream()->Append(pStream->GetData(),pStream->GetLength());
 				m_pRemoteSide->ProccessSend();
@@ -88,17 +87,18 @@ extern MemList<RemoteSide*>* g_pGlobalRemoteSidePool;
 
 RemoteSide* ClientSide::GetRemoteSide(InetSocketAddress* pAddr)
 {
-	g_pGlobalRemoteSidePool->Lock();
+	//g_pGlobalRemoteSidePool->Lock();
 	RemoteSide* pRemoteSide=NULL;
 	MemNode<RemoteSide*>* pSocketPool = g_pGlobalRemoteSidePool->GetHead();
 	for(;pSocketPool!=NULL;pSocketPool = pSocketPool->GetNext())
 	{
 		RemoteSide* pSide = pSocketPool->GetData();
-		if(pSide->GetAddr()->Equal(pAddr))
+		if(pSide->GetAddr()->Equal(pAddr) && pSide->IsIdle())
 		{
 			pSide->SetStatusBlocking();
-			g_pGlobalRemoteSidePool->Unlock();
+			//g_pGlobalRemoteSidePool->Unlock();
 			pRemoteSide = pSide;
+			pRemoteSide->SetClientSide(this);
 			break;
 		}
 	}
@@ -110,11 +110,10 @@ RemoteSide* ClientSide::GetRemoteSide(InetSocketAddress* pAddr)
 		pRemoteSide->SetMasterThread(GetMasterThread());
 		pRemoteSide->GetEvent()->AddToEngine(EPOLLIN|EPOLLOUT|EPOLLERR|EPOLLET|EPOLLRDHUP);
 		pRemoteSide->SetClientSide(this);
-		//g_pGlobalRemoteSidePool->Append(pRemoteSide);
+		g_pGlobalRemoteSidePool->Append(pRemoteSide);
 		int ret = pRemoteSide->Connect();
 	}
-
-	g_pGlobalRemoteSidePool->Unlock();
+	//g_pGlobalRemoteSidePool->Unlock();
 	return pRemoteSide;
 }
 
@@ -130,7 +129,7 @@ int ClientSide::ProccessSend()
 		while(flag)
 		{
 			if(m_pSendStream->GetLength()==0)
-				return FALSE;
+				return TRUE;
 				int nSent = send(GetEvent()->GetFD(),m_pSendStream->GetData(),m_pSendStream->GetLength(),0);
 				if(nSent == -1)
 				{
@@ -142,10 +141,14 @@ int ClientSide::ProccessSend()
 						m_pSendStream->Sub(nSent);
 						if(m_pSendStream->GetLength() == 0)
 						{
+							if(m_pRemoteSide->GetResponse()->GetBody()->IsEnd())
+							{
+								m_pRemoteSide->SetStatusIdle();
+							}
 							flag = FALSE;
 						}
 				}
 		}
-	return TRUE;
+	return FALSE;
 
 }

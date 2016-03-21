@@ -7,6 +7,7 @@
 #include "InetSocketAddress.h"
 #include "HttpResponse.h"
 #define STATUS_BLOCKING 1
+#define STATUS_IDLE 2
 class ClientSide;
 class RemoteSide:public IOHandler
 {
@@ -20,7 +21,9 @@ class RemoteSide:public IOHandler
 		int Writeable();
 		int Proccess();
 		int SetStatusBlocking();
+		int SetStatusIdle();
 		int OnCanSend();
+		int IsIdle();
 		Stream* GetSendStream();
 		InetSocketAddress* GetAddr();
 		virtual int ProccessReceive(Stream*);
@@ -28,6 +31,7 @@ class RemoteSide:public IOHandler
 		virtual int ProccessConnectionReset();
 		int SetSendStream(Stream*);
 		int SetClientSide(ClientSide*);
+		HttpResponse* GetResponse();
 	private:
 		int m_iSocket;
 		int m_iState;

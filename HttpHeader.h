@@ -9,7 +9,8 @@ using namespace std;
 
 #define HTTP_CONTENT_LENGTH 100
 #define HTTP_SERVER 101
-
+#define HTTP_CONNECTION 102
+#define HTTP_TRANSFER_ENCODING 103
 typedef MemList<pair<string,string>* > HttpKeyValueList;
 class HttpHeader
 {

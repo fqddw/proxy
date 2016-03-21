@@ -3,10 +3,10 @@
 #include "unistd.h"
 #include "memory.h"
 #include "stdlib.h"
-HttpResponse::HttpResponse()
+HttpResponse::HttpResponse():m_pBody(NULL)
 {
 }
-HttpResponse::HttpResponse(Stream* pStream):m_pStream(pStream),m_pHeader(NULL),m_iState(HEADER_NOTFOUND)
+HttpResponse::HttpResponse(Stream* pStream):m_pStream(pStream),m_pHeader(NULL),m_iState(HEADER_NOTFOUND),m_pBody(NULL)
 {
 }
 
@@ -22,7 +22,7 @@ int HttpResponse::IsHeaderEnd()
 	{
 		if(pData[iterator] == '\r' && pData[iterator+1] == '\n' && pData[iterator+2] == '\r' && pData[iterator+3] == '\n')
 		{
-			return TRUE;
+			return iterator+4;
 		}
 	}
 	return FALSE;
@@ -227,8 +227,13 @@ int HttpResponse::LoadHttpHeader()
 	return 0;
 }
 #define RESPONSE_CODE_NOT_MODIFIED 304
+#define RESPONSE_CODE_NO_CONTENT 204
 int HttpResponse::HasBody()
 {
+	if(m_pHeader->GetResponseLine()->GetCode() == RESPONSE_CODE_NOT_MODIFIED)
+	{
+		return FALSE;
+	}
 	if(m_pHeader->GetResponseLine()->GetCode() == RESPONSE_CODE_NOT_MODIFIED)
 	{
 		return FALSE;
@@ -246,7 +251,26 @@ int HttpResponse::HasBody()
 }
 
 int HttpResponse::LoadBody()
-{}
+{
+	if(!m_pBody)
+		m_pBody = new HttpBody();
+	char* pTransferEncoding = m_pHeader->GetField(HTTP_TRANSFER_ENCODING);
+	if(pTransferEncoding){
+		if(strstr(pTransferEncoding,"chunked"))
+		{
+			m_pBody->SetType(BODY_TYPE_TRANSFER_ENCODING);
+		}
+	}
+	else
+	{
+		char* pLength = m_pHeader->GetField(HTTP_CONTENT_LENGTH);
+		if(pLength)
+		{
+			m_pBody->SetContentLength(atoi(pLength));
+		}
+	}
+		return TRUE;
+}
 
 int HttpResponse::GetState()
 {

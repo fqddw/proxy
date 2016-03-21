@@ -79,7 +79,6 @@ HttpBody* HttpRequest::GetBody()
 }
 int HttpRequest::LoadBody()
 {
-		return TRUE;
 }
 int HttpRequest::HasBody()
 {

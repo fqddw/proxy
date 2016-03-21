@@ -66,3 +66,23 @@ int Stream::Sub(int offset)
 	cs_->Leave();
 	return TRUE;
 }
+
+char* Stream::GetPartDataToString(int begin,int end)
+{
+	int length = end-begin;
+	char* pReturnString = new char[length+1];
+	pReturnString[length] = '\0';
+	memcpy(pReturnString,m_pData+begin,length);
+	return pReturnString;
+}
+
+Stream* Stream::GetPartStream(int begin,int end)
+{
+	int length = end-begin;
+	char* pReturnString = new char[length];
+	memcpy(pReturnString,m_pData+begin,length);
+	Stream* pStream = new Stream();
+	pStream->Append(pReturnString,length);
+	return pStream;
+
+}

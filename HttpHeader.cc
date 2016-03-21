@@ -58,7 +58,8 @@ char* HttpHeader::GetField(int iFieldIndex)
 {
 	static FIELD sFields[] = {
 		{HTTP_CONTENT_LENGTH,"Content-Length"},
-		{HTTP_SERVER,"Server"}
+		{HTTP_SERVER,"Server"},
+		{HTTP_CONNECTION,"Connection"}
 	};
 	int i=0;
 	for(;i<sizeof(sFields)/sizeof(FIELD);i++)
