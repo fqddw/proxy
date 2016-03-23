@@ -8,6 +8,7 @@
 #include "netdb.h"
 #include "InetSocketAddress.h"
 #include "NetUtils.h"
+#include "arpa/inet.h"
 extern MemList<void*>* pGlobalList;
 #define HEADER_NOTFOUND 0
 #define HEADER_FOUND 1
@@ -45,8 +46,8 @@ int ClientSide::ProccessReceive(Stream* pStream)
 			{
 				m_pHttpRequest->LoadHttpHeader();
 				m_iState = HEADER_FOUND;
-				InetSocketAddress* pAddr = NetUtils::GetHostByName(m_pHttpRequest->GetHeader()->GetUrl()->GetHost(),m_pHttpRequest->GetHeader()->GetUrl()->GetPort());
-
+				InetSocketAddress* pAddr = NULL;
+				pAddr = NetUtils::GetHostByName(m_pHttpRequest->GetHeader()->GetUrl()->GetHost(),m_pHttpRequest->GetHeader()->GetUrl()->GetPort());
 				RemoteSide* pRemoteSide = GetRemoteSide(pAddr);
 				m_pRemoteSide = pRemoteSide;
 				Stream* pSendStream = m_pHttpRequest->GetHeader()->ToHeader();
@@ -54,6 +55,14 @@ int ClientSide::ProccessReceive(Stream* pStream)
 				delete pSendStream;
 				m_pStream->Sub(m_pStream->GetLength());
 				m_iState = HEADER_NOTFOUND;
+
+				if(pRemoteSide->IsConnected())
+				{
+					pRemoteSide->SetCanWrite(TRUE);
+					printf("Connected\n");
+					pRemoteSide->ProccessSend();
+				}
+				SetCanRead(FALSE);
 				return 0;
 				Stream* pHeaderStream = m_pHttpRequest->GetHeader()->ToHeader(); 
 				pRemoteSide->GetSendStream()->Append(pHeaderStream->GetData(),pHeaderStream->GetLength());
@@ -62,9 +71,9 @@ int ClientSide::ProccessReceive(Stream* pStream)
 					m_iState = HEADER_NOTFOUND;
 				else
 				{
-					m_pHttpRequest->LoadBody();
+					/*m_pHttpRequest->LoadBody();
 					Stream* pBodyStream = m_pHttpRequest->GetBody()->ToStream(pStream);
-					pRemoteSide->GetSendStream()->Append(pStream->GetData(),pBodyStream->GetLength());
+					pRemoteSide->GetSendStream()->Append(pStream->GetData(),pBodyStream->GetLength());*/
 				}
 			}
 			else
@@ -89,7 +98,7 @@ RemoteSide* ClientSide::GetRemoteSide(InetSocketAddress* pAddr)
 {
 	//g_pGlobalRemoteSidePool->Lock();
 	RemoteSide* pRemoteSide=NULL;
-	MemNode<RemoteSide*>* pSocketPool = g_pGlobalRemoteSidePool->GetHead();
+	/*MemNode<RemoteSide*>* pSocketPool = g_pGlobalRemoteSidePool->GetHead();
 	for(;pSocketPool!=NULL;pSocketPool = pSocketPool->GetNext())
 	{
 		RemoteSide* pSide = pSocketPool->GetData();
@@ -101,7 +110,7 @@ RemoteSide* ClientSide::GetRemoteSide(InetSocketAddress* pAddr)
 			pRemoteSide->SetClientSide(this);
 			break;
 		}
-	}
+	}*/
 
 	if(!pRemoteSide)
 	{
@@ -111,7 +120,6 @@ RemoteSide* ClientSide::GetRemoteSide(InetSocketAddress* pAddr)
 		pRemoteSide->GetEvent()->AddToEngine(EPOLLIN|EPOLLOUT|EPOLLERR|EPOLLET|EPOLLRDHUP);
 		pRemoteSide->SetClientSide(this);
 		g_pGlobalRemoteSidePool->Append(pRemoteSide);
-		int ret = pRemoteSide->Connect();
 	}
 	//g_pGlobalRemoteSidePool->Unlock();
 	return pRemoteSide;
@@ -130,7 +138,7 @@ int ClientSide::ProccessSend()
 		{
 			if(m_pSendStream->GetLength()==0)
 				return TRUE;
-				int nSent = send(GetEvent()->GetFD(),m_pSendStream->GetData(),m_pSendStream->GetLength(),0);
+				int nSent = send(GetEvent()->GetFD(),m_pSendStream->GetData(),m_pSendStream->GetLength(),0);printf("nSent %d %d\n",nSent,m_pSendStream->GetLength());
 				if(nSent == -1)
 				{
 						flag = FALSE;

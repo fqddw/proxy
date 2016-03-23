@@ -44,7 +44,10 @@ int Server::ProccessReceive(Stream* pStream)
 	{
 		int client = accept(GetEvent()->GetFD(),&sa,&len);
 		if(client == -1 && errno == EAGAIN)
+		{
+			printf("Server Debug Here\n");
 			return TRUE;
+		}
 		else if(client == -1)
 		{
 			GetEvent()->RemoveFromEngine();
@@ -64,6 +67,7 @@ int Server::ProccessReceive(Stream* pStream)
 		pGlobalList->Append(pClientSideHandler);
 		pClientSideHandler->GetEvent()->SetNetEngine(GetEvent()->GetNetEngine());
 		pClientSideHandler->SetMasterThread(GetMasterThread());
+		pClientSideHandler->SetCanWrite(FALSE);
 		pClientSideHandler->GetEvent()->AddToEngine(EPOLLIN|EPOLLOUT|EPOLLERR|EPOLLET|EPOLLRDHUP);
 	}
 	return TRUE;

@@ -27,6 +27,8 @@ class IOHandler
 		virtual int ProccessSend();
 		virtual int ProccessConnectionReset();
 		virtual int IsServer();
+		void SetCanWrite(int);
+		void SetCanRead(int);
 	private:
 		IOEvent* m_pEvent;
 		MasterThread* m_pMasterThread;
@@ -34,6 +36,7 @@ class IOHandler
 		ConnectionResetProccessor* m_pConnResetProc;
 		SendProccessor* m_pSendProc;
 		int m_bCanRead;
+		int m_bCanWrite;
 };
 
 

@@ -1,6 +1,7 @@
 #include "HttpBody.h"
 #include "CommonType.h"
 #include "stdlib.h"
+#include "stdio.h"
 Stream* HttpBody::ToStream(Stream* pStream)
 {
 		Stream* pLocalStream = new Stream();
@@ -17,23 +18,25 @@ int HttpBody::IsEnd(Stream* pStream)
 	{
 		if(pStream->GetLength()+m_iCurLength == m_iLength)
 		{
-			m_iCurLength += pStream->GetLength();
 			return TRUE;
 		}
 		else
+		{
+			m_iCurLength += pStream->GetLength();
 			return FALSE;
+		}
 	}
 	if(m_iType == BODY_TYPE_TRANSFER_ENCODING)
 	{
 		Parse(pStream);
-		if(GetLastChunkLength() == 0)
+		if(IsEnd() == TRUE)
 			return TRUE;
 		else
 			return FALSE;
 	}
 		return TRUE;
 }
-HttpBody::HttpBody():m_iType(BODY_TYPE_CONTENT_LENGTH),m_iCurChunkLength(0),m_iIsEnd(FALSE),m_iChunkState(CS_IN_BEGIN_CRLF),m_iCurInChunkLength(0),m_iOffset(0),m_pLengthStream(NULL),m_iLength(0),m_iCurLength(0)
+HttpBody::HttpBody():m_iType(BODY_TYPE_CONTENT_LENGTH),m_iCurChunkLength(0),m_iIsEnd(FALSE),m_iChunkState(CS_IN_LENGTH),m_iCurInChunkLength(0),m_iOffset(0),m_pLengthStream(new Stream()),m_iLength(0),m_iCurLength(0)
 {
 }
 
@@ -57,16 +60,18 @@ int HttpBody::Parse(Stream* pStream)
 	{
 		if(m_iChunkState == CS_IN_CHUNK)
 		{
-			if(pStream->GetLength() + m_iCurInChunkLength < m_iCurChunkLength)
+			if(pStream->GetLength()- offset  + m_iCurInChunkLength < m_iCurChunkLength)
 			{
-				m_iCurInChunkLength += pStream->GetLength();
-				offset += pStream->GetLength();
+				m_iCurInChunkLength += (pStream->GetLength()-offset);
 				break;
 			}
 			else
 			{
 				offset += (m_iCurChunkLength-m_iCurInChunkLength);
-				m_iChunkState == CS_IN_BEGIN_CRLF;
+				m_iChunkState = CS_IN_BEGIN_CRLF;
+				m_iCurInChunkLength = 0;
+				m_iCurChunkLength = 0;
+				m_iOffset = 0;
 				begin = offset;
 			}
 		}
@@ -86,15 +91,27 @@ int HttpBody::Parse(Stream* pStream)
 		}
 		if(m_iChunkState == CS_IN_LENGTH)
 		{
-			int offset = 0;
 			for(;offset<pStream->GetLength();offset++)
 			{
 				if(pData[offset] == '\r')
 				{
-					char* pLength = pStream->GetPartDataToString(begin,offset);
-					m_iCurChunkLength = atoi(pLength);
+					Stream* pPartData = pStream->GetPartStream(begin,offset);
+					m_pLengthStream->Append(pPartData->GetData(),pPartData->GetLength());
+					char* pLength = m_pLengthStream->GetPartDataToString(0,m_pLengthStream->GetLength());
+					int chunkLength = 0;
+					sscanf(pLength,"%x",&chunkLength);
+					delete m_pLengthStream;
+					m_pLengthStream = new Stream();
+
+					m_iCurChunkLength = chunkLength;
+					m_iCurInChunkLength = 0;
 					delete [] pLength;
 					m_iChunkState = CS_IN_END_CRLF;
+					if(chunkLength == 0)
+					{
+						m_iIsEnd = TRUE;
+						return TRUE;
+					}
 					if(offset == pStream->GetLength()-1)
 					{
 						m_iOffset = 1;
@@ -105,6 +122,8 @@ int HttpBody::Parse(Stream* pStream)
 						{
 							m_iChunkState = CS_IN_CHUNK;
 							m_iOffset = 0;
+							offset += 1;
+							begin = offset;
 						}
 						else
 							return FALSE;

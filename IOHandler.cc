@@ -1,5 +1,5 @@
 #include "IOHandler.h"
-IOHandler::IOHandler():m_pEvent(new IOEvent),m_pSendProc(new SendProccessor(this)),m_pRecvProc(new ReceiveProccessor(this)),m_bCanRead(TRUE),m_pConnResetProc(new ConnectionResetProccessor(this))
+IOHandler::IOHandler():m_pEvent(new IOEvent),m_pSendProc(new SendProccessor(this)),m_pRecvProc(new ReceiveProccessor(this)),m_bCanRead(TRUE),m_pConnResetProc(new ConnectionResetProccessor(this)),m_bCanWrite(TRUE)
 {
 }
 IOEvent* IOHandler::GetEvent()
@@ -40,7 +40,8 @@ int IOHandler::Dispatch(int events)
 	}
 	if(events & EPOLLOUT)
 	{
-		GetMasterThread()->InsertTask(m_pSendProc);
+		if(m_bCanWrite)
+			GetMasterThread()->InsertTask(m_pSendProc);
 	}
 	if(events & EPOLLERR)
 	{
@@ -72,3 +73,12 @@ int IOHandler::IsServer()
 		return FALSE;
 }
 
+void IOHandler::SetCanWrite(int flag)
+{
+	m_bCanWrite = flag;
+}
+
+void IOHandler::SetCanRead(int flag)
+{
+	m_bCanRead = flag;
+}

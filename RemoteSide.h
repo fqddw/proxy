@@ -8,6 +8,7 @@
 #include "HttpResponse.h"
 #define STATUS_BLOCKING 1
 #define STATUS_IDLE 2
+#define SOCKTE_STATUS_CONNECTING 3
 class ClientSide;
 class RemoteSide:public IOHandler
 {
@@ -24,6 +25,7 @@ class RemoteSide:public IOHandler
 		int SetStatusIdle();
 		int OnCanSend();
 		int IsIdle();
+		int IsConnected();
 		Stream* GetSendStream();
 		InetSocketAddress* GetAddr();
 		virtual int ProccessReceive(Stream*);
@@ -33,6 +35,7 @@ class RemoteSide:public IOHandler
 		int SetClientSide(ClientSide*);
 		HttpResponse* GetResponse();
 	private:
+		int m_isConnected;
 		int m_iSocket;
 		int m_iState;
 		Stream* m_pStream;

@@ -36,11 +36,11 @@ InetSocketAddress* RemoteSide::GetAddr()
 {
 	return m_pAddr;
 }
-RemoteSide::RemoteSide():IOHandler(),m_pSendStream(new Stream),m_pStream(new Stream),m_iState(STATUS_BLOCKING)
+RemoteSide::RemoteSide():IOHandler(),m_pSendStream(new Stream),m_pStream(new Stream),m_iState(STATUS_BLOCKING),m_isConnected(FALSE)
 {
 	GetEvent()->SetIOHandler(this);
 }
-RemoteSide::RemoteSide(InetSocketAddress* pAddr):IOHandler(),m_pSendStream(new Stream),m_pStream(new Stream),m_iState(STATUS_BLOCKING)
+RemoteSide::RemoteSide(InetSocketAddress* pAddr):IOHandler(),m_pSendStream(new Stream),m_pStream(new Stream),m_iState(STATUS_BLOCKING),m_isConnected(FALSE)
 {
 	GetEvent()->SetIOHandler(this);
 	m_pAddr = pAddr;
@@ -54,11 +54,24 @@ RemoteSide::RemoteSide(InetSocketAddress* pAddr):IOHandler(),m_pSendStream(new S
 int RemoteSide::Connect()
 {
 	struct sockaddr sa = m_pAddr->ToSockAddr();
+	m_isConnected = SOCKTE_STATUS_CONNECTING;
 	int ret = connect(m_iSocket,&sa,sizeof(sa));
 	return ret;
 }
 int RemoteSide::ProccessSend()
 {
+	if(m_isConnected == SOCKTE_STATUS_CONNECTING)
+	{
+		if(m_pSendStream->GetLength())
+			SetCanWrite(TRUE);
+		m_isConnected = TRUE;
+	}
+	if(!IsConnected())
+	{
+		Connect();
+		return FALSE;
+	}
+
 		int totalSend = 0;
 		int flag = TRUE;
 		while(flag)
@@ -76,14 +89,17 @@ int RemoteSide::ProccessSend()
 						if(m_pSendStream->GetLength() == 0)
 						{
 							flag = FALSE;
+							SetCanWrite(flag);
 						}
 				}
 		}
 	return TRUE;
 }
 
+extern MemList<RemoteSide*>* g_pGlobalRemoteSidePool;
 int RemoteSide::ProccessConnectionReset()
 {
+	g_pGlobalRemoteSidePool->Delete(this);
 	return TRUE;
 }
 int RemoteSide::ProccessReceive(Stream* pStream)
@@ -103,42 +119,52 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 				m_pHttpResponse->LoadBody();
 				Stream* pBodyStream = pStream->GetPartStream(iHeaderSize,pStream->GetLength());
 				isEnd = m_pHttpResponse->GetBody()->IsEnd(pBodyStream);
-				printf("Header %d\n",isEnd);
 			}
 		}
 	}
 	else
 	{
-		isEnd = m_pHttpResponse->GetBody()->IsEnd(pUserStream);
+		if(m_pHttpResponse->HasBody())
+			if(m_pHttpResponse->GetBody())
+			isEnd = m_pHttpResponse->GetBody()->IsEnd(pUserStream);
 	}
-	int flag = TRUE;
-	while(flag)
+	if(m_pClientSide->GetSendStream()->GetLength()>0)
 	{
-		int nSent = send(m_pClientSide->GetEvent()->GetFD(),pUserStream->GetData(),pUserStream->GetLength(),0);
-		if(nSent == -1)
+		m_pClientSide->GetSendStream()->Append(pUserStream->GetData(),pUserStream->GetLength());
+	}
+	else
+	{
+		int flag = TRUE;
+		while(flag)
 		{
-			if(errno == EAGAIN)
+			int nSent = send(m_pClientSide->GetEvent()->GetFD(),pUserStream->GetData(),pUserStream->GetLength(),0);
+			if(nSent == -1)
 			{
-				m_pClientSide->GetSendStream()->Append(pUserStream->GetData(),pUserStream->GetLength());
-			}
-			flag = FALSE;
-		}
-		else
-		{
-			pUserStream->Sub(nSent);
-			if(pUserStream->GetLength() == 0)
-			{
-				if(isEnd)
+				if(errno == EAGAIN)
 				{
-					delete m_pHttpResponse;
-					m_pHttpResponse = new HttpResponse(m_pStream);
-					m_iState = STATUS_IDLE;
+					m_pClientSide->GetSendStream()->Append(pUserStream->GetData(),pUserStream->GetLength());
+					m_pClientSide->SetCanWrite(TRUE);
 				}
 				flag = FALSE;
 			}
+			else
+			{
+				pUserStream->Sub(nSent);
+				if(pUserStream->GetLength() == 0)
+				{
+					SetCanWrite(FALSE);
+					if(isEnd)
+					{
+						delete m_pHttpResponse;
+						m_pHttpResponse = new HttpResponse(m_pStream);
+						m_pStream->Sub(m_pStream->GetLength());
+						m_iState = STATUS_IDLE;
+					}
+					flag = FALSE;
+				}
+			}
 		}
 	}
-
 	return TRUE;
 }
 
@@ -161,4 +187,9 @@ int RemoteSide::SetClientSide(ClientSide* pClientSide)
 HttpResponse* RemoteSide::GetResponse()
 {
 	return m_pHttpResponse;
+}
+
+int RemoteSide::IsConnected()
+{
+	return m_isConnected == TRUE;
 }
