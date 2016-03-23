@@ -45,7 +45,6 @@ int Server::ProccessReceive(Stream* pStream)
 		int client = accept(GetEvent()->GetFD(),&sa,&len);
 		if(client == -1 && errno == EAGAIN)
 		{
-			printf("Server Debug Here\n");
 			return TRUE;
 		}
 		else if(client == -1)

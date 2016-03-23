@@ -29,6 +29,8 @@ class IOHandler
 		virtual int IsServer();
 		void SetCanWrite(int);
 		void SetCanRead(int);
+		int LockSendBuffer();
+		int UnlockSendBuffer();
 	private:
 		IOEvent* m_pEvent;
 		MasterThread* m_pMasterThread;
@@ -37,6 +39,7 @@ class IOHandler
 		SendProccessor* m_pSendProc;
 		int m_bCanRead;
 		int m_bCanWrite;
+		CriticalSection* cs_;
 };
 
 

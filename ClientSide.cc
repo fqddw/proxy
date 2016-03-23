@@ -47,7 +47,9 @@ int ClientSide::ProccessReceive(Stream* pStream)
 				m_pHttpRequest->LoadHttpHeader();
 				m_iState = HEADER_FOUND;
 				InetSocketAddress* pAddr = NULL;
+				printf("Before Here\n");
 				pAddr = NetUtils::GetHostByName(m_pHttpRequest->GetHeader()->GetUrl()->GetHost(),m_pHttpRequest->GetHeader()->GetUrl()->GetPort());
+				printf("Here\n");
 				RemoteSide* pRemoteSide = GetRemoteSide(pAddr);
 				m_pRemoteSide = pRemoteSide;
 				Stream* pSendStream = m_pHttpRequest->GetHeader()->ToHeader();
@@ -62,7 +64,6 @@ int ClientSide::ProccessReceive(Stream* pStream)
 					printf("Connected\n");
 					pRemoteSide->ProccessSend();
 				}
-				SetCanRead(FALSE);
 				return 0;
 				Stream* pHeaderStream = m_pHttpRequest->GetHeader()->ToHeader(); 
 				pRemoteSide->GetSendStream()->Append(pHeaderStream->GetData(),pHeaderStream->GetLength());
@@ -134,13 +135,19 @@ int ClientSide::ProccessSend()
 {
 		int totalSend = 0;
 		int flag = TRUE;
+		LockSendBuffer();
+		SetCanWrite(FALSE);
 		while(flag)
 		{
 			if(m_pSendStream->GetLength()==0)
-				return TRUE;
+			{
+				UnlockSendBuffer();
+				flag = TRUE;
+			}
 				int nSent = send(GetEvent()->GetFD(),m_pSendStream->GetData(),m_pSendStream->GetLength(),0);printf("nSent %d %d\n",nSent,m_pSendStream->GetLength());
 				if(nSent == -1)
 				{
+					UnlockSendBuffer();
 						flag = FALSE;
 				}
 				else
@@ -153,10 +160,12 @@ int ClientSide::ProccessSend()
 							{
 								m_pRemoteSide->SetStatusIdle();
 							}
+							UnlockSendBuffer();
 							flag = FALSE;
 						}
 				}
 		}
+		SetCanWrite(TRUE);
 	return FALSE;
 
 }

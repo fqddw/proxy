@@ -74,6 +74,7 @@ int RemoteSide::ProccessSend()
 
 		int totalSend = 0;
 		int flag = TRUE;
+		LockSendBuffer();
 		while(flag)
 		{
 				int nSent = send(GetEvent()->GetFD(),m_pSendStream->GetData(),m_pSendStream->GetLength(),0);
@@ -90,9 +91,11 @@ int RemoteSide::ProccessSend()
 						{
 							flag = FALSE;
 							SetCanWrite(flag);
+							m_pClientSide->SetCanRead(TRUE);
 						}
 				}
 		}
+		UnlockSendBuffer();
 	return TRUE;
 }
 
@@ -130,11 +133,14 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 	}
 	if(m_pClientSide->GetSendStream()->GetLength()>0)
 	{
+		m_pClientSide->LockSendBuffer();
 		m_pClientSide->GetSendStream()->Append(pUserStream->GetData(),pUserStream->GetLength());
+		m_pClientSide->UnlockSendBuffer();
 	}
 	else
 	{
 		int flag = TRUE;
+		m_pClientSide->SetCanWrite(FALSE);
 		while(flag)
 		{
 			int nSent = send(m_pClientSide->GetEvent()->GetFD(),pUserStream->GetData(),pUserStream->GetLength(),0);
@@ -142,7 +148,9 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 			{
 				if(errno == EAGAIN)
 				{
+					m_pClientSide->LockSendBuffer();
 					m_pClientSide->GetSendStream()->Append(pUserStream->GetData(),pUserStream->GetLength());
+					m_pClientSide->UnlockSendBuffer();
 					m_pClientSide->SetCanWrite(TRUE);
 				}
 				flag = FALSE;
@@ -152,7 +160,7 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 				pUserStream->Sub(nSent);
 				if(pUserStream->GetLength() == 0)
 				{
-					SetCanWrite(FALSE);
+					m_pClientSide->SetCanWrite(FALSE);
 					if(isEnd)
 					{
 						delete m_pHttpResponse;
@@ -165,6 +173,7 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 			}
 		}
 	}
+
 	return TRUE;
 }
 

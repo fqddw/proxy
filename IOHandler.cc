@@ -1,5 +1,5 @@
 #include "IOHandler.h"
-IOHandler::IOHandler():m_pEvent(new IOEvent),m_pSendProc(new SendProccessor(this)),m_pRecvProc(new ReceiveProccessor(this)),m_bCanRead(TRUE),m_pConnResetProc(new ConnectionResetProccessor(this)),m_bCanWrite(TRUE)
+IOHandler::IOHandler():m_pEvent(new IOEvent),m_pSendProc(new SendProccessor(this)),m_pRecvProc(new ReceiveProccessor(this)),m_bCanRead(TRUE),m_pConnResetProc(new ConnectionResetProccessor(this)),m_bCanWrite(TRUE),cs_(new CriticalSection())
 {
 }
 IOEvent* IOHandler::GetEvent()
@@ -33,6 +33,7 @@ int IOHandler::Dispatch(int events)
 {
 	if(events & EPOLLIN)
 	{
+		printf("EPOLLIN %d\n",m_bCanRead);
 		if(m_bCanRead)
 		{
 			GetMasterThread()->InsertTask(m_pRecvProc);
@@ -81,4 +82,17 @@ void IOHandler::SetCanWrite(int flag)
 void IOHandler::SetCanRead(int flag)
 {
 	m_bCanRead = flag;
+}
+
+int IOHandler::LockSendBuffer()
+{
+	cs_->Enter();
+	return TRUE;
+}
+
+
+int IOHandler::UnlockSendBuffer()
+{
+	cs_->Leave();
+	return TRUE;
 }

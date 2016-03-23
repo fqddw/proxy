@@ -6,6 +6,7 @@
 #include "CommonType.h"
 #include "unistd.h"
 #include "MemList.h"
+#include "stdio.h"
 extern MemList<void*>* pGlobalList;
 ReceiveProccessor::ReceiveProccessor(IOHandler* pIOHandler):m_pIOHandler(pIOHandler)
 {
@@ -15,6 +16,7 @@ int ReceiveProccessor::Run()
 {
 		Stream* pStream = NULL;
 		if(m_pIOHandler->IsServer()){
+			printf("server in here\n");
 				m_pIOHandler->ProccessReceive(pStream);
 		}else{
 				GetDataStream(&pStream);
