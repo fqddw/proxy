@@ -33,7 +33,6 @@ int IOHandler::Dispatch(int events)
 {
 	if(events & EPOLLIN)
 	{
-		printf("EPOLLIN %d\n",m_bCanRead);
 		if(m_bCanRead)
 		{
 			GetMasterThread()->InsertTask(m_pRecvProc);
