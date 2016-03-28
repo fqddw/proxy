@@ -19,10 +19,9 @@ int ReceiveProccessor::Run()
 			printf("server in here\n");
 				m_pIOHandler->ProccessReceive(pStream);
 		}else{
-				GetDataStream(&pStream);
-				if(pStream)
-						m_pIOHandler->ProccessReceive(pStream);
-
+			GetDataStream(&pStream);
+			if(pStream)
+				m_pIOHandler->ProccessReceive(pStream);
 		}
 		return 0;
 }

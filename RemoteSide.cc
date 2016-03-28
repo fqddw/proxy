@@ -107,6 +107,7 @@ int RemoteSide::ProccessConnectionReset()
 }
 int RemoteSide::ProccessReceive(Stream* pStream)
 {
+	SetCanRead(FALSE);
 	Stream* pUserStream = pStream;
 	m_pStream->Append(pStream->GetData(),pStream->GetLength());
 	int isEnd = FALSE;
@@ -140,6 +141,7 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 	else
 	{
 		int flag = TRUE;
+		m_pClientSide->LockSendBuffer();
 		m_pClientSide->SetCanWrite(FALSE);
 		while(flag)
 		{
@@ -148,9 +150,7 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 			{
 				if(errno == EAGAIN)
 				{
-					m_pClientSide->LockSendBuffer();
 					m_pClientSide->GetSendStream()->Append(pUserStream->GetData(),pUserStream->GetLength());
-					m_pClientSide->UnlockSendBuffer();
 					m_pClientSide->SetCanWrite(TRUE);
 				}
 				flag = FALSE;
@@ -168,10 +168,12 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 						m_pStream->Sub(m_pStream->GetLength());
 						m_iState = STATUS_IDLE;
 					}
+					SetCanRead(TRUE);
 					flag = FALSE;
 				}
 			}
 		}
+		m_pClientSide->UnlockSendBuffer();
 	}
 
 	return TRUE;

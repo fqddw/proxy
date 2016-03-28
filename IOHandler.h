@@ -29,6 +29,8 @@ class IOHandler
 		virtual int IsServer();
 		void SetCanWrite(int);
 		void SetCanRead(int);
+		int CanRead();
+		int CanWrite();
 		int LockSendBuffer();
 		int UnlockSendBuffer();
 	private:

@@ -132,35 +132,28 @@ int ClientSide::ProccessSend()
 {
 		int totalSend = 0;
 		int flag = TRUE;
-		LockSendBuffer();
 		SetCanWrite(FALSE);
 		while(flag)
 		{
-			if(m_pSendStream->GetLength()==0)
+			printf("Rest Send\n");
+			int nSent = send(GetEvent()->GetFD(),m_pSendStream->GetData(),m_pSendStream->GetLength(),0);printf("nSent %d %d\n",nSent,m_pSendStream->GetLength());
+			if(nSent == -1)
 			{
-				UnlockSendBuffer();
-				flag = TRUE;
+				flag = FALSE;
 			}
-				int nSent = send(GetEvent()->GetFD(),m_pSendStream->GetData(),m_pSendStream->GetLength(),0);printf("nSent %d %d\n",nSent,m_pSendStream->GetLength());
-				if(nSent == -1)
+			else
+			{
+				totalSend += nSent;
+				m_pSendStream->Sub(nSent);
+				if(m_pSendStream->GetLength() == 0)
 				{
-					UnlockSendBuffer();
-						flag = FALSE;
+					if(m_pRemoteSide->GetResponse()->GetBody()->IsEnd())
+					{
+						m_pRemoteSide->SetStatusIdle();
+					}
+					flag = FALSE;
 				}
-				else
-				{
-						totalSend += nSent;
-						m_pSendStream->Sub(nSent);
-						if(m_pSendStream->GetLength() == 0)
-						{
-							if(m_pRemoteSide->GetResponse()->GetBody()->IsEnd())
-							{
-								m_pRemoteSide->SetStatusIdle();
-							}
-							UnlockSendBuffer();
-							flag = FALSE;
-						}
-				}
+			}
 		}
 		SetCanWrite(TRUE);
 	return FALSE;

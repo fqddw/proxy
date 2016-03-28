@@ -41,7 +41,9 @@ int IOHandler::Dispatch(int events)
 	if(events & EPOLLOUT)
 	{
 		if(m_bCanWrite)
+		{
 			GetMasterThread()->InsertTask(m_pSendProc);
+		}
 	}
 	if(events & EPOLLERR)
 	{
@@ -81,6 +83,14 @@ void IOHandler::SetCanWrite(int flag)
 void IOHandler::SetCanRead(int flag)
 {
 	m_bCanRead = flag;
+}
+int IOHandler::CanRead()
+{
+	return m_bCanRead;
+}
+int IOHandler::CanWrite()
+{
+	return m_bCanWrite;
 }
 
 int IOHandler::LockSendBuffer()
