@@ -16,10 +16,12 @@ int ReceiveProccessor::Run()
 {
 		Stream* pStream = NULL;
 		if(m_pIOHandler->IsServer()){
-			printf("server in here\n");
-				m_pIOHandler->ProccessReceive(pStream);
+			m_pIOHandler->ProccessReceive(pStream);
 		}else{
+			m_pIOHandler->SetCanRead(FALSE);
 			GetDataStream(&pStream);
+			//if(pStream)
+			//printf("Stream %s\n",pStream->GetData());
 			if(pStream)
 				m_pIOHandler->ProccessReceive(pStream);
 		}

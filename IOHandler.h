@@ -31,6 +31,8 @@ class IOHandler
 		void SetCanRead(int);
 		int CanRead();
 		int CanWrite();
+		Task* GetRecvTask();
+		Task* GetSendTask();
 		int LockSendBuffer();
 		int UnlockSendBuffer();
 	private:

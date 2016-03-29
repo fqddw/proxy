@@ -37,12 +37,20 @@ int IOHandler::Dispatch(int events)
 		{
 			GetMasterThread()->InsertTask(m_pRecvProc);
 		}
+		else
+		{
+			GetEvent()->SetInReady();
+		}
 	}
 	if(events & EPOLLOUT)
 	{
 		if(m_bCanWrite)
 		{
 			GetMasterThread()->InsertTask(m_pSendProc);
+		}
+		else
+		{
+			GetEvent()->SetOutReady();
 		}
 	}
 	if(events & EPOLLERR)
@@ -104,4 +112,14 @@ int IOHandler::UnlockSendBuffer()
 {
 	cs_->Leave();
 	return TRUE;
+}
+
+Task* IOHandler::GetRecvTask()
+{
+	return m_pRecvProc;
+}
+
+Task* IOHandler::GetSendTask()
+{
+	return m_pSendProc;
 }

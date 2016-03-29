@@ -65,6 +65,7 @@ int ClientSide::ProccessReceive(Stream* pStream)
 				Stream* pHeaderStream = m_pHttpRequest->GetHeader()->ToHeader(); 
 				pRemoteSide->GetSendStream()->Append(pHeaderStream->GetData(),pHeaderStream->GetLength());
 				int hasBody = m_pHttpRequest->HasBody();
+				SetCanWrite(TRUE);
 				if(!hasBody)
 					m_iState = HEADER_NOTFOUND;
 				else
@@ -130,16 +131,23 @@ Stream* ClientSide::GetSendStream(){
 
 int ClientSide::ProccessSend()
 {
+	printf("ClientSide::ProccessSend()\n");
 		int totalSend = 0;
 		int flag = TRUE;
-		SetCanWrite(FALSE);
+		LockSendBuffer();
+		printf("Send Data ClientSide\n");
 		while(flag)
 		{
-			printf("Rest Send\n");
 			int nSent = send(GetEvent()->GetFD(),m_pSendStream->GetData(),m_pSendStream->GetLength(),0);printf("nSent %d %d\n",nSent,m_pSendStream->GetLength());
 			if(nSent == -1)
 			{
 				flag = FALSE;
+				if(GetEvent()->IsOutReady())
+				{
+					GetEvent()->CancelOutReady();
+					//GetMasterThread()->InsertTask(GetSendTask());
+					return TRUE;
+				}
 			}
 			else
 			{
@@ -151,11 +159,21 @@ int ClientSide::ProccessSend()
 					{
 						m_pRemoteSide->SetStatusIdle();
 					}
+					m_pRemoteSide->SetCanRead(TRUE);
+					//SetCanWrite(TRUE);
+					UnlockSendBuffer();
+					if(m_pRemoteSide->GetEvent()->IsInReady())
+					{
+						printf("mannul Recv\n");
+						m_pRemoteSide->GetEvent()->CancelInReady();
+						GetMasterThread()->InsertTask(m_pRemoteSide->GetRecvTask());
+						return TRUE;
+					}
 					flag = FALSE;
 				}
 			}
 		}
-		SetCanWrite(TRUE);
+		UnlockSendBuffer();
 	return FALSE;
 
 }

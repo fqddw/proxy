@@ -1,6 +1,6 @@
 #include "IOEvent.h"
 #include "NetEngine.h"
-IOEvent::IOEvent():m_iFD((int)NULL),m_pHandler(NULL)
+IOEvent::IOEvent():m_iFD((int)NULL),m_pHandler(NULL),m_iOutReady(FALSE),m_iInReady(FALSE)
 {
 }
 IOEvent::IOEvent(IOHandler* pHandler)
@@ -50,4 +50,32 @@ int IOEvent::RemoveFromEngine()
 {
 	m_pEngine->RemoveFileDescriptor(m_pHandler);
 	return TRUE;
+}
+void IOEvent::SetInReady()
+{
+	m_iInReady = TRUE;
+}
+
+void IOEvent::CancelInReady()
+{
+	m_iInReady = FALSE;
+}
+
+int IOEvent::IsInReady()
+{
+	return m_iInReady;
+}
+void IOEvent::SetOutReady()
+{
+	m_iOutReady = TRUE;
+}
+
+void IOEvent::CancelOutReady()
+{
+	m_iOutReady = FALSE;
+}
+
+int IOEvent::IsOutReady()
+{
+	return m_iOutReady;
 }

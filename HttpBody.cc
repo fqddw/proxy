@@ -55,7 +55,7 @@ int HttpBody::Parse(Stream* pStream)
 	char* pData = pStream->GetData();
 	int offset = 0;
 	int begin = 0;
-	char* pCrlf = "\r\n";
+	char* pCrlf = (char*)"\r\n";
 	while(offset < pStream->GetLength())
 	{
 		if(m_iChunkState == CS_IN_CHUNK)
