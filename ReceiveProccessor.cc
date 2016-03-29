@@ -18,12 +18,9 @@ int ReceiveProccessor::Run()
 		if(m_pIOHandler->IsServer()){
 			m_pIOHandler->ProccessReceive(pStream);
 		}else{
-			m_pIOHandler->SetCanRead(FALSE);
+			m_pIOHandler->GetEvent()->CancelInReady();
 			GetDataStream(&pStream);
-			//if(pStream)
-			//printf("Stream %s\n",pStream->GetData());
-			if(pStream)
-				m_pIOHandler->ProccessReceive(pStream);
+			m_pIOHandler->ProccessReceive(pStream);
 		}
 		return 0;
 }
@@ -35,6 +32,7 @@ int ReceiveProccessor::GetDataStream(Stream** pStream)
 	{
 		char buffer[256*1024] = {'\0'};
 		int n = recv(m_pIOHandler->GetEvent()->GetFD(),buffer,256*1024,0);
+		printf("RecvData %d %d\n",n,m_pIOHandler->GetEvent()->GetFD());
 		if(n < 0)
 		{
 			if(errno == EAGAIN)
@@ -43,10 +41,12 @@ int ReceiveProccessor::GetDataStream(Stream** pStream)
 			}
 			else if(errno == EINTR)
 			{
+				printf("EINR\n");
 				continue;
 			}
 			else
 			{
+				printf("ERROR\n");
 				return FALSE;
 			}
 		}

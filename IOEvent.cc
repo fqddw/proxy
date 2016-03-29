@@ -79,3 +79,7 @@ int IOEvent::IsOutReady()
 {
 	return m_iOutReady;
 }
+int IOEvent::ModEvent(int event)
+{
+	m_pEngine->ModFileDescriptor(m_pHandler,event);
+}

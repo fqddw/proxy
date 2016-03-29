@@ -37,7 +37,12 @@ int ClientSide::Proccess()
 }
 int ClientSide::ProccessReceive(Stream* pStream)
 {
-	if(!pStream)return 0;
+	if(!pStream)
+	{
+		GetEvent()->CancelInReady();
+		SetCanRead(TRUE);
+		return 0;
+	}
 		m_pStream->Append(pStream->GetData(),pStream->GetLength());
 
 		if(m_iState == HEADER_NOTFOUND)
@@ -55,6 +60,7 @@ int ClientSide::ProccessReceive(Stream* pStream)
 				delete pSendStream;
 				m_pStream->Sub(m_pStream->GetLength());
 				m_iState = HEADER_NOTFOUND;
+				SetCanWrite(TRUE);
 
 				if(pRemoteSide->IsConnected())
 				{
@@ -65,7 +71,6 @@ int ClientSide::ProccessReceive(Stream* pStream)
 				Stream* pHeaderStream = m_pHttpRequest->GetHeader()->ToHeader(); 
 				pRemoteSide->GetSendStream()->Append(pHeaderStream->GetData(),pHeaderStream->GetLength());
 				int hasBody = m_pHttpRequest->HasBody();
-				SetCanWrite(TRUE);
 				if(!hasBody)
 					m_iState = HEADER_NOTFOUND;
 				else
@@ -117,8 +122,8 @@ RemoteSide* ClientSide::GetRemoteSide(InetSocketAddress* pAddr)
 		pRemoteSide->GetEvent()->SetNetEngine(GetEvent()->GetNetEngine());
 		pRemoteSide->SetMasterThread(GetMasterThread());
 		pRemoteSide->SetClientSide(this);
-		pRemoteSide->GetEvent()->AddToEngine(EPOLLIN|EPOLLOUT|EPOLLERR|EPOLLET|EPOLLRDHUP);
-		g_pGlobalRemoteSidePool->Append(pRemoteSide);
+		pRemoteSide->GetEvent()->AddToEngine(EPOLLOUT|EPOLLERR|EPOLLET|EPOLLRDHUP);
+		//g_pGlobalRemoteSidePool->Append(pRemoteSide);
 	}
 	//g_pGlobalRemoteSidePool->Unlock();
 	return pRemoteSide;
@@ -166,7 +171,7 @@ int ClientSide::ProccessSend()
 					{
 						printf("mannul Recv\n");
 						m_pRemoteSide->GetEvent()->CancelInReady();
-						GetMasterThread()->InsertTask(m_pRemoteSide->GetRecvTask());
+						//GetMasterThread()->InsertTask(m_pRemoteSide->GetRecvTask());
 						return TRUE;
 					}
 					flag = FALSE;

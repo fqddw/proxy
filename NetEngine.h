@@ -10,6 +10,7 @@ class NetEngine
 		int SetSize(int);
 		int Loop();
 		int AddFileDescriptor(IOHandler*,int);
+		int ModFileDescriptor(IOHandler*,int);
 		int RemoveFileDescriptor(IOHandler*);
 	private:
 		int m_iFD;

@@ -35,6 +35,7 @@ int IOHandler::Dispatch(int events)
 	{
 		if(m_bCanRead)
 		{
+			SetCanRead(FALSE);
 			GetMasterThread()->InsertTask(m_pRecvProc);
 		}
 		else

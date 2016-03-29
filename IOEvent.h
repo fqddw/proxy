@@ -17,6 +17,7 @@ class IOEvent
 		NetEngine* GetNetEngine();
 		void SetNetEngine(NetEngine* pNetEngine);
 		int AddToEngine(int);
+		int ModEvent(int);
 		int RemoveFromEngine();
 		void SetInReady();
 		void CancelInReady();

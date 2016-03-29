@@ -65,6 +65,7 @@ int RemoteSide::ProccessSend()
 		if(m_pSendStream->GetLength())
 			SetCanWrite(TRUE);
 		m_isConnected = TRUE;
+		GetEvent()->ModEvent(EPOLLIN|EPOLLET);
 	}
 	if(!IsConnected())
 	{
@@ -107,6 +108,12 @@ int RemoteSide::ProccessConnectionReset()
 }
 int RemoteSide::ProccessReceive(Stream* pStream)
 {
+	if(!pStream)
+	{
+		GetEvent()->CancelInReady();
+		SetCanRead(TRUE);
+		return TRUE;
+	}
 	Stream* pUserStream = pStream;
 	m_pStream->Append(pStream->GetData(),pStream->GetLength());
 	int isEnd = FALSE;
@@ -148,6 +155,7 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 			{
 				if(errno == EAGAIN)
 				{
+					printf("EAGAIN Test\n");
 					m_pClientSide->GetSendStream()->Append(pUserStream->GetData(),pUserStream->GetLength());
 					m_pClientSide->UnlockSendBuffer();
 				}
@@ -170,11 +178,12 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 					m_pClientSide->UnlockSendBuffer();
 					if(GetEvent()->IsInReady())
 					{
+						printf("IsInReady\n");
 						GetMasterThread()->InsertTask(GetRecvTask());
-						//GetRecvTask()->Run();
 					}
 					else
 					{
+						printf("Not Ready!\n");
 						SetCanRead(TRUE);
 					}
 					flag = FALSE;
