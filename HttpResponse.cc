@@ -6,7 +6,7 @@
 HttpResponse::HttpResponse():m_pBody(NULL)
 {
 }
-HttpResponse::HttpResponse(Stream* pStream):m_pStream(pStream),m_pHeader(NULL),m_iState(HEADER_NOTFOUND),m_pBody(new HttpBody())
+HttpResponse::HttpResponse(Stream* pStream):m_pStream(pStream),m_pHeader(NULL),m_iState(HEADER_NOTFOUND),m_pBody(NULL)
 {
 }
 

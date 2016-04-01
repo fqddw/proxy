@@ -35,7 +35,8 @@ int IOHandler::Dispatch(int events)
 	{
 		if(m_bCanRead)
 		{
-			SetCanRead(FALSE);
+			if(!IsServer())
+				SetCanRead(FALSE);
 			GetMasterThread()->InsertTask(m_pRecvProc);
 		}
 		else
@@ -104,14 +105,14 @@ int IOHandler::CanWrite()
 
 int IOHandler::LockSendBuffer()
 {
-	cs_->Enter();
+	//cs_->Enter();
 	return TRUE;
 }
 
 
 int IOHandler::UnlockSendBuffer()
 {
-	cs_->Leave();
+	//cs_->Leave();
 	return TRUE;
 }
 

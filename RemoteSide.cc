@@ -29,6 +29,7 @@ int RemoteSide::SetStatusIdle()
 	m_pHttpResponse = new HttpResponse(m_pStream);
 
 	m_iState = STATUS_BLOCKING; 
+	SetCanRead(TRUE);
 	return TRUE;
 }
 
@@ -127,6 +128,7 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 			if(m_pHttpResponse->HasBody())
 			{
 				m_pHttpResponse->LoadBody();
+				printf("HttpBody %d\n",m_pHttpResponse->GetBody());
 				Stream* pBodyStream = pStream->GetPartStream(iHeaderSize,pStream->GetLength());
 				isEnd = m_pHttpResponse->GetBody()->IsEnd(pBodyStream);
 			}
@@ -155,7 +157,6 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 			{
 				if(errno == EAGAIN)
 				{
-					printf("EAGAIN Test\n");
 					m_pClientSide->GetSendStream()->Append(pUserStream->GetData(),pUserStream->GetLength());
 					m_pClientSide->UnlockSendBuffer();
 				}
@@ -174,16 +175,16 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 						m_pHttpResponse = new HttpResponse(m_pStream);
 						m_pStream->Sub(m_pStream->GetLength());
 						m_iState = STATUS_IDLE;
+						SetCanRead(TRUE);
+						m_pClientSide->SetCanWrite(FALSE);
 					}
 					m_pClientSide->UnlockSendBuffer();
 					if(GetEvent()->IsInReady())
 					{
-						printf("IsInReady\n");
 						GetMasterThread()->InsertTask(GetRecvTask());
 					}
 					else
 					{
-						printf("Not Ready!\n");
 						SetCanRead(TRUE);
 					}
 					flag = FALSE;

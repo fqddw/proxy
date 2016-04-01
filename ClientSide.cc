@@ -123,7 +123,7 @@ RemoteSide* ClientSide::GetRemoteSide(InetSocketAddress* pAddr)
 		pRemoteSide->SetMasterThread(GetMasterThread());
 		pRemoteSide->SetClientSide(this);
 		pRemoteSide->GetEvent()->AddToEngine(EPOLLOUT|EPOLLERR|EPOLLET|EPOLLRDHUP);
-		//g_pGlobalRemoteSidePool->Append(pRemoteSide);
+		g_pGlobalRemoteSidePool->Append(pRemoteSide);
 	}
 	//g_pGlobalRemoteSidePool->Unlock();
 	return pRemoteSide;
@@ -136,14 +136,18 @@ Stream* ClientSide::GetSendStream(){
 
 int ClientSide::ProccessSend()
 {
-	printf("ClientSide::ProccessSend()\n");
+	printf("Send Pending Length: %d\n",m_pSendStream->GetLength());
+	if(m_pSendStream->GetLength()<=0)
+	{
+		SetCanWrite(FALSE);
+		return FALSE;
+	}
 		int totalSend = 0;
 		int flag = TRUE;
 		LockSendBuffer();
-		printf("Send Data ClientSide\n");
 		while(flag)
 		{
-			int nSent = send(GetEvent()->GetFD(),m_pSendStream->GetData(),m_pSendStream->GetLength(),0);printf("nSent %d %d\n",nSent,m_pSendStream->GetLength());
+			int nSent = send(GetEvent()->GetFD(),m_pSendStream->GetData(),m_pSendStream->GetLength(),0);
 			if(nSent == -1)
 			{
 				flag = FALSE;
@@ -163,16 +167,19 @@ int ClientSide::ProccessSend()
 					if(m_pRemoteSide->GetResponse()->GetBody()->IsEnd())
 					{
 						m_pRemoteSide->SetStatusIdle();
+						SetCanWrite(FALSE);
 					}
-					m_pRemoteSide->SetCanRead(TRUE);
 					//SetCanWrite(TRUE);
 					UnlockSendBuffer();
 					if(m_pRemoteSide->GetEvent()->IsInReady())
 					{
-						printf("mannul Recv\n");
 						m_pRemoteSide->GetEvent()->CancelInReady();
-						//GetMasterThread()->InsertTask(m_pRemoteSide->GetRecvTask());
+						GetMasterThread()->InsertTask(m_pRemoteSide->GetRecvTask());
 						return TRUE;
+					}
+					else
+					{
+						m_pRemoteSide->SetCanRead(TRUE);
 					}
 					flag = FALSE;
 				}

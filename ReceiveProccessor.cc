@@ -32,7 +32,6 @@ int ReceiveProccessor::GetDataStream(Stream** pStream)
 	{
 		char buffer[256*1024] = {'\0'};
 		int n = recv(m_pIOHandler->GetEvent()->GetFD(),buffer,256*1024,0);
-		printf("RecvData %d %d\n",n,m_pIOHandler->GetEvent()->GetFD());
 		if(n < 0)
 		{
 			if(errno == EAGAIN)
