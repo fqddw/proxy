@@ -105,14 +105,14 @@ int IOHandler::CanWrite()
 
 int IOHandler::LockSendBuffer()
 {
-	//cs_->Enter();
+	cs_->Enter();
 	return TRUE;
 }
 
 
 int IOHandler::UnlockSendBuffer()
 {
-	//cs_->Leave();
+	cs_->Leave();
 	return TRUE;
 }
 

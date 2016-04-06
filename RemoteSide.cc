@@ -128,7 +128,6 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 			if(m_pHttpResponse->HasBody())
 			{
 				m_pHttpResponse->LoadBody();
-				printf("HttpBody %d\n",m_pHttpResponse->GetBody());
 				Stream* pBodyStream = pStream->GetPartStream(iHeaderSize,pStream->GetLength());
 				isEnd = m_pHttpResponse->GetBody()->IsEnd(pBodyStream);
 			}
@@ -177,6 +176,7 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 						m_iState = STATUS_IDLE;
 						SetCanRead(TRUE);
 						m_pClientSide->SetCanWrite(FALSE);
+						//m_pClientSide->GetEvent()->ModEvent(EPOLLIN|EPOLLERR|EPOLLET|EPOLLRDHUP);
 					}
 					m_pClientSide->UnlockSendBuffer();
 					if(GetEvent()->IsInReady())

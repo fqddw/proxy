@@ -53,6 +53,12 @@ int ClientSide::ProccessReceive(Stream* pStream)
 				m_iState = HEADER_FOUND;
 				InetSocketAddress* pAddr = NULL;
 				pAddr = NetUtils::GetHostByName(m_pHttpRequest->GetHeader()->GetUrl()->GetHost(),m_pHttpRequest->GetHeader()->GetUrl()->GetPort());
+				if(!pAddr)
+				{
+					char* pText = "HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n";
+					send(GetEvent()->GetFD(),pText,strlen(pText),0);
+					return 0;
+				}
 				RemoteSide* pRemoteSide = GetRemoteSide(pAddr);
 				m_pRemoteSide = pRemoteSide;
 				Stream* pSendStream = m_pHttpRequest->GetHeader()->ToHeader();
@@ -61,12 +67,16 @@ int ClientSide::ProccessReceive(Stream* pStream)
 				m_pStream->Sub(m_pStream->GetLength());
 				m_iState = HEADER_NOTFOUND;
 				SetCanWrite(TRUE);
+				//GetEvent()->ModEvent(EPOLLOUT|EPOLLET);
 
 				if(pRemoteSide->IsConnected())
 				{
+					printf("Log Reuse\n");
 					pRemoteSide->SetCanWrite(TRUE);
 					pRemoteSide->ProccessSend();
 				}
+				else
+					printf("New Connection\n");
 				return 0;
 				Stream* pHeaderStream = m_pHttpRequest->GetHeader()->ToHeader(); 
 				pRemoteSide->GetSendStream()->Append(pHeaderStream->GetData(),pHeaderStream->GetLength());
@@ -122,7 +132,7 @@ RemoteSide* ClientSide::GetRemoteSide(InetSocketAddress* pAddr)
 		pRemoteSide->GetEvent()->SetNetEngine(GetEvent()->GetNetEngine());
 		pRemoteSide->SetMasterThread(GetMasterThread());
 		pRemoteSide->SetClientSide(this);
-		pRemoteSide->GetEvent()->AddToEngine(EPOLLOUT|EPOLLERR|EPOLLET|EPOLLRDHUP);
+		pRemoteSide->GetEvent()->AddToEngine(EPOLLIN|EPOLLOUT|EPOLLERR|EPOLLET|EPOLLRDHUP);
 		g_pGlobalRemoteSidePool->Append(pRemoteSide);
 	}
 	//g_pGlobalRemoteSidePool->Unlock();
@@ -154,7 +164,9 @@ int ClientSide::ProccessSend()
 				if(GetEvent()->IsOutReady())
 				{
 					GetEvent()->CancelOutReady();
-					GetMasterThread()->InsertTask(GetSendTask());
+					printf("Out Ready!\n");
+					//GetMasterThread()->InsertTask(GetSendTask());
+					UnlockSendBuffer();
 					return TRUE;
 				}
 			}
@@ -168,12 +180,14 @@ int ClientSide::ProccessSend()
 					{
 						m_pRemoteSide->SetStatusIdle();
 						SetCanWrite(FALSE);
+						printf("BodyEnd Here\n");
+						//GetEvent()->ModEvent(EPOLLIN|EPOLLERR|EPOLLET|EPOLLRDHUP);
 					}
 					//SetCanWrite(TRUE);
-					UnlockSendBuffer();
 					if(m_pRemoteSide->GetEvent()->IsInReady())
 					{
 						m_pRemoteSide->GetEvent()->CancelInReady();
+						UnlockSendBuffer();
 						GetMasterThread()->InsertTask(m_pRemoteSide->GetRecvTask());
 						return TRUE;
 					}
