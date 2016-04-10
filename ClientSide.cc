@@ -55,7 +55,7 @@ int ClientSide::ProccessReceive(Stream* pStream)
 				pAddr = NetUtils::GetHostByName(m_pHttpRequest->GetHeader()->GetUrl()->GetHost(),m_pHttpRequest->GetHeader()->GetUrl()->GetPort());
 				if(!pAddr)
 				{
-					char* pText = "HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n";
+					char* pText = (char*)"HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n";
 					send(GetEvent()->GetFD(),pText,strlen(pText),0);
 					return 0;
 				}
