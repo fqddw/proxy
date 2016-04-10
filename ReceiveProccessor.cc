@@ -47,6 +47,18 @@ int ReceiveProccessor::GetDataStream(Stream** pStream)
 			}
 			else
 			{
+				int sockfd = m_pIOHandler->GetEvent()->GetFD();
+				m_pIOHandler->GetEvent()->RemoveFromEngine();
+				if(pGlobalList->Delete(m_pIOHandler))
+				{
+					//delete m_pIOHandler;
+				}
+				if(g_pGlobalRemoteSidePool->Delete(reinterpret_cast<RemoteSide*>(m_pIOHandler)))
+				{
+				}
+				close(sockfd);
+				return FALSE;
+
 				printf("ERROR\n");
 				return FALSE;
 			}

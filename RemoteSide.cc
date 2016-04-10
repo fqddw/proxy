@@ -176,6 +176,7 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 						m_iState = STATUS_IDLE;
 						SetCanRead(TRUE);
 						m_pClientSide->SetCanWrite(FALSE);
+						printf("Remote Class Body End\n");
 						//m_pClientSide->GetEvent()->ModEvent(EPOLLIN|EPOLLERR|EPOLLET|EPOLLRDHUP);
 					}
 					m_pClientSide->UnlockSendBuffer();
