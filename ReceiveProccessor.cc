@@ -7,7 +7,9 @@
 #include "unistd.h"
 #include "MemList.h"
 #include "stdio.h"
+#include "RemoteSide.h"
 extern MemList<void*>* pGlobalList;
+extern MemList<RemoteSide*>* g_pGlobalRemoteSidePool;
 ReceiveProccessor::ReceiveProccessor(IOHandler* pIOHandler):m_pIOHandler(pIOHandler)
 {
 }
@@ -60,9 +62,9 @@ int ReceiveProccessor::GetDataStream(Stream** pStream)
 			int sockfd = m_pIOHandler->GetEvent()->GetFD();
 			m_pIOHandler->GetEvent()->RemoveFromEngine();
 			g_pGlobalRemoteSidePool->Delete((RemoteSide*)m_pIOHandler);
-			if(pGlobalList->Delete(this))
+			if(pGlobalList->Delete(m_pIOHandler))
 			{
-				delete this;
+				//delete m_pIOHandler;
 			}
 			close(sockfd);
 			return FALSE;
