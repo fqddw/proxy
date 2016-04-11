@@ -24,7 +24,8 @@ int ReceiveProccessor::Run()
 		}
 		return 0;
 }
-
+#include "RemoteSide.h"
+extern MemList<RemoteSide*>* g_pGlobalRemoteSidePool;
 int ReceiveProccessor::GetDataStream(Stream** pStream)
 {
 	*pStream = NULL;
@@ -46,13 +47,19 @@ int ReceiveProccessor::GetDataStream(Stream** pStream)
 			else
 			{
 				printf("ERROR\n");
+				int sockfd = m_pIOHandler->GetEvent()->GetFD();
+				m_pIOHandler->GetEvent()->RemoveFromEngine();
+				g_pGlobalRemoteSidePool->Delete((RemoteSide*)m_pIOHandler);
+
 				return FALSE;
 			}
 		}
 		if(n == 0)
 		{
+			printf("Remote Sockets Closed\n");
 			int sockfd = m_pIOHandler->GetEvent()->GetFD();
 			m_pIOHandler->GetEvent()->RemoveFromEngine();
+			g_pGlobalRemoteSidePool->Delete((RemoteSide*)m_pIOHandler);
 			if(pGlobalList->Delete(this))
 			{
 				delete this;
