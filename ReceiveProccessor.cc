@@ -70,7 +70,6 @@ int ReceiveProccessor::GetDataStream(Stream** pStream)
 		}
 		if(n == 0)
 		{
-			printf("Remote Sockets Closed\n");
 			int sockfd = m_pIOHandler->GetEvent()->GetFD();
 			m_pIOHandler->GetEvent()->RemoveFromEngine();
 			g_pGlobalRemoteSidePool->Delete((RemoteSide*)m_pIOHandler);

@@ -71,12 +71,9 @@ int ClientSide::ProccessReceive(Stream* pStream)
 
 				if(pRemoteSide->IsConnected())
 				{
-					printf("Log Reuse\n");
 					pRemoteSide->SetCanWrite(TRUE);
 					pRemoteSide->ProccessSend();
 				}
-				else
-					printf("New Connection\n");
 				return 0;
 				Stream* pHeaderStream = m_pHttpRequest->GetHeader()->ToHeader(); 
 				pRemoteSide->GetSendStream()->Append(pHeaderStream->GetData(),pHeaderStream->GetLength());
@@ -146,7 +143,7 @@ Stream* ClientSide::GetSendStream(){
 
 int ClientSide::ProccessSend()
 {
-	printf("Send Pending Length: %d\n",m_pSendStream->GetLength());
+	//printf("Send Pending Length: %d\n",m_pSendStream->GetLength());
 	if(m_pSendStream->GetLength()<=0)
 	{
 		SetCanWrite(FALSE);
@@ -164,7 +161,6 @@ int ClientSide::ProccessSend()
 				if(GetEvent()->IsOutReady())
 				{
 					GetEvent()->CancelOutReady();
-					printf("Out Ready!\n");
 					//GetMasterThread()->InsertTask(GetSendTask());
 					UnlockSendBuffer();
 					return TRUE;
@@ -180,7 +176,6 @@ int ClientSide::ProccessSend()
 					{
 						m_pRemoteSide->SetStatusIdle();
 						SetCanWrite(FALSE);
-						printf("BodyEnd Here\n");
 						//GetEvent()->ModEvent(EPOLLIN|EPOLLERR|EPOLLET|EPOLLRDHUP);
 					}
 					//SetCanWrite(TRUE);
