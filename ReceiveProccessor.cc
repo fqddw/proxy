@@ -83,6 +83,8 @@ int ReceiveProccessor::GetDataStream(Stream** pStream)
 		if(*pStream == NULL)
 			*pStream = new Stream();
 		(*pStream)->Append(buffer,n);
+		m_pIOHandler->GetEvent()->SetInReady();
+		break;
 	}
 	return TRUE;
 }

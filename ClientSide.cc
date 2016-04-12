@@ -130,7 +130,7 @@ RemoteSide* ClientSide::GetRemoteSide(InetSocketAddress* pAddr)
 		pRemoteSide->SetMasterThread(GetMasterThread());
 		pRemoteSide->SetClientSide(this);
 		pRemoteSide->GetEvent()->AddToEngine(EPOLLIN|EPOLLOUT|EPOLLERR|EPOLLET|EPOLLRDHUP);
-		g_pGlobalRemoteSidePool->Append(pRemoteSide);
+		//g_pGlobalRemoteSidePool->Append(pRemoteSide);
 	}
 	//g_pGlobalRemoteSidePool->Unlock();
 	return pRemoteSide;
@@ -158,12 +158,27 @@ int ClientSide::ProccessSend()
 			if(nSent == -1)
 			{
 				flag = FALSE;
-				if(GetEvent()->IsOutReady())
+				if(errno == EAGAIN)
 				{
-					GetEvent()->CancelOutReady();
-					//GetMasterThread()->InsertTask(GetSendTask());
-					UnlockSendBuffer();
-					return TRUE;
+					if(GetEvent()->IsOutReady())
+					{
+						GetEvent()->CancelOutReady();
+						//GetMasterThread()->InsertTask(GetSendTask());
+						UnlockSendBuffer();
+						return TRUE;
+					}
+				}
+				else
+				{
+					m_pRemoteSide->GetEvent()->RemoveFromEngine();
+					close(m_pRemoteSide->GetEvent()->GetFD());
+					int sockfd = GetEvent()->GetFD();
+					GetEvent()->RemoveFromEngine();
+					if(pGlobalList->Delete(this))
+					{
+						//delete m_pIOHandler;
+					}
+					close(sockfd);
 				}
 			}
 			else
