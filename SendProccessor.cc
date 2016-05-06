@@ -1,5 +1,5 @@
 #include "SendProccessor.h"
-SendProccessor::SendProccessor(IOHandler* pIOHandler):m_pIOHandler(pIOHandler)
+SendProccessor::SendProccessor(IOHandler* pIOHandler):m_pIOHandler(pIOHandler),Task()
 {
 }
 #include "stdio.h"

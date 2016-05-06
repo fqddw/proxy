@@ -1,8 +1,10 @@
 #include "TimeLib.h"
+#include "stdio.h"
 struct timespec Time::GetNow()
 {
 	struct timespec t;
 	clock_gettime(CLOCK_REALTIME,&t);
+	printf("sec %d nsec %d\n",t.tv_sec,t.tv_nsec);
 	return t;
 }
 

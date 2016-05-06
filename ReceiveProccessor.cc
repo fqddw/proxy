@@ -10,7 +10,7 @@
 #include "RemoteSide.h"
 extern MemList<void*>* pGlobalList;
 extern MemList<RemoteSide*>* g_pGlobalRemoteSidePool;
-ReceiveProccessor::ReceiveProccessor(IOHandler* pIOHandler):m_pIOHandler(pIOHandler)
+ReceiveProccessor::ReceiveProccessor(IOHandler* pIOHandler):m_pIOHandler(pIOHandler),Task()
 {
 }
 

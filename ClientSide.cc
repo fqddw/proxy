@@ -37,6 +37,7 @@ int ClientSide::Proccess()
 }
 int ClientSide::ProccessReceive(Stream* pStream)
 {
+	printf("Client Proccess Receive\n");
 	if(!pStream)
 	{
 		GetEvent()->CancelInReady();

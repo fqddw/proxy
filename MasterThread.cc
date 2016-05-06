@@ -58,26 +58,34 @@ int MasterThread::RunLoop()
 	Task* pNextTask = NULL;
 	while (1)
 	{
-		pNextTask = pTaskQueue->PopLastestTask();
-		if (pNextTask != NULL && workthread_busy != WORKTHREAD_BUSY)
+		if (workthread_busy != WORKTHREAD_BUSY)
 		{
-			struct timespec time = Time::GetNow();
-			int cmp = Time::Compare(time,pNextTask->GetTime());
-			if (cmp >= 0)
+			pNextTask = pTaskQueue->PopLastestTask();
+			if(pNextTask == NULL)
 			{
-				int ret = DispatchTask(pNextTask);
-				if(!ret)
-				{
-					workthread_busy = WORKTHREAD_BUSY;
-					continue;
-				}
-				//pTaskQueue->PopLastestTask();
+				SleepForever();
 			}
 			else
 			{
-				struct timespec taskTime = pNextTask->GetTime();
-				ep_->SetDuring(&taskTime);
-				Sleep();
+				struct timespec time = Time::GetNow();
+				int cmp = Time::Compare(time,pNextTask->GetTime());
+				if (cmp >= 0)
+				{
+					int ret = DispatchTask(pNextTask);
+					if(!ret)
+					{
+						workthread_busy = WORKTHREAD_BUSY;
+						continue;
+					}
+					//pTaskQueue->PopLastestTask();
+				}
+				else
+				{
+					struct timespec taskTime = pNextTask->GetTime();
+					InsertTask(pNextTask);
+					ep_->SetDuring(&taskTime);
+					Sleep();
+				}
 			}
 		}
 		else
