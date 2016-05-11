@@ -75,6 +75,8 @@ int MasterThread::RunLoop()
 					if(!ret)
 					{
 						workthread_busy = WORKTHREAD_BUSY;
+						InsertTask(pNextTask);
+						SleepForever();
 						continue;
 					}
 					//pTaskQueue->PopLastestTask();
