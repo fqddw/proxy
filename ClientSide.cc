@@ -37,7 +37,6 @@ int ClientSide::Proccess()
 }
 int ClientSide::ProccessReceive(Stream* pStream)
 {
-	printf("Client Proccess Receive\n");
 	if(!pStream)
 	{
 		GetEvent()->CancelInReady();
@@ -152,9 +151,9 @@ int ClientSide::ProccessSend()
 	}
 		int totalSend = 0;
 		int flag = TRUE;
-		LockSendBuffer();
 		while(flag)
 		{
+			LockSendBuffer();
 			int nSent = send(GetEvent()->GetFD(),m_pSendStream->GetData(),m_pSendStream->GetLength(),0);
 			if(nSent == -1)
 			{
@@ -210,7 +209,6 @@ int ClientSide::ProccessSend()
 				}
 			}
 		}
-		UnlockSendBuffer();
 	return FALSE;
 
 }

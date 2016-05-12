@@ -76,28 +76,28 @@ int RemoteSide::ProccessSend()
 
 		int totalSend = 0;
 		int flag = TRUE;
-		LockSendBuffer();
 		while(flag)
 		{
-				int nSent = send(GetEvent()->GetFD(),m_pSendStream->GetData(),m_pSendStream->GetLength(),0);
-				if(nSent == -1)
+			LockSendBuffer();
+			int nSent = send(GetEvent()->GetFD(),m_pSendStream->GetData(),m_pSendStream->GetLength(),0);
+			if(nSent == -1)
+			{
+				if(errno == EAGAIN)
+					flag = FALSE;
+			}
+			else
+			{
+				totalSend += nSent;
+				m_pSendStream->Sub(nSent);
+				if(m_pSendStream->GetLength() == 0)
 				{
-					if(errno != EAGAIN)
-						flag = FALSE;
+					flag = FALSE;
+					SetCanWrite(flag);
+					m_pClientSide->SetCanRead(TRUE);
 				}
-				else
-				{
-						totalSend += nSent;
-						m_pSendStream->Sub(nSent);
-						if(m_pSendStream->GetLength() == 0)
-						{
-							flag = FALSE;
-							SetCanWrite(flag);
-							m_pClientSide->SetCanRead(TRUE);
-						}
-				}
+			}
+			UnlockSendBuffer();
 		}
-		UnlockSendBuffer();
 	return TRUE;
 }
 
@@ -120,10 +120,10 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 	int isEnd = FALSE;
 	if(m_pHttpResponse->GetState() == HEADER_NOTFOUND)
 	{
-		m_pHttpResponse->SetState(HEADER_FOUND);
 		int iHeaderSize = 0;
 		if(iHeaderSize = m_pHttpResponse->IsHeaderEnd())
 		{
+			m_pHttpResponse->SetState(HEADER_FOUND);
 			m_pHttpResponse->LoadHttpHeader();
 			if(m_pHttpResponse->HasBody())
 			{
@@ -148,9 +148,9 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 	else
 	{
 		int flag = TRUE;
-		m_pClientSide->LockSendBuffer();
 		while(flag)
 		{
+			m_pClientSide->LockSendBuffer();
 			int nSent = send(m_pClientSide->GetEvent()->GetFD(),pUserStream->GetData(),pUserStream->GetLength(),0);
 			if(nSent == -1)
 			{
