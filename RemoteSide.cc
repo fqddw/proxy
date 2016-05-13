@@ -82,8 +82,11 @@ int RemoteSide::ProccessSend()
 			int nSent = send(GetEvent()->GetFD(),m_pSendStream->GetData(),m_pSendStream->GetLength(),0);
 			if(nSent == -1)
 			{
+				flag = FALSE;
 				if(errno == EAGAIN)
-					flag = FALSE;
+					printf("--------------------------\n");
+				else
+					printf("||||||||||||||||||\n");
 			}
 			else
 			{

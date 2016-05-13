@@ -122,14 +122,17 @@ int HttpResponse::LoadHttpHeader()
 		}
 		if(state == PS_CODE)
 		{
-			if(pData[it] == ' ')
+			if(pData[it] == ' ' || pData[it] == '\r')
 			{
 				int len =it-nStart;
 				char pCode[4] = "\0";
 				memcpy(pCode,pData+nStart,len);
 				int iCode = atoi(pCode);
 				m_pHeader->GetResponseLine()->SetCode(iCode);
-				state = PS_SPACE_BEFORE_STATUS_TEXT;
+				if(pData[it] == ' ')
+					state = PS_SPACE_BEFORE_STATUS_TEXT;
+				else
+					state = PS_BEFORE_LF;
 			}
 		}
 		if(state == PS_SPACE_BEFORE_STATUS_TEXT)
