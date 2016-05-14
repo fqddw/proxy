@@ -4,6 +4,9 @@
 #include "stdio.h"
 #include "errno.h"
 #include "NetUtils.h"
+#include "unistd.h"
+#include "string.h"
+
 int RemoteSide::Proccess()
 {
 	return TRUE;
@@ -37,11 +40,11 @@ InetSocketAddress* RemoteSide::GetAddr()
 {
 	return m_pAddr;
 }
-RemoteSide::RemoteSide():IOHandler(),m_pSendStream(new Stream),m_pStream(new Stream),m_iState(STATUS_BLOCKING),m_isConnected(FALSE)
+RemoteSide::RemoteSide():IOHandler(),m_pSendStream(new Stream),m_pStream(new Stream),m_iState(STATUS_BLOCKING),m_isConnected(FALSE),m_bCloseClient(FALSE)
 {
 	GetEvent()->SetIOHandler(this);
 }
-RemoteSide::RemoteSide(InetSocketAddress* pAddr):IOHandler(),m_pSendStream(new Stream),m_pStream(new Stream),m_iState(STATUS_BLOCKING),m_isConnected(FALSE)
+RemoteSide::RemoteSide(InetSocketAddress* pAddr):IOHandler(),m_pSendStream(new Stream),m_pStream(new Stream),m_iState(STATUS_BLOCKING),m_isConnected(FALSE),m_bCloseClient(FALSE)
 {
 	GetEvent()->SetIOHandler(this);
 	m_pAddr = pAddr;
@@ -105,11 +108,6 @@ int RemoteSide::ProccessSend()
 }
 
 extern MemList<RemoteSide*>* g_pGlobalRemoteSidePool;
-int RemoteSide::ProccessConnectionReset()
-{
-	g_pGlobalRemoteSidePool->Delete(this);
-	return TRUE;
-}
 int RemoteSide::ProccessReceive(Stream* pStream)
 {
 	if(!pStream)
@@ -123,11 +121,23 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 	int isEnd = FALSE;
 	if(m_pHttpResponse->GetState() == HEADER_NOTFOUND)
 	{
+		m_bCloseClient = FALSE;
 		int iHeaderSize = 0;
 		if(iHeaderSize = m_pHttpResponse->IsHeaderEnd())
 		{
 			m_pHttpResponse->SetState(HEADER_FOUND);
 			m_pHttpResponse->LoadHttpHeader();
+			char* pConnection = m_pHttpResponse->GetHeader()->GetField(HTTP_CONNECTION);
+			if(pConnection)
+			{
+				printf("%s\n",pConnection);
+				if(strstr(pConnection,"close") && m_pHttpResponse->GetHeader()->GetField(HTTP_CONTENT_LENGTH) == NULL)
+				{
+					printf("Client Need Close\n");
+					m_bCloseClient = TRUE;
+				}
+			}
+
 			if(m_pHttpResponse->HasBody())
 			{
 				m_pHttpResponse->LoadBody();
@@ -223,4 +233,15 @@ HttpResponse* RemoteSide::GetResponse()
 int RemoteSide::IsConnected()
 {
 	return m_isConnected == TRUE;
+}
+
+int RemoteSide::ProccessConnectionReset()
+{
+	if(m_bCloseClient)
+	{
+		printf("Client Need Close\n");
+		m_pClientSide->GetEvent()->RemoveFromEngine();
+		close(m_pClientSide->GetEvent()->GetFD());
+	}
+	return 0;
 }

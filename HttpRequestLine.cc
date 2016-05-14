@@ -30,7 +30,10 @@ char* HttpRequestLine::ToString()
 
 char* HttpRequestLine::GetMethodString()
 {
-	return (char*)"GET";
+	if(m_iMethod == HTTP_METHOD_GET)
+		return (char*)"GET";
+	if(m_iMethod == HTTP_METHOD_POST)
+		return (char*)"POST";
 }
 int HttpRequestLine::GetMajorVer()
 {

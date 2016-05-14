@@ -58,6 +58,7 @@ int ReceiveProccessor::GetDataStream(Stream** pStream)
 				{
 				}
 				close(sockfd);
+				m_pIOHandler->ProccessConnectionReset();
 				return FALSE;
 
 				/*printf("ERROR\n");
@@ -77,6 +78,7 @@ int ReceiveProccessor::GetDataStream(Stream** pStream)
 			{
 				//delete m_pIOHandler;
 			}
+			m_pIOHandler->ProccessConnectionReset();
 			close(sockfd);
 			return FALSE;
 		}

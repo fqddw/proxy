@@ -35,6 +35,7 @@ class RemoteSide:public IOHandler
 		int SetClientSide(ClientSide*);
 		HttpResponse* GetResponse();
 	private:
+		int m_bCloseClient;
 		int m_isConnected;
 		int m_iSocket;
 		int m_iState;
