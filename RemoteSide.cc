@@ -139,7 +139,7 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 			if(m_pHttpResponse->HasBody())
 			{
 				m_pHttpResponse->LoadBody();
-				Stream* pBodyStream = pStream->GetPartStream(iHeaderSize,pStream->GetLength());
+				Stream* pBodyStream = m_pStream->GetPartStream(iHeaderSize,m_pStream->GetLength());
 				isEnd = m_pHttpResponse->GetBody()->IsEnd(pBodyStream);
 			}
 		}
