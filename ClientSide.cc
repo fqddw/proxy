@@ -64,7 +64,6 @@ int ClientSide::ProccessReceive(Stream* pStream)
 				Stream* pSendStream = m_pHttpRequest->GetHeader()->ToHeader();
 				pRemoteSide->GetSendStream()->Append(pSendStream->GetData(),pSendStream->GetLength());
 				delete pSendStream;
-				m_pStream->Sub(m_pStream->GetLength());
 				SetCanWrite(TRUE);
 				//GetEvent()->ModEvent(EPOLLOUT|EPOLLET);
 
@@ -75,15 +74,18 @@ int ClientSide::ProccessReceive(Stream* pStream)
 				{
 					printf("Has Request Body\n");
 					m_pHttpRequest->LoadBody();
-					Stream* pBodyStream = m_pHttpRequest->GetBody()->ToStream(pStream);
-					pRemoteSide->GetSendStream()->Append(pStream->GetData(),pBodyStream->GetLength());
+					Stream* pBodyStream = m_pStream->GetPartStream(m_pHttpRequest->GetHeader()->GetRawLength(),m_pStream->GetLength());
+					if(m_pHttpRequest->GetBody()->IsEnd(pBodyStream))
+						m_iState = HEADER_NOTFOUND;
+
+					pRemoteSide->GetSendStream()->Append(pBodyStream->GetData(),pBodyStream->GetLength());
 				}
 				if(pRemoteSide->IsConnected())
 				{
 					pRemoteSide->SetCanWrite(TRUE);
 					pRemoteSide->ProccessSend();
 				}
-
+				m_pStream->Sub(m_pStream->GetLength());
 			}
 			else
 			{

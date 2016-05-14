@@ -130,10 +130,8 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 			char* pConnection = m_pHttpResponse->GetHeader()->GetField(HTTP_CONNECTION);
 			if(pConnection)
 			{
-				printf("%s\n",pConnection);
-				if(strstr(pConnection,"close") && m_pHttpResponse->GetHeader()->GetField(HTTP_CONTENT_LENGTH) == NULL)
+				if(strstr(pConnection,"close") && m_pHttpResponse->GetHeader()->GetField(HTTP_CONTENT_LENGTH) == NULL && m_pHttpResponse->GetHeader()->GetField(HTTP_TRANSFER_ENCODING) == NULL)
 				{
-					printf("Client Need Close\n");
 					m_bCloseClient = TRUE;
 				}
 			}

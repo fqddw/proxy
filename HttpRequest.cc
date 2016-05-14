@@ -1,14 +1,15 @@
 #include "HttpRequest.h"
 #include "CommonType.h"
 #include "stdio.h"
+#include "stdlib.h"
 #include "string"
 #include "HttpUrl.h"
 using namespace std;
-HttpRequest::HttpRequest()
+HttpRequest::HttpRequest():m_pHttpBody(NULL)
 {
 }
 
-HttpRequest::HttpRequest(Stream* pStream)
+HttpRequest::HttpRequest(Stream* pStream):m_pHttpBody(NULL)
 {
 	m_pStream = pStream;
 }
@@ -37,6 +38,7 @@ int HttpRequest::LoadHttpHeader()
 	string String_Stream;
 	String_Stream.assign(m_pStream->GetData(),m_pStream->GetLength());
 	int posHeaderEnd = String_Stream.find("\r\n\r\n");
+	pHeader->SetRawLength(posHeaderEnd+4);
 	string strHeaderString = String_Stream.substr(0,posHeaderEnd);
 	int nLineEnd = strHeaderString.find("\r\n");
 	string stringHttpRequestLine = strHeaderString.substr(0,nLineEnd);
@@ -79,6 +81,13 @@ HttpBody* HttpRequest::GetBody()
 }
 int HttpRequest::LoadBody()
 {
+	if(m_pHttpBody)
+		delete m_pHttpBody;
+	else
+		m_pHttpBody = new HttpBody();
+	char* chLength = m_pHttpHeader->GetField(HTTP_CONTENT_LENGTH);printf("chLength %s\n",chLength);
+	m_pHttpBody->SetContentLength(atoi(chLength));
+	return 0;
 }
 int HttpRequest::HasBody()
 {

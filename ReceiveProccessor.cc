@@ -31,7 +31,7 @@ extern MemList<RemoteSide*>* g_pGlobalRemoteSidePool;
 int ReceiveProccessor::GetDataStream(Stream** pStream)
 {
 	*pStream = NULL;
-	for(;;)
+	//for(;;)
 	{
 		char buffer[16*1024] = {'\0'};
 		int n = recv(m_pIOHandler->GetEvent()->GetFD(),buffer,16*1024,0);
@@ -43,8 +43,8 @@ int ReceiveProccessor::GetDataStream(Stream** pStream)
 			}
 			else if(errno == EINTR)
 			{
-				printf("EINR\n");
-				continue;
+				printf("EINR\n");return 0;
+				//continue;
 			}
 			else
 			{
@@ -86,7 +86,7 @@ int ReceiveProccessor::GetDataStream(Stream** pStream)
 			*pStream = new Stream();
 		(*pStream)->Append(buffer,n);
 		m_pIOHandler->GetEvent()->SetInReady();
-		break;
+		//break;
 	}
 	return TRUE;
 }

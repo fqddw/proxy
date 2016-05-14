@@ -1,5 +1,6 @@
 #include "HttpHeader.h"
 #include "CommonType.h"
+#include <algorithm>
 int HttpRequestHeader::SetRequestLine(HttpRequestLine* pHttpRequestLine)
 {
 	m_pRequestLine = pHttpRequestLine;
@@ -70,7 +71,12 @@ char* HttpHeader::GetField(int iFieldIndex)
 			MemNode<pair<string,string>*>* pNode = m_pKeyValueList->GetHead();
 			while(pNode!=NULL)
 			{
-				if(pNode->GetData()->first == string(sFields[i].pText))
+				string lncaseStr = pNode->GetData()->first;
+				transform(lncaseStr.begin(),lncaseStr.end(),lncaseStr.begin(),::tolower);
+				string rncaseStr = sFields[i].pText;
+				transform(rncaseStr.begin(),rncaseStr.end(),rncaseStr.begin(),::tolower);
+
+				if(lncaseStr == rncaseStr)
 				{
 					return (char*)pNode->GetData()->second.c_str();
 				}
@@ -105,3 +111,15 @@ Stream* HttpRequestHeader::ToHeader()
 	pStream->Append((char*)"\r\n",2);
 	return pStream;
 }
+
+int HttpHeader::SetRawLength(int iRawLength)
+{
+	m_iRawLength = iRawLength;
+	return TRUE;
+}
+
+int HttpHeader::GetRawLength()
+{
+	return m_iRawLength;
+}
+

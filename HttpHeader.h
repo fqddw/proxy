@@ -19,7 +19,10 @@ class HttpHeader
 		int SetKeyValueList(HttpKeyValueList*);
 		HttpKeyValueList* GetKeyValueList();
 		char* GetField(int);
+		int SetRawLength(int);
+		int GetRawLength();
 	private:
+		int m_iRawLength;
 		HttpKeyValueList* m_pKeyValueList;
 };
 
