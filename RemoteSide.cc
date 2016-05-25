@@ -237,7 +237,6 @@ int RemoteSide::ProccessConnectionReset()
 {
 	if(m_bCloseClient)
 	{
-		printf("Client Need Close\n");
 		m_pClientSide->GetEvent()->RemoveFromEngine();
 		close(m_pClientSide->GetEvent()->GetFD());
 	}

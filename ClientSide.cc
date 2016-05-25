@@ -72,7 +72,6 @@ int ClientSide::ProccessReceive(Stream* pStream)
 					m_iState = HEADER_NOTFOUND;
 				else
 				{
-					printf("Has Request Body\n");
 					m_pHttpRequest->LoadBody();
 					Stream* pBodyStream = m_pStream->GetPartStream(m_pHttpRequest->GetHeader()->GetRawLength(),m_pStream->GetLength());
 					if(m_pHttpRequest->GetBody()->IsEnd(pBodyStream))
