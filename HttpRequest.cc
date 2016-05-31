@@ -104,3 +104,8 @@ int HttpRequest::HasBody()
 
 	return FALSE;
 }
+
+int HttpRequest::GetAuthStatus()
+{
+	return 0;
+}

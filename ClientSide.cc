@@ -50,6 +50,7 @@ int ClientSide::ProccessReceive(Stream* pStream)
 			if(m_pHttpRequest->IsHeaderEnd())
 			{
 				m_pHttpRequest->LoadHttpHeader();
+				m_pHttpRequest->GetAuthStatus();
 				m_iState = HEADER_FOUND;
 				InetSocketAddress* pAddr = NULL;
 				pAddr = NetUtils::GetHostByName(m_pHttpRequest->GetHeader()->GetUrl()->GetHost(),m_pHttpRequest->GetHeader()->GetUrl()->GetPort());

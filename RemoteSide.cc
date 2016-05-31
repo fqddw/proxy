@@ -120,7 +120,7 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 	int isEnd = FALSE;
 	if(m_pHttpResponse->GetState() == HEADER_NOTFOUND)
 	{
-		m_pStream->Append(pStream->GetData(),pStream->GetLength());
+		//m_pStream->Append(pStream->GetData(),pStream->GetLength());
 		m_bCloseClient = FALSE;
 		int iHeaderSize = 0;
 		if(iHeaderSize = m_pHttpResponse->IsHeaderEnd())

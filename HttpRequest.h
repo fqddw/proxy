@@ -12,6 +12,7 @@ class HttpRequest
 		HttpBody* GetBody();
 		int HasBody();
 		int LoadBody();
+		int GetAuthStatus();
 	private:
 		HttpRequestHeader* m_pHttpHeader;
 		HttpBody* m_pHttpBody;
