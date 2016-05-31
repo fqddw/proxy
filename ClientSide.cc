@@ -163,7 +163,7 @@ int ClientSide::ProccessSend()
 					if(GetEvent()->IsOutReady())
 					{
 						GetEvent()->CancelOutReady();
-						//GetMasterThread()->InsertTask(GetSendTask());
+						GetMasterThread()->InsertTask(GetSendTask());
 						UnlockSendBuffer();
 						return TRUE;
 					}
