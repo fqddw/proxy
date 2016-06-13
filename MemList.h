@@ -18,6 +18,7 @@ template<typename T> class MemList
 {
 	public:
 		MemList();
+		~MemList();
 		int Lock();
 		int Unlock();
 
@@ -171,5 +172,15 @@ template<typename T>
 MemNode<T>* MemList<T>::GetHead()
 {
 	return m_pHead;
+}
+template<typename T>
+MemList<T>::~MemList<T>()
+{
+	MemNode<T>* pNode = m_pHead;
+	while(pNode)
+	{
+		delete pNode;
+		pNode = pNode->GetNext();
+	}
 }
 #endif

@@ -109,3 +109,17 @@ int HttpRequest::GetAuthStatus()
 {
 	return 0;
 }
+
+HttpRequest::~HttpRequest()
+{
+	if(m_pHttpHeader)
+	{
+		delete m_pHttpHeader;
+		m_pHttpHeader = NULL;
+	}
+	if(m_pHttpBody)
+	{
+		delete m_pHttpBody;
+		m_pHttpBody = NULL;
+	}
+}

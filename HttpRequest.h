@@ -5,6 +5,7 @@ class HttpRequest
 {
 	public:
 		HttpRequest();
+		~HttpRequest();
 		HttpRequest(Stream*);
 		int IsHeaderEnd();
 		int LoadHttpHeader();

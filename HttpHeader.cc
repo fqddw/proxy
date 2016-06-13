@@ -123,3 +123,11 @@ int HttpHeader::GetRawLength()
 	return m_iRawLength;
 }
 
+HttpHeader::~HttpHeader()
+{
+	if(m_pKeyValueList)
+	{
+		delete m_pKeyValueList;
+		m_pKeyValueList = NULL;
+	}
+}

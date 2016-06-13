@@ -15,6 +15,7 @@ typedef MemList<pair<string,string>* > HttpKeyValueList;
 class HttpHeader
 {
 	public:
+		~HttpHeader();
 		virtual Stream* ToHeader() = 0;
 		int SetKeyValueList(HttpKeyValueList*);
 		HttpKeyValueList* GetKeyValueList();

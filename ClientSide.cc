@@ -71,7 +71,11 @@ int ClientSide::ProccessReceive(Stream* pStream)
 
 				int hasBody = m_pHttpRequest->HasBody();
 				if(!hasBody)
+				{
+					delete m_pHttpRequest;
+					m_pHttpRequest = new HttpRequest(m_pStream);
 					m_iState = HEADER_NOTFOUND;
+				}
 				else
 				{
 					m_pHttpRequest->LoadBody();
@@ -99,6 +103,7 @@ int ClientSide::ProccessReceive(Stream* pStream)
 						m_iState = HEADER_NOTFOUND;
 				m_pRemoteSide->GetSendStream()->Append(pStream->GetData(),pStream->GetLength());
 				m_pRemoteSide->ProccessSend();
+				m_pStream->Sub(m_pStream->GetLength());
 		}
 		else if(m_iState == HEADER_NOTFOUND && m_iTransState == CLIENT_STATE_RUNNING)
 		{
