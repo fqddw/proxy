@@ -45,7 +45,8 @@ int ClientSide::ProccessReceive(Stream* pStream)
 	}
 		m_pStream->Append(pStream->GetData(),pStream->GetLength());
 
-		if(m_iState == HEADER_NOTFOUND)
+
+		if(m_iState == HEADER_NOTFOUND && m_iTransState == CLIENT_STATE_IDLE)
 		{
 			if(m_pHttpRequest->IsHeaderEnd())
 			{
@@ -92,12 +93,17 @@ int ClientSide::ProccessReceive(Stream* pStream)
 				return FALSE;
 			}
 		}
-		else
+		else if(m_iState == HEADER_FOUND && m_iTransState == CLIENT_STATE_RUNNING)
 		{
 				if(m_pHttpRequest->GetBody()->IsEnd(pStream))
 						m_iState = HEADER_NOTFOUND;
 				m_pRemoteSide->GetSendStream()->Append(pStream->GetData(),pStream->GetLength());
 				m_pRemoteSide->ProccessSend();
+		}
+		else if(m_iState == HEADER_NOTFOUND && m_iTransState == CLIENT_STATE_RUNNING)
+		{
+			close(m_pRemoteSide->GetEvent()->GetFD());
+			m_pRemoteSide->SetClientSide(NULL);
 		}
 
 		return FALSE;
@@ -130,7 +136,7 @@ RemoteSide* ClientSide::GetRemoteSide(InetSocketAddress* pAddr)
 		pRemoteSide->SetMasterThread(GetMasterThread());
 		pRemoteSide->SetClientSide(this);
 		pRemoteSide->GetEvent()->AddToEngine(EPOLLIN|EPOLLOUT|EPOLLERR|EPOLLET|EPOLLRDHUP);
-		//g_pGlobalRemoteSidePool->Append(pRemoteSide);
+		g_pGlobalRemoteSidePool->Append(pRemoteSide);
 	}
 	//g_pGlobalRemoteSidePool->Unlock();
 	return pRemoteSide;
@@ -187,6 +193,7 @@ int ClientSide::ProccessSend()
 				m_pSendStream->Sub(nSent);
 				if(m_pSendStream->GetLength() == 0)
 				{
+					if(m_pRemoteSide->GetResponse()->GetBody())
 					if(m_pRemoteSide->GetResponse()->GetBody()->IsEnd())
 					{
 						m_pRemoteSide->SetStatusIdle();
