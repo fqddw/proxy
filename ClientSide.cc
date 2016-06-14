@@ -48,6 +48,7 @@ int ClientSide::ProccessReceive(Stream* pStream)
 
 		if(m_iState == HEADER_NOTFOUND && m_iTransState == CLIENT_STATE_IDLE)
 		{
+			m_iTransState = CLIENT_STATE_RUNNING;
 			if(m_pHttpRequest->IsHeaderEnd())
 			{
 				m_pHttpRequest->LoadHttpHeader();
