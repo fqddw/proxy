@@ -7,6 +7,7 @@
 #include "InetSocketAddress.h"
 #define CLIENT_STATE_IDLE 1
 #define CLIENT_STATE_RUNNING 2
+#define CLIENT_STATE_WAITING 3
 class RemoteSide;
 class ClientSide : public IOHandler
 {
@@ -20,6 +21,7 @@ class ClientSide : public IOHandler
 		int ProccessSend();
 		Stream* GetSendStream();
 		int WriteData();
+		void SetTransIdleState();
 	private:
 		int m_iState;
 		int m_iTransState;

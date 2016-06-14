@@ -88,8 +88,10 @@ int RemoteSide::ProccessSend()
 				flag = FALSE;
 				if(errno == EAGAIN)
 					printf("--------------------------\n");
-				else
+				else if(errno == EINTR)
 					printf("||||||||||||||||||\n");
+				else
+					printf("%d +++++++++++++++++++\n",errno);
 			}
 			else
 			{
@@ -117,7 +119,7 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 		return TRUE;
 	}
 	Stream* pUserStream = pStream;
-	int isEnd = FALSE;
+	int isEnd = TRUE;
 	if(m_pHttpResponse->GetState() == HEADER_NOTFOUND)
 	{
 		//m_pStream->Append(pStream->GetData(),pStream->GetLength());
@@ -185,6 +187,7 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 						m_pHttpResponse = new HttpResponse(m_pStream);
 						m_pStream->Sub(m_pStream->GetLength());
 						m_iState = STATUS_IDLE;
+						m_pClientSide->SetTransIdleState();
 						SetCanRead(TRUE);
 						m_pClientSide->SetCanWrite(FALSE);
 						//m_pClientSide->GetEvent()->ModEvent(EPOLLIN|EPOLLERR|EPOLLET|EPOLLRDHUP);

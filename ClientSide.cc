@@ -46,9 +46,10 @@ int ClientSide::ProccessReceive(Stream* pStream)
 		m_pStream->Append(pStream->GetData(),pStream->GetLength());
 
 
-		if(m_iState == HEADER_NOTFOUND && m_iTransState == CLIENT_STATE_IDLE)
+		if(m_iState == HEADER_NOTFOUND && m_iTransState != CLIENT_STATE_WAITING)
 		{
-			m_iTransState = CLIENT_STATE_RUNNING;
+			if(m_iTransState != CLIENT_STATE_RUNNING)
+				m_iTransState = CLIENT_STATE_RUNNING;
 			if(m_pHttpRequest->IsHeaderEnd())
 			{
 				m_pHttpRequest->LoadHttpHeader();
@@ -76,13 +77,17 @@ int ClientSide::ProccessReceive(Stream* pStream)
 					delete m_pHttpRequest;
 					m_pHttpRequest = new HttpRequest(m_pStream);
 					m_iState = HEADER_NOTFOUND;
+					m_iTransState = CLIENT_STATE_WAITING;
 				}
 				else
 				{
 					m_pHttpRequest->LoadBody();
 					Stream* pBodyStream = m_pStream->GetPartStream(m_pHttpRequest->GetHeader()->GetRawLength(),m_pStream->GetLength());
 					if(m_pHttpRequest->GetBody()->IsEnd(pBodyStream))
+					{
 						m_iState = HEADER_NOTFOUND;
+						m_iTransState = CLIENT_STATE_WAITING;
+					}
 
 					pRemoteSide->GetSendStream()->Append(pBodyStream->GetData(),pBodyStream->GetLength());
 				}
@@ -101,12 +106,15 @@ int ClientSide::ProccessReceive(Stream* pStream)
 		else if(m_iState == HEADER_FOUND && m_iTransState == CLIENT_STATE_RUNNING)
 		{
 				if(m_pHttpRequest->GetBody()->IsEnd(pStream))
+				{
 						m_iState = HEADER_NOTFOUND;
+						m_iTransState = CLIENT_STATE_WAITING;
+				}
 				m_pRemoteSide->GetSendStream()->Append(pStream->GetData(),pStream->GetLength());
 				m_pRemoteSide->ProccessSend();
 				m_pStream->Sub(m_pStream->GetLength());
 		}
-		else if(m_iState == HEADER_NOTFOUND && m_iTransState == CLIENT_STATE_RUNNING)
+		else if(m_iTransState == CLIENT_STATE_WAITING)
 		{
 			close(m_pRemoteSide->GetEvent()->GetFD());
 			m_pRemoteSide->SetClientSide(NULL);
@@ -202,6 +210,7 @@ int ClientSide::ProccessSend()
 					if(m_pRemoteSide->GetResponse()->GetBody())
 					if(m_pRemoteSide->GetResponse()->GetBody()->IsEnd())
 					{
+						m_iTransState = CLIENT_STATE_IDLE;
 						m_pRemoteSide->SetStatusIdle();
 						SetCanWrite(FALSE);
 						//GetEvent()->ModEvent(EPOLLIN|EPOLLERR|EPOLLET|EPOLLRDHUP);
@@ -224,4 +233,8 @@ int ClientSide::ProccessSend()
 		}
 	return FALSE;
 
+}
+void ClientSide::SetTransIdleState()
+{
+	m_iTransState = CLIENT_STATE_IDLE;
 }
