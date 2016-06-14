@@ -238,3 +238,10 @@ void ClientSide::SetTransIdleState()
 {
 	m_iTransState = CLIENT_STATE_IDLE;
 }
+int ClientSide::ProccessConnectionReset()
+{
+	if(m_pRemoteSide)
+	{
+		m_pRemoteSide->SetClientSide(NULL);
+	}
+}

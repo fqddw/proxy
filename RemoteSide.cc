@@ -91,7 +91,15 @@ int RemoteSide::ProccessSend()
 				else if(errno == EINTR)
 					printf("||||||||||||||||||\n");
 				else
+				{
 					printf("%d +++++++++++++++++++\n",errno);
+					GetEvent()->RemoveFromEngine();
+					close(GetEvent()->GetFD());
+				}
+			}else if(nSent == 0)
+			{
+				GetEvent()->RemoveFromEngine();
+				close(GetEvent()->GetFD());
 			}
 			else
 			{
@@ -117,6 +125,12 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 		GetEvent()->CancelInReady();
 		SetCanRead(TRUE);
 		return TRUE;
+	}
+	if(!m_pClientSide)
+	{
+		GetEvent()->RemoveFromEngine();
+		close(GetEvent()->GetFD());
+		return 0;
 	}
 	Stream* pUserStream = pStream;
 	int isEnd = TRUE;
@@ -172,7 +186,18 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 					m_pClientSide->GetSendStream()->Append(pUserStream->GetData(),pUserStream->GetLength());
 					m_pClientSide->UnlockSendBuffer();
 				}
+				else
+				{
+					GetEvent()->RemoveFromEngine();
+					close(GetEvent()->GetFD());
+				}
+
 				flag = FALSE;
+			}
+			else if(nSent == 0)
+			{
+				GetEvent()->RemoveFromEngine();
+				close(GetEvent()->GetFD());
 			}
 			else
 			{

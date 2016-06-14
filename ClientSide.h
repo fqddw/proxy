@@ -18,6 +18,7 @@ class ClientSide : public IOHandler
 		int Proccess();
 		RemoteSide* GetRemoteSide(InetSocketAddress*);
 		int ProccessReceive(Stream*);
+		int ProccessConnectionReset();
 		int ProccessSend();
 		Stream* GetSendStream();
 		int WriteData();
