@@ -95,11 +95,13 @@ int RemoteSide::ProccessSend()
 					printf("%d +++++++++++++++++++\n",errno);
 					GetEvent()->RemoveFromEngine();
 					close(GetEvent()->GetFD());
+					return 0;
 				}
 			}else if(nSent == 0)
 			{
 				GetEvent()->RemoveFromEngine();
 				close(GetEvent()->GetFD());
+				return 0;
 			}
 			else
 			{
