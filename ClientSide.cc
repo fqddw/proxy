@@ -135,6 +135,7 @@ RemoteSide* ClientSide::GetRemoteSide(InetSocketAddress* pAddr)
 		RemoteSide* pSide = pSocketPool->GetData();
 		if(pSide->GetAddr()->Equal(pAddr) && pSide->IsIdle())
 		{
+			printf("RemoteSide matched\n");
 			pSide->SetStatusBlocking();
 			//g_pGlobalRemoteSidePool->Unlock();
 			pRemoteSide = pSide;
@@ -208,12 +209,21 @@ int ClientSide::ProccessSend()
 				if(m_pSendStream->GetLength() == 0)
 				{
 					if(m_pRemoteSide->GetResponse()->GetBody())
-					if(m_pRemoteSide->GetResponse()->GetBody()->IsEnd())
+					{
+						if(m_pRemoteSide->GetResponse()->GetBody()->IsEnd())
+						{
+							printf("DEBUG %s %d\n",__FILE__,__LINE__);
+							m_iTransState = CLIENT_STATE_IDLE;
+							m_pRemoteSide->SetStatusIdle();
+							SetCanWrite(FALSE);
+							//GetEvent()->ModEvent(EPOLLIN|EPOLLERR|EPOLLET|EPOLLRDHUP);
+						}
+					}
+					else
 					{
 						m_iTransState = CLIENT_STATE_IDLE;
 						m_pRemoteSide->SetStatusIdle();
 						SetCanWrite(FALSE);
-						//GetEvent()->ModEvent(EPOLLIN|EPOLLERR|EPOLLET|EPOLLRDHUP);
 					}
 					//SetCanWrite(TRUE);
 					if(m_pRemoteSide->GetEvent()->IsInReady())
