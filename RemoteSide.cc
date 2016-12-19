@@ -97,12 +97,12 @@ int RemoteSide::ProccessSend()
 					close(GetEvent()->GetFD());
 					return 0;
 				}
-			}/*else if(nSent == 0)
+			}else if(nSent == 0)
 			{
 				GetEvent()->RemoveFromEngine();
 				close(GetEvent()->GetFD());
 				return 0;
-			}*/
+			}
 			else
 			{
 				totalSend += nSent;

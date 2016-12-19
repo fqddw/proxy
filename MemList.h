@@ -180,8 +180,9 @@ MemList<T>::~MemList<T>()
 	while(pNode)
 	{
 		delete pNode->GetData();
-		delete pNode;
+		MemNode<T>* pTmpNode = pNode;
 		pNode = pNode->GetNext();
+		delete pTmpNode;
 	}
 }
 #endif

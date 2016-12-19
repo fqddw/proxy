@@ -82,9 +82,11 @@ HttpBody* HttpRequest::GetBody()
 int HttpRequest::LoadBody()
 {
 	if(m_pHttpBody)
+	{
 		delete m_pHttpBody;
-	else
-		m_pHttpBody = new HttpBody();
+		m_pHttpBody = NULL;
+	}
+	m_pHttpBody = new HttpBody();
 	char* chLength = m_pHttpHeader->GetField(HTTP_CONTENT_LENGTH);
 	m_pHttpBody->SetContentLength(atoi(chLength));
 	return 0;

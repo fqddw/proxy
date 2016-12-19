@@ -135,7 +135,7 @@ RemoteSide* ClientSide::GetRemoteSide(InetSocketAddress* pAddr)
 		RemoteSide* pSide = pSocketPool->GetData();
 		if(pSide->GetAddr()->Equal(pAddr) && pSide->IsIdle())
 		{
-			printf("RemoteSide matched\n");
+			//printf("RemoteSide matched\n");
 			pSide->SetStatusBlocking();
 			//g_pGlobalRemoteSidePool->Unlock();
 			pRemoteSide = pSide;
@@ -252,6 +252,6 @@ int ClientSide::ProccessConnectionReset()
 {
 	if(m_pRemoteSide)
 	{
-		m_pRemoteSide->SetClientSide(NULL);
+		//m_pRemoteSide->SetClientSide(NULL);
 	}
 }
