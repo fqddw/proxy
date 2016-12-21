@@ -120,6 +120,18 @@ int RemoteSide::ProccessSend()
 }
 
 extern MemList<RemoteSide*>* g_pGlobalRemoteSidePool;
+int RemoteSide::ClearHttpEnd()
+{
+	delete m_pHttpResponse;
+	m_pHttpResponse = new HttpResponse(m_pStream);
+	m_pStream->Sub(m_pStream->GetLength());
+	m_iState = STATUS_IDLE;
+	m_pClientSide->SetTransIdleState();
+	SetCanRead(TRUE);
+	m_pClientSide->SetCanWrite(FALSE);
+	return 0;
+
+}
 int RemoteSide::ProccessReceive(Stream* pStream)
 {
 	if(!pStream)
@@ -159,6 +171,7 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 				m_pHttpResponse->LoadBody();
 				Stream* pBodyStream = m_pStream->GetPartStream(iHeaderSize,m_pStream->GetLength());
 				isEnd = m_pHttpResponse->GetBody()->IsEnd(pBodyStream);
+				delete pBodyStream;
 			}
 		}
 	}
@@ -168,13 +181,20 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 			if(m_pHttpResponse->GetBody())
 			isEnd = m_pHttpResponse->GetBody()->IsEnd(pUserStream);
 	}
-	if(m_pClientSide->GetSendStream()->GetLength()>0)
 	{
+		int nLengthSend = m_pClientSide->GetSendStream()->GetLength();
 		m_pClientSide->LockSendBuffer();
 		m_pClientSide->GetSendStream()->Append(pUserStream->GetData(),pUserStream->GetLength());
 		m_pClientSide->UnlockSendBuffer();
+		if(nLengthSend == 0)
+		{
+			GetMasterThread()->InsertTask(m_pClientSide->GetSendTask());
+		}
+		else
+		{
+		}
 	}
-	else
+	/*else
 	{
 		int flag = TRUE;
 		while(flag)
@@ -201,7 +221,7 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 				GetEvent()->RemoveFromEngine();
 				close(GetEvent()->GetFD());
 				return 0;
-			}*/
+			}/
 			else
 			{
 				pUserStream->Sub(nSent);
@@ -233,7 +253,7 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 				}
 			}
 		}
-	}
+	}*/
 
 	return TRUE;
 }

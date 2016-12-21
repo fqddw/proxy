@@ -90,10 +90,12 @@ int ClientSide::ProccessReceive(Stream* pStream)
 					}
 
 					pRemoteSide->GetSendStream()->Append(pBodyStream->GetData(),pBodyStream->GetLength());
+					delete pBodyStream;
 				}
 				if(pRemoteSide->IsConnected())
 				{
 					pRemoteSide->SetCanWrite(TRUE);
+					//GetMasterThread()->InsertTask(m_pRemoteSide->GetSendTask());
 					pRemoteSide->ProccessSend();
 				}
 				m_pStream->Sub(m_pStream->GetLength());
@@ -184,7 +186,7 @@ int ClientSide::ProccessSend()
 					if(GetEvent()->IsOutReady())
 					{
 						GetEvent()->CancelOutReady();
-						GetMasterThread()->InsertTask(GetSendTask());
+						//GetMasterThread()->InsertTask(GetSendTask());
 						UnlockSendBuffer();
 						return TRUE;
 					}
@@ -212,10 +214,7 @@ int ClientSide::ProccessSend()
 					{
 						if(m_pRemoteSide->GetResponse()->GetBody()->IsEnd())
 						{
-							printf("DEBUG %s %d\n",__FILE__,__LINE__);
-							m_iTransState = CLIENT_STATE_IDLE;
-							m_pRemoteSide->SetStatusIdle();
-							SetCanWrite(FALSE);
+							m_pRemoteSide->ClearHttpEnd();
 							//GetEvent()->ModEvent(EPOLLIN|EPOLLERR|EPOLLET|EPOLLRDHUP);
 						}
 					}

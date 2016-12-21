@@ -34,6 +34,7 @@ class RemoteSide:public IOHandler
 		int SetSendStream(Stream*);
 		int SetClientSide(ClientSide*);
 		HttpResponse* GetResponse();
+		int ClearHttpEnd();
 	private:
 		int m_bCloseClient;
 		int m_isConnected;

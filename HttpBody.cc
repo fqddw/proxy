@@ -18,6 +18,7 @@ int HttpBody::IsEnd(Stream* pStream)
 	{
 		if(pStream->GetLength()+m_iCurLength == m_iLength)
 		{
+			m_iIsEnd = TRUE;
 			return TRUE;
 		}
 		else
