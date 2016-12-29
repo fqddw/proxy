@@ -185,8 +185,8 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 				isEnd = m_pHttpResponse->GetBody()->IsEnd(pBodyStream);
 				delete pBodyStream;
 			}
+			m_pStream->Sub(m_pStream->GetLength());
 		}
-		m_pStream->Sub(m_pStream->GetLength());
 	}
 	else
 	{

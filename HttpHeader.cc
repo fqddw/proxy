@@ -99,7 +99,7 @@ Stream* HttpRequestHeader::ToHeader()
 	Stream* pStream = new Stream();
 	pStream->Append(pCandString,strlen(pCandString));
 	pStream->Append((char*)"\r\n",2);
-	delete pCandString;
+	delete []pCandString;
 	MemNode<pair<string,string>*>* pNode = GetKeyValueList()->GetHead();
 	while(pNode != NULL)
 	{
