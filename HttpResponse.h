@@ -11,6 +11,7 @@ class HttpResponse
 {
 		public:
 				HttpResponse();
+				~HttpResponse();
 				HttpResponse(Stream*);
 				int IsHeaderEnd();
 				HttpResponseHeader* GetHeader();

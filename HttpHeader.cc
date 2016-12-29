@@ -99,6 +99,7 @@ Stream* HttpRequestHeader::ToHeader()
 	Stream* pStream = new Stream();
 	pStream->Append(pCandString,strlen(pCandString));
 	pStream->Append((char*)"\r\n",2);
+	delete pCandString;
 	MemNode<pair<string,string>*>* pNode = GetKeyValueList()->GetHead();
 	while(pNode != NULL)
 	{
@@ -129,5 +130,29 @@ HttpHeader::~HttpHeader()
 	{
 		delete m_pKeyValueList;
 		m_pKeyValueList = NULL;
+	}
+}
+
+HttpRequestHeader::~HttpRequestHeader()
+{
+	if(m_pRequestLine != NULL)
+	{
+		delete m_pRequestLine;
+		m_pRequestLine = NULL;
+	}
+	if(m_pUrl != NULL)
+	{
+		delete m_pUrl;
+		m_pUrl = NULL;
+	}
+
+}
+
+HttpResponseHeader::~HttpResponseHeader()
+{
+	if(m_pHttpResponseLine != NULL)
+	{
+		delete m_pHttpResponseLine;
+		m_pHttpResponseLine = NULL;
 	}
 }

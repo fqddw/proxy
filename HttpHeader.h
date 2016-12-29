@@ -30,6 +30,7 @@ class HttpHeader
 class HttpRequestHeader : public HttpHeader
 {
 	public:
+		~HttpRequestHeader();
 		HttpUrl* GetUrl();
 		int GetMethod();
 		Stream* ToHeader();
@@ -44,6 +45,7 @@ class HttpRequestHeader : public HttpHeader
 class HttpResponseHeader : public HttpHeader
 {
 	public:
+		~HttpResponseHeader();
 		HttpResponseLine* GetResponseLine();
 		Stream* ToHeader();
 		int SetResponseLine(HttpResponseLine*);

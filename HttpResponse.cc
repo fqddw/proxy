@@ -281,3 +281,17 @@ int HttpResponse::SetState(int state)
 {
 	return m_iState=state;
 }
+
+HttpResponse::~HttpResponse()
+{
+	if(m_pHeader != NULL)
+	{
+		delete m_pHeader;
+		m_pHeader = NULL;
+	}
+	if(m_pBody != NULL)
+	{
+		delete m_pBody;
+		m_pBody = NULL;
+	}
+}
