@@ -21,17 +21,18 @@ int ReceiveProccessor::Run()
 			m_pIOHandler->ProccessReceive(pStream);
 		}else{
 			m_pIOHandler->GetEvent()->CancelInReady();
-			GetDataStream(&pStream);
-			m_pIOHandler->ProccessReceive(pStream);
+			int ret = GetDataStream(&pStream);
 		}
 		return 0;
 }
 #include "RemoteSide.h"
 extern MemList<RemoteSide*>* g_pGlobalRemoteSidePool;
-int ReceiveProccessor::GetDataStream(Stream** pStream)
+int ReceiveProccessor::GetDataStream(Stream** ppStream)
 {
-	*pStream = NULL;
-	//for(;;)
+	*ppStream = NULL;
+	int total = 0;
+	m_pIOHandler->SetCanRead(FALSE);
+	for(;;)
 	{
 		char buffer[16*1024] = {'\0'};
 		int n = recv(m_pIOHandler->GetEvent()->GetFD(),buffer,16*1024,0);
@@ -39,7 +40,7 @@ int ReceiveProccessor::GetDataStream(Stream** pStream)
 		{
 			if(errno == EAGAIN)
 			{
-				return TRUE;
+				break;
 			}
 			else if(errno == EINTR)
 			{
@@ -52,15 +53,16 @@ int ReceiveProccessor::GetDataStream(Stream** pStream)
 				m_pIOHandler->GetEvent()->RemoveFromEngine();
 				if(pGlobalList->Delete(m_pIOHandler))
 				{
-					//delete m_pIOHandler;
 				}
-				if(g_pGlobalRemoteSidePool->Delete(reinterpret_cast<RemoteSide*>(m_pIOHandler)))
+				if(m_pIOHandler->GetSide() == REMOTE_SIDE)
 				{
+					if(g_pGlobalRemoteSidePool->Delete(reinterpret_cast<RemoteSide*>(m_pIOHandler)))
+					{
+					}
 				}
 				close(sockfd);
-				m_pIOHandler->ProccessConnectionReset();
-				return FALSE;
 
+				return FALSE;
 				/*printf("ERROR\n");
 				int sockfd = m_pIOHandler->GetEvent()->GetFD();
 				m_pIOHandler->GetEvent()->RemoveFromEngine();
@@ -78,16 +80,30 @@ int ReceiveProccessor::GetDataStream(Stream** pStream)
 			{
 				//delete m_pIOHandler;
 			}
-			m_pIOHandler->ProccessConnectionReset();
+			//m_pIOHandler->ProccessConnectionReset();
+			if(m_pIOHandler->GetSide() == REMOTE_SIDE)
+			{
+				if(g_pGlobalRemoteSidePool->Delete(reinterpret_cast<RemoteSide*>(m_pIOHandler)))
+				{
+				}
+			}
+
 			close(sockfd);
-			return FALSE;
+			break;
 		}
-		if(*pStream == NULL)
-			*pStream = new Stream();
-		(*pStream)->Append(buffer,n);
-		m_pIOHandler->GetEvent()->SetInReady();
+		total += n;
+		if(*ppStream == NULL)
+			*ppStream = new Stream();
+		(*ppStream)->Append(buffer,n);
 		//break;
 	}
+		m_pIOHandler->SetCanRead(TRUE);
+
+	if(total > 0)
+	{
+		m_pIOHandler->ProccessReceive(*ppStream);
+	}
+
 	return TRUE;
 }
 

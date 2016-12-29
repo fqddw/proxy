@@ -9,6 +9,8 @@
 #include "Stream.h"
 #define HANDLER_IDLE 1
 #define HANDLER_RUNNING 2
+#define REMOTE_SIDE 1
+#define CLIENT_SIDE 2
 class SendProccessor;
 class ReceiveProccessor;
 class ConnectionResetProccessor;
@@ -35,12 +37,11 @@ class IOHandler
 		Task* GetSendTask();
 		int LockSendBuffer();
 		int UnlockSendBuffer();
+		virtual int GetSide();
 	private:
 		IOEvent* m_pEvent;
 		MasterThread* m_pMasterThread;
-		ReceiveProccessor* m_pRecvProc;
 		ConnectionResetProccessor* m_pConnResetProc;
-		SendProccessor* m_pSendProc;
 		int m_bCanRead;
 		int m_bCanWrite;
 		CriticalSection* cs_;

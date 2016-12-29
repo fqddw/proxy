@@ -98,6 +98,8 @@ int HttpBody::Parse(Stream* pStream)
 				{
 					Stream* pPartData = pStream->GetPartStream(begin,offset);
 					m_pLengthStream->Append(pPartData->GetData(),pPartData->GetLength());
+					m_pLengthStream->Append((char*)"\0",1);
+					delete pPartData;
 					char* pLength = m_pLengthStream->GetPartDataToString(0,m_pLengthStream->GetLength());
 					int chunkLength = 0;
 					sscanf(pLength,"%x",&chunkLength);
@@ -172,4 +174,9 @@ int HttpBody::SetContentLength(int length)
 {
 	m_iLength = length;
 	return TRUE;
+}
+
+HttpBody::~HttpBody()
+{
+	delete m_pLengthStream;
 }

@@ -23,6 +23,9 @@ class ClientSide : public IOHandler
 		Stream* GetSendStream();
 		int WriteData();
 		void SetTransIdleState();
+		HttpRequest* GetRequest();
+		int ClearHttpEnd();
+		int GetSide();
 	private:
 		int m_iState;
 		int m_iTransState;

@@ -1,5 +1,5 @@
 #include "IOHandler.h"
-IOHandler::IOHandler():m_pEvent(new IOEvent),m_pSendProc(new SendProccessor(this)),m_pRecvProc(new ReceiveProccessor(this)),m_bCanRead(TRUE),m_pConnResetProc(new ConnectionResetProccessor(this)),m_bCanWrite(TRUE),cs_(new CriticalSection())
+IOHandler::IOHandler():m_pEvent(new IOEvent),m_bCanRead(TRUE),m_pConnResetProc(new ConnectionResetProccessor(this)),m_bCanWrite(TRUE),cs_(new CriticalSection())
 {
 }
 IOEvent* IOHandler::GetEvent()
@@ -25,8 +25,6 @@ MasterThread* IOHandler::GetMasterThread()
 IOHandler::~IOHandler()
 {
 	delete m_pEvent;
-	delete m_pRecvProc;
-	delete m_pConnResetProc;
 }
 #include "stdio.h"
 int IOHandler::Dispatch(int events)
@@ -37,7 +35,7 @@ int IOHandler::Dispatch(int events)
 		{
 			if(!IsServer())
 				SetCanRead(FALSE);
-			GetMasterThread()->InsertTask(m_pRecvProc);
+			GetMasterThread()->InsertTask(GetRecvTask());
 		}
 		else
 		{
@@ -48,7 +46,7 @@ int IOHandler::Dispatch(int events)
 	{
 		if(m_bCanWrite)
 		{
-			GetMasterThread()->InsertTask(m_pSendProc);
+			GetMasterThread()->InsertTask(GetSendTask());
 		}
 		else
 		{
@@ -118,10 +116,19 @@ int IOHandler::UnlockSendBuffer()
 
 Task* IOHandler::GetRecvTask()
 {
-	return m_pRecvProc;
+	ReceiveProccessor* task = new ReceiveProccessor(this);
+	task->CancelRepeatable();
+	return task;
 }
 
 Task* IOHandler::GetSendTask()
 {
-	return m_pSendProc;
+	SendProccessor* task = new SendProccessor(this);
+	task->CancelRepeatable();
+	return task;
+}
+
+int IOHandler::GetSide()
+{
+	return REMOTE_SIDE;
 }

@@ -21,6 +21,12 @@ ClientSide::ClientSide():IOHandler(),m_pStream(new Stream()),m_pSendStream(new S
 ClientSide::~ClientSide()
 {
 	delete m_pStream;
+	delete m_pSendStream;
+	if(m_pHttpRequest)
+	{
+		delete m_pHttpRequest;
+		m_pHttpRequest = NULL;
+	}
 }
 ClientSide::ClientSide(int sockfd):IOHandler(),m_pStream(new Stream()),m_pSendStream(new Stream())
 {
@@ -35,6 +41,18 @@ int ClientSide::Proccess()
 {
 		return FALSE;
 }
+int ClientSide::ClearHttpEnd()
+{
+	delete m_pHttpRequest;
+	m_pHttpRequest = new HttpRequest(m_pStream);
+	m_pStream->Sub(m_pStream->GetLength());
+	m_iState = HEADER_NOTFOUND;
+	//SetCanRead(TRUE);
+	//m_pClientSide->SetCanWrite(FALSE);
+	return 0;
+
+}
+#include "stdlib.h"
 int ClientSide::ProccessReceive(Stream* pStream)
 {
 	if(!pStream)
@@ -107,6 +125,7 @@ int ClientSide::ProccessReceive(Stream* pStream)
 		}
 		else if(m_iState == HEADER_FOUND && m_iTransState == CLIENT_STATE_RUNNING)
 		{
+			if(m_pHttpRequest->GetBody())
 				if(m_pHttpRequest->GetBody()->IsEnd(pStream))
 				{
 						m_iState = HEADER_NOTFOUND;
@@ -195,14 +214,30 @@ int ClientSide::ProccessSend()
 				{
 					m_pRemoteSide->GetEvent()->RemoveFromEngine();
 					close(m_pRemoteSide->GetEvent()->GetFD());
+					g_pGlobalRemoteSidePool->Delete(m_pRemoteSide);
+					delete m_pRemoteSide;
 					int sockfd = GetEvent()->GetFD();
 					GetEvent()->RemoveFromEngine();
 					if(pGlobalList->Delete(this))
 					{
-						//delete m_pIOHandler;
 					}
+					delete this;
 					close(sockfd);
 				}
+			}
+			else if(nSent == 0)
+			{
+				printf("SIGPIP WILL TRIGGER\n");
+				m_pRemoteSide->GetEvent()->RemoveFromEngine();
+				close(m_pRemoteSide->GetEvent()->GetFD());
+				delete m_pRemoteSide;
+				int sockfd = GetEvent()->GetFD();
+				GetEvent()->RemoveFromEngine();
+				if(pGlobalList->Delete(this))
+				{
+				}
+				delete this;
+				close(sockfd);
 			}
 			else
 			{
@@ -215,14 +250,19 @@ int ClientSide::ProccessSend()
 						if(m_pRemoteSide->GetResponse()->GetBody()->IsEnd())
 						{
 							m_pRemoteSide->ClearHttpEnd();
+							ClearHttpEnd();
+							SetCanRead(TRUE);
+							m_iTransState = CLIENT_STATE_IDLE;
 							//GetEvent()->ModEvent(EPOLLIN|EPOLLERR|EPOLLET|EPOLLRDHUP);
 						}
 					}
 					else
 					{
+						ClearHttpEnd();
 						m_iTransState = CLIENT_STATE_IDLE;
 						m_pRemoteSide->SetStatusIdle();
-						SetCanWrite(FALSE);
+						SetCanRead(TRUE);
+						//SetCanWrite(FALSE);
 					}
 					//SetCanWrite(TRUE);
 					if(m_pRemoteSide->GetEvent()->IsInReady())
@@ -253,4 +293,14 @@ int ClientSide::ProccessConnectionReset()
 	{
 		//m_pRemoteSide->SetClientSide(NULL);
 	}
+}
+
+HttpRequest* ClientSide::GetRequest()
+{
+	return m_pHttpRequest;
+}
+
+int ClientSide::GetSide()
+{
+	return CLIENT_SIDE;
 }

@@ -109,7 +109,7 @@ int main(int argc,char** argv)
 {	
 	g_pGlobalRemoteSidePool = new MemList<RemoteSide*>();
 	pGlobalList = new MemList<void*>();
-	//signal(SIGPIPE,SIG_IGN);
+	signal(SIGPIPE,SIG_IGN);
 	NetEngine* pEngine = new NetEngine();
 	pEngine->SetSize(1024);
 	pEngine->Init();

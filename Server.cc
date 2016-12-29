@@ -63,7 +63,7 @@ int Server::ProccessReceive(Stream* pStream)
 		int cflags = fcntl(client,F_GETFL,0);
 		fcntl(client,F_SETFL, cflags|O_NONBLOCK);
 		ClientSide* pClientSideHandler = new ClientSide(client);
-		pGlobalList->Append(pClientSideHandler);
+		//pGlobalList->Append(pClientSideHandler);
 		pClientSideHandler->GetEvent()->SetNetEngine(GetEvent()->GetNetEngine());
 		pClientSideHandler->SetMasterThread(GetMasterThread());
 		pClientSideHandler->SetCanWrite(FALSE);

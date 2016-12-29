@@ -69,7 +69,7 @@ int RemoteSide::ProccessSend()
 		if(m_pSendStream->GetLength())
 			SetCanWrite(TRUE);
 		m_isConnected = TRUE;
-		GetEvent()->ModEvent(EPOLLIN|EPOLLET);
+		//GetEvent()->ModEvent(EPOLLIN|EPOLLET);
 	}
 	if(!IsConnected())
 	{
@@ -109,9 +109,21 @@ int RemoteSide::ProccessSend()
 				m_pSendStream->Sub(nSent);
 				if(m_pSendStream->GetLength() == 0)
 				{
-					flag = FALSE;
-					SetCanWrite(flag);
-					m_pClientSide->SetCanRead(TRUE);
+					if(m_pClientSide->GetRequest()->GetBody())
+					{
+						if(m_pClientSide->GetRequest()->GetBody()->IsEnd())
+						{
+							flag = FALSE;
+							SetCanWrite(flag);
+							//m_pClientSide->SetCanRead(TRUE);
+						}
+					}
+					else
+					{
+						flag = FALSE;
+						SetCanWrite(flag);
+						//m_pClientSide->SetCanRead(TRUE);
+					}
 				}
 			}
 			UnlockSendBuffer();
@@ -174,6 +186,7 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 				delete pBodyStream;
 			}
 		}
+		m_pStream->Sub(m_pStream->GetLength());
 	}
 	else
 	{
@@ -193,6 +206,7 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 		else
 		{
 		}
+		delete pUserStream;
 	}
 	/*else
 	{
@@ -286,10 +300,23 @@ int RemoteSide::IsConnected()
 
 int RemoteSide::ProccessConnectionReset()
 {
-	if(m_bCloseClient)
+	if(0)//m_bCloseClient)
 	{
 		m_pClientSide->GetEvent()->RemoveFromEngine();
 		close(m_pClientSide->GetEvent()->GetFD());
 	}
 	return 0;
+}
+
+int RemoteSide::GetSide()
+{
+	return REMOTE_SIDE;
+}
+RemoteSide::~RemoteSide()
+{
+	if(m_pHttpResponse)
+	{
+		delete m_pHttpResponse;
+		m_pHttpResponse = NULL;
+	}
 }
