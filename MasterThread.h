@@ -29,6 +29,8 @@ public:
 	void SetWorkerCount(int);
 	int SetWorkThreadBusy(int);
 	int GetWorkerCount();
+	void RunningLock();
+	void RunningUnlock();
 private:
 	EventPump* ep_;
 	TaskQueue * pTaskQueue;
@@ -36,6 +38,7 @@ private:
 	int state_;
 	int m_iWorkCount;
 	int workthread_busy;
+	CriticalSection* cs_running;
 };
 #define WORKTHREAD_BUSY 1
 #define WORKTHREAD_IDLE 2

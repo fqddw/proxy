@@ -18,7 +18,7 @@ LPVOID WorkThreadProc(LPVOID ptr)
 	pThread->Run();
 	return 0;
 }
-MasterThread::MasterThread(EventPump* ep) :ep_(ep), pTaskQueue(new TaskQueue), state_(STATE_RUNNING),workthread_busy(WORKTHREAD_IDLE)
+MasterThread::MasterThread(EventPump* ep) :ep_(ep), pTaskQueue(new TaskQueue), state_(STATE_RUNNING),workthread_busy(WORKTHREAD_IDLE),cs_running(new CriticalSection())
 {
 
 }
@@ -53,16 +53,19 @@ int MasterThread::WakeUp()
 	ep_->WakeUp();
 	return 0;
 }
+#include "stdio.h"
 int MasterThread::RunLoop()
 {
 	Task* pNextTask = NULL;
 	while (1)
 	{
+		RunningLock();
 		if (workthread_busy != WORKTHREAD_BUSY)
 		{
 			pNextTask = pTaskQueue->PopLastestTask();
 			if(pNextTask == NULL)
 			{
+				RunningUnlock();
 				SleepForever();
 			}
 			else
@@ -75,9 +78,14 @@ int MasterThread::RunLoop()
 					if(!ret)
 					{
 						workthread_busy = WORKTHREAD_BUSY;
-						InsertTask(pNextTask);
+						pTaskQueue->Insert(pNextTask);
+						RunningUnlock();
 						SleepForever();
 						continue;
+					}
+					else
+					{
+						RunningUnlock();
 					}
 					//pTaskQueue->PopLastestTask();
 				}
@@ -86,12 +94,14 @@ int MasterThread::RunLoop()
 					struct timespec taskTime = pNextTask->GetTime();
 					InsertTask(pNextTask);
 					ep_->SetDuring(&taskTime);
+					RunningUnlock();
 					Sleep();
 				}
 			}
 		}
 		else
 		{
+			RunningUnlock();
 			SleepForever();
 		}
 	}
@@ -200,4 +210,13 @@ int MasterThread::SetWorkThreadBusy(int state)
 {
 	workthread_busy = state;
 	return TRUE;
+}
+
+void MasterThread::RunningLock()
+{
+	cs_running->Enter();
+}
+void MasterThread::RunningUnlock()
+{
+	cs_running->Leave();
 }

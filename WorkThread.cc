@@ -47,7 +47,7 @@ int WorkThread::Run()
 		{
 			pTask->Run();
 			if(!pTask->Repeatable()){
-				if(pGlobalList->Delete(pTask))
+				//if(pGlobalList->Delete(pTask))
 				{
 					delete pTask;
 				}
@@ -56,9 +56,11 @@ int WorkThread::Run()
 		}
 		else
 		{
+			pMasterThread_->RunningLock();
 			state_ = STATE_WAITING;
 			pMasterThread_->SetWorkThreadBusy(WORKTHREAD_IDLE);
 			pMasterThread_->WakeUp();
+			pMasterThread_->RunningUnlock();
 			ep_->WaitObjectForever();
 		}
 	}

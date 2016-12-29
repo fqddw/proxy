@@ -115,7 +115,7 @@ int RemoteSide::ProccessSend()
 						{
 							flag = FALSE;
 							SetCanWrite(flag);
-							//m_pClientSide->SetCanRead(TRUE);
+							m_pClientSide->SetCanWrite(TRUE);
 						}
 					}
 					else

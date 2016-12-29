@@ -172,7 +172,7 @@ RemoteSide* ClientSide::GetRemoteSide(InetSocketAddress* pAddr)
 		pRemoteSide->SetMasterThread(GetMasterThread());
 		pRemoteSide->SetClientSide(this);
 		pRemoteSide->GetEvent()->AddToEngine(EPOLLIN|EPOLLOUT|EPOLLERR|EPOLLET|EPOLLRDHUP);
-		//g_pGlobalRemoteSidePool->Append(pRemoteSide);
+		g_pGlobalRemoteSidePool->Append(pRemoteSide);
 	}
 	//g_pGlobalRemoteSidePool->Unlock();
 	return pRemoteSide;
