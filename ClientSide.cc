@@ -221,7 +221,7 @@ int ClientSide::ProccessSend()
 					if(pGlobalList->Delete(this))
 					{
 					}
-					delete this;
+					//delete this;
 					close(sockfd);
 				}
 			}

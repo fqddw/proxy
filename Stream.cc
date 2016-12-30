@@ -83,7 +83,7 @@ Stream* Stream::GetPartStream(int begin,int end)
 	memcpy(pReturnString,m_pData+begin,length);
 	Stream* pStream = new Stream();
 	pStream->Append(pReturnString,length);
-	delete pReturnString;
+	delete []pReturnString;
 	return pStream;
 
 }

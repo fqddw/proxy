@@ -179,7 +179,7 @@ MemList<T>::~MemList<T>()
 	MemNode<T>* pNode = m_pHead;
 	while(pNode)
 	{
-		delete pNode->GetData();
+		//delete pNode->GetData();
 		MemNode<T>* pTmpNode = pNode;
 		pNode = pNode->GetNext();
 		delete pTmpNode;
