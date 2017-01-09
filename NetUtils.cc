@@ -11,7 +11,7 @@ InetSocketAddress* NetUtils::GetHostByName(char* pHostName,int port)
 	struct addrinfo* ptr,*result;
 	int ret = getaddrinfo(pHostName,NULL,&hints,&result);
 	if (ret != 0) {
-		fprintf(stderr,"getaddrinfo: %s/n",
+		fprintf(stderr,"getaddrinfo: %s %s/n", pHostName,
 				gai_strerror(ret));
 		return NULL;
 	}

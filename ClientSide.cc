@@ -215,7 +215,7 @@ int ClientSide::ProccessSend()
 					m_pRemoteSide->GetEvent()->RemoveFromEngine();
 					close(m_pRemoteSide->GetEvent()->GetFD());
 					g_pGlobalRemoteSidePool->Delete(m_pRemoteSide);
-					delete m_pRemoteSide;
+					//delete m_pRemoteSide;
 					int sockfd = GetEvent()->GetFD();
 					GetEvent()->RemoveFromEngine();
 					if(pGlobalList->Delete(this))
