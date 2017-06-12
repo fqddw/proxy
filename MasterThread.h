@@ -31,6 +31,7 @@ public:
 	int GetWorkerCount();
 	void RunningLock();
 	void RunningUnlock();
+	int GetTaskQueueSize();
 private:
 	EventPump* ep_;
 	TaskQueue * pTaskQueue;

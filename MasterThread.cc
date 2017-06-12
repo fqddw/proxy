@@ -220,3 +220,8 @@ void MasterThread::RunningUnlock()
 {
 	cs_running->Leave();
 }
+
+int MasterThread::GetTaskQueueSize()
+{
+	return pTaskQueue->GetSize();
+}
