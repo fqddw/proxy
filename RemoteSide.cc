@@ -319,4 +319,5 @@ RemoteSide::~RemoteSide()
 		delete m_pHttpResponse;
 		m_pHttpResponse = NULL;
 	}
+	delete m_pAddr;
 }
