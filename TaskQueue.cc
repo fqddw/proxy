@@ -9,7 +9,6 @@ TaskQueue::TaskQueue() : cs_(new CriticalSection())
 
 void TaskQueue::Insert(Task* pTask)
 {
-	printf("Insert Task %d\n", GetSize());
 	cs_->Enter();
 	int id = GetUniqueId();
 	Task * pElement = pTask;

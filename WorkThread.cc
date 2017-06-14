@@ -46,7 +46,6 @@ int WorkThread::Run()
 		if (pTask)
 		{
 			pTask->Run();
-			printf("Task Run out %d\n", pMasterThread_->GetTaskQueueSize());
 			if(!pTask->Repeatable()){
 				//if(pGlobalList->Delete(pTask))
 				{

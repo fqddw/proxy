@@ -148,7 +148,7 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 {
 	if(!pStream)
 	{
-		GetEvent()->CancelInReady();
+		//GetEvent()->CancelInReady();
 		SetCanRead(TRUE);
 		return TRUE;
 	}

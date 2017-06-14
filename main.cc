@@ -7,6 +7,7 @@
 #include "MasterThread.h"
 #include <signal.h>
 #include "MemList.h"
+#include "DNSCache.h"
 void* threadProc(void* ptr)
 {
 	Task* pTaskWrapper = (Task*)ptr;
@@ -62,6 +63,7 @@ int Thread::SetTask(Task* pTask)
 }
 
 MemList<void*>* pGlobalList = NULL;
+DNSCache* g_pDNSCache = NULL;
 #include "RemoteSide.h"
 class ServerStartTask : public Task
 {
@@ -109,6 +111,7 @@ int main(int argc,char** argv)
 {	
 	g_pGlobalRemoteSidePool = new MemList<RemoteSide*>();
 	pGlobalList = new MemList<void*>();
+	g_pDNSCache = new DNSCache();
 	signal(SIGPIPE,SIG_IGN);
 	NetEngine* pEngine = new NetEngine();
 	pEngine->SetSize(1024);
