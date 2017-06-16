@@ -28,6 +28,7 @@ InetSocketAddress* NetUtils::GetHostByName(char* pHostName,int port)
 		if (ret != 0) {
 			fprintf(stderr,"getaddrinfo: %s %s/n", pHostName,
 					gai_strerror(ret));
+			freeaddrinfo(result);
 			return NULL;
 		}
 		int index = 0;
@@ -38,9 +39,12 @@ InetSocketAddress* NetUtils::GetHostByName(char* pHostName,int port)
 			{
 				struct sockaddr_in *psa = (struct sockaddr_in*)ptr->ai_addr;
 				g_pDNSCache->AddRecord(pHostName, psa->sin_addr.s_addr);
-				return new InetSocketAddress(port,psa->sin_addr.s_addr);
+				InetSocketAddress* pAddr = new InetSocketAddress(port,psa->sin_addr.s_addr);
+				freeaddrinfo(result);
+				return pAddr;
 			}
 		}
+		freeaddrinfo(result);
 	}
 	return NULL;
 }
