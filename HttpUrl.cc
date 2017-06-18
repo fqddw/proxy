@@ -52,7 +52,10 @@ int HttpUrl::Parse()
 			m_iPort = port;
 			m_pHost = strHost;
 	}
-	m_pRequestString = strUrl.substr(iHostEndPos);
+	if(iHostEndPos != string::npos)
+		m_pRequestString = strUrl.substr(iHostEndPos);
+	else
+		m_pRequestString = "/";
 	return TRUE;
 }
 

@@ -34,8 +34,8 @@ int ReceiveProccessor::GetDataStream(Stream** ppStream)
 	m_pIOHandler->SetCanRead(FALSE);
 	for(;;)
 	{
-		char buffer[16*1024] = {'\0'};
-		int n = recv(m_pIOHandler->GetEvent()->GetFD(),buffer,16*1024,0);
+		char buffer[256*1024] = {'\0'};
+		int n = recv(m_pIOHandler->GetEvent()->GetFD(),buffer,256*1024,0);
 		if(n < 0)
 		{
 			if(errno == EAGAIN)
@@ -74,7 +74,6 @@ int ReceiveProccessor::GetDataStream(Stream** ppStream)
 		if(n == 0)
 		{
 			int sockfd = m_pIOHandler->GetEvent()->GetFD();
-			printf("Receive 0 normal end %d\n", sockfd);
 			m_pIOHandler->GetEvent()->RemoveFromEngine();
 			g_pGlobalRemoteSidePool->Delete((RemoteSide*)m_pIOHandler);
 			if(pGlobalList->Delete(m_pIOHandler))

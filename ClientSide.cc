@@ -212,6 +212,7 @@ int ClientSide::ProccessSend()
 				}
 				else
 				{
+					printf("SIG PIPE\n");
 					m_pRemoteSide->GetEvent()->RemoveFromEngine();
 					close(m_pRemoteSide->GetEvent()->GetFD());
 					g_pGlobalRemoteSidePool->Delete(m_pRemoteSide);

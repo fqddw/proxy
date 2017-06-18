@@ -9,7 +9,6 @@ InetSocketAddress* NetUtils::GetHostByName(char* pHostName,int port)
 {
 	int ip = g_pDNSCache->getSaddrByHost(pHostName);
 	if(ip != FALSE){
-		printf("ip %d\n", ip);
 		return new InetSocketAddress(port, ip);
 	}
 	else{
