@@ -17,6 +17,7 @@ class DNSCache
 		DNSCache();
 		int getSaddrByHost(char*);
 		int AddRecord(char*, int);
+		MemList<DNSItem*>* GetList();
 	private:
 		MemList<DNSItem*>* m_pCacheData;
 };

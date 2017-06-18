@@ -136,6 +136,12 @@ int main(int argc,char** argv)
 		int c = getchar();
 		if(c == 'l')
 		{
+			MemList<DNSItem*>* pList = g_pDNSCache->GetList();
+			MemNode<DNSItem*>* pItem = pList->GetHead();
+			while(pItem) {
+				printf("%s\n", pItem->GetData()->GetHostName());
+				pItem = pItem->GetNext();
+			}
 		}
 	}
 	return 0;

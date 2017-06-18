@@ -50,3 +50,9 @@ int DNSCache::AddRecord(char* pHost, int iSaddr)
 	m_pCacheData->Append(pDNSItem);
 	return TRUE;
 }
+
+MemList<DNSItem*>* DNSCache::GetList()
+{
+	        return m_pCacheData;
+}
+
