@@ -7,6 +7,10 @@
 extern DNSCache* g_pDNSCache;
 InetSocketAddress* NetUtils::GetHostByName(char* pHostName,int port)
 {
+	if(strlen(pHostName) == 0)
+	{
+		return NULL;
+	}
 	int ip = g_pDNSCache->getSaddrByHost(pHostName);
 	if(ip != FALSE){
 		return new InetSocketAddress(port, ip);
