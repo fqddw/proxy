@@ -79,6 +79,7 @@ int ClientSide::ProccessReceive(Stream* pStream)
 				{
 					char* pText = (char*)"HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n";
 					send(GetEvent()->GetFD(),pText,strlen(pText),0);
+					close(GetEvent()->GetFD());
 					return 0;
 				}
 				RemoteSide* pRemoteSide = GetRemoteSide(pAddr);
