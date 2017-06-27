@@ -31,7 +31,6 @@ InetSocketAddress* NetUtils::GetHostByName(char* pHostName,int port)
 		if (ret != 0) {
 			fprintf(stderr,"getaddrinfo: %s %s/n", pHostName,
 					gai_strerror(ret));
-			freeaddrinfo(result);
 			return NULL;
 		}
 		int index = 0;
