@@ -132,3 +132,8 @@ int IOHandler::GetSide()
 {
 	return REMOTE_SIDE;
 }
+
+Stream* IOHandler::GetSendStream()
+{
+				return NULL;
+}

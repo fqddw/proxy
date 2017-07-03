@@ -32,6 +32,12 @@ Stream::Stream():m_pData(NULL),m_iLength(0),cs_(new CriticalSection())
 {
 }
 
+Stream::Stream(int iLength):m_iLength(0),cs_(new CriticalSection())
+{
+				m_pData = new char[iLength];
+				memset(m_pData,0,iLength);
+}
+
 Stream::~Stream()
 {
 	if(m_pData)

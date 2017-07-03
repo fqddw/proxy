@@ -5,6 +5,7 @@ class Stream
 {
 	public:
 		Stream();
+		Stream(int);
 		~Stream();
 		int GetLength();
 		char* GetData();

@@ -38,6 +38,8 @@ class IOHandler
 		int LockSendBuffer();
 		int UnlockSendBuffer();
 		virtual int GetSide();
+		virtual Stream* GetSendStream();
+		virtual int ClearHttpEnd(){return 0;};
 	private:
 		IOEvent* m_pEvent;
 		MasterThread* m_pMasterThread;

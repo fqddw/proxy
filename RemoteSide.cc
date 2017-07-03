@@ -31,7 +31,7 @@ int RemoteSide::SetStatusIdle()
 	delete m_pHttpResponse;
 	m_pHttpResponse = new HttpResponse(m_pStream);
 
-	m_iState = STATUS_BLOCKING; 
+	m_iState = STATUS_IDLE; 
 	SetCanRead(TRUE);
 	return TRUE;
 }
@@ -124,6 +124,7 @@ int RemoteSide::ProccessSend()
 						SetCanWrite(flag);
 						//m_pClientSide->SetCanRead(TRUE);
 					}
+					GetEvent()->ModEvent(EPOLLIN|EPOLLET);
 				}
 			}
 			UnlockSendBuffer();
@@ -154,11 +155,18 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 	}
 	if(!m_pClientSide)
 	{
+					printf("MemLeak Here %d\n", pStream->GetLength());
+					delete pStream;
 		GetEvent()->RemoveFromEngine();
 		close(GetEvent()->GetFD());
 		return 0;
 	}
 	Stream* pUserStream = pStream;
+	if(m_pClientSide == NULL)
+	{
+					delete pUserStream;
+					return 0;
+	}
 	int isEnd = TRUE;
 	if(m_pHttpResponse->GetState() == HEADER_NOTFOUND)
 	{
@@ -177,7 +185,6 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 					m_bCloseClient = TRUE;
 				}
 			}
-
 			if(m_pHttpResponse->HasBody())
 			{
 				m_pHttpResponse->LoadBody();
@@ -300,7 +307,7 @@ int RemoteSide::IsConnected()
 
 int RemoteSide::ProccessConnectionReset()
 {
-	if(0)//m_bCloseClient)
+	if(m_bCloseClient)
 	{
 		m_pClientSide->GetEvent()->RemoveFromEngine();
 		close(m_pClientSide->GetEvent()->GetFD());
@@ -314,6 +321,8 @@ int RemoteSide::GetSide()
 }
 RemoteSide::~RemoteSide()
 {
+				delete m_pStream;
+				delete m_pSendStream;
 	if(m_pHttpResponse)
 	{
 		delete m_pHttpResponse;

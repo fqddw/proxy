@@ -95,7 +95,7 @@ int ServerStartTask::Run()
 {
 	ServerConfigDefault* pConfig = new ServerConfigDefault();
 	Server* pServer = new Server();
-	pGlobalList->Append(pServer);
+	//pGlobalList->Append(pServer);
 	pServer->GetEvent()->SetNetEngine(m_pEngine);
 	pServer->SetPort(pConfig->GetPort());
 	pServer->SetMasterThread(m_pMasterThread);
@@ -142,6 +142,10 @@ int main(int argc,char** argv)
 				printf("%s\n", pItem->GetData()->GetHostName());
 				pItem = pItem->GetNext();
 			}
+		}
+		if(c=='q')
+		{
+						return 0;
 		}
 	}
 	return 0;

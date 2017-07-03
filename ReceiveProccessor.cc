@@ -49,6 +49,12 @@ int ReceiveProccessor::GetDataStream(Stream** ppStream)
 			}
 			else
 			{
+						if(m_pIOHandler->GetSide() == CLIENT_SIDE)
+							printf("sig pipe client %d\n", m_pIOHandler->GetSendStream()->GetLength());
+						if(m_pIOHandler->GetSide() == REMOTE_SIDE)
+							printf("sig pipe remote %d\n", m_pIOHandler->GetSendStream()->GetLength());
+
+						m_pIOHandler->ClearHttpEnd();
 				int sockfd = m_pIOHandler->GetEvent()->GetFD();
 				m_pIOHandler->GetEvent()->RemoveFromEngine();
 				if(pGlobalList->Delete(m_pIOHandler))
@@ -73,6 +79,12 @@ int ReceiveProccessor::GetDataStream(Stream** ppStream)
 		}
 		if(n == 0)
 		{
+						if(m_pIOHandler->GetSide() == CLIENT_SIDE)
+							printf("client close %d\n", m_pIOHandler->GetSendStream()->GetLength());
+
+						if(m_pIOHandler->GetSide() == REMOTE_SIDE)
+							printf("remote close %d\n", m_pIOHandler->GetSendStream()->GetLength());
+						m_pIOHandler->ClearHttpEnd();
 			int sockfd = m_pIOHandler->GetEvent()->GetFD();
 			m_pIOHandler->GetEvent()->RemoveFromEngine();
 			g_pGlobalRemoteSidePool->Delete((RemoteSide*)m_pIOHandler);
@@ -97,12 +109,14 @@ int ReceiveProccessor::GetDataStream(Stream** ppStream)
 		(*ppStream)->Append(buffer,n);
 		//break;
 	}
-		m_pIOHandler->SetCanRead(TRUE);
+		//m_pIOHandler->SetCanRead(TRUE);
 
 	if(total > 0)
 	{
 		m_pIOHandler->ProccessReceive(*ppStream);
 	}
+	else
+					m_pIOHandler->SetCanRead(TRUE);
 
 	return TRUE;
 }

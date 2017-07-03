@@ -31,7 +31,9 @@ int HttpBody::IsEnd(Stream* pStream)
 	{
 		Parse(pStream);
 		if(IsEnd() == TRUE)
+		{
 			return TRUE;
+		}
 		else
 			return FALSE;
 	}

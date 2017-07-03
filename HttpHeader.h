@@ -11,6 +11,7 @@ using namespace std;
 #define HTTP_SERVER 101
 #define HTTP_CONNECTION 102
 #define HTTP_TRANSFER_ENCODING 103
+#define HTTP_COOKIE 104
 typedef MemList<pair<string,string>* > HttpKeyValueList;
 class HttpHeader
 {

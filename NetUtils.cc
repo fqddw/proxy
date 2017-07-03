@@ -27,7 +27,6 @@ InetSocketAddress* NetUtils::GetHostByName(char* pHostName,int port)
 		int ret = getaddrinfo(pHostName,NULL,&hints,&result);
 		struct timespec end = Time::GetNow();
 		struct timespec sub = Time::Sub(end, start);
-		printf("DNS time second %ld nsec %ld %s\n", sub.tv_sec, sub.tv_nsec, pHostName);
 		if (ret != 0) {
 			fprintf(stderr,"getaddrinfo: %s %s/n", pHostName,
 					gai_strerror(ret));

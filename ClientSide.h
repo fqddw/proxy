@@ -17,6 +17,7 @@ class ClientSide : public IOHandler
 		ClientSide(int);
 		int Proccess();
 		RemoteSide* GetRemoteSide(InetSocketAddress*);
+		RemoteSide* GetRemoteSide(int);
 		int ProccessReceive(Stream*);
 		int ProccessConnectionReset();
 		int ProccessSend();
@@ -26,11 +27,16 @@ class ClientSide : public IOHandler
 		HttpRequest* GetRequest();
 		int ClearHttpEnd();
 		int GetSide();
+		int GetSendEndPos();
+		int CanAppend(int);
+		int AppendSendStream(char*, int);
 	private:
 		int m_iState;
 		int m_iTransState;
 		Stream* m_pStream;
 		Stream* m_pSendStream;
+		int m_iSendEndPos;
+		int m_iAvaibleDataSize;
 		HttpRequest* m_pHttpRequest;
 		RemoteSide* m_pRemoteSide;
 };
