@@ -7,6 +7,7 @@
 #include "unistd.h"
 #include "string.h"
 
+extern MemList<RemoteSide*>* g_pGlobalRemoteSidePool;
 int RemoteSide::Proccess()
 {
 	return TRUE;
@@ -64,10 +65,11 @@ int RemoteSide::Connect()
 }
 int RemoteSide::ProccessSend()
 {
+				//处理连接操作
 	if(m_isConnected == SOCKTE_STATUS_CONNECTING)
 	{
 		if(m_pSendStream->GetLength())
-			SetCanWrite(TRUE);
+						SetCanWrite(FALSE);
 		m_isConnected = TRUE;
 		//GetEvent()->ModEvent(EPOLLIN|EPOLLET);
 	}
@@ -87,7 +89,11 @@ int RemoteSide::ProccessSend()
 			{
 				flag = FALSE;
 				if(errno == EAGAIN)
+				{
+								//重新启动可写触发的响应
+								SetCanWrite(TRUE);
 					printf("--------------------------\n");
+				}
 				else if(errno == EINTR)
 					printf("||||||||||||||||||\n");
 				else
@@ -95,12 +101,14 @@ int RemoteSide::ProccessSend()
 					printf("%d +++++++++++++++++++\n",errno);
 					GetEvent()->RemoveFromEngine();
 					close(GetEvent()->GetFD());
+					g_pGlobalRemoteSidePool->Delete(this);
 					return 0;
 				}
 			}else if(nSent == 0)
 			{
 				GetEvent()->RemoveFromEngine();
 				close(GetEvent()->GetFD());
+				g_pGlobalRemoteSidePool->Delete(this);
 				return 0;
 			}
 			else
@@ -114,17 +122,21 @@ int RemoteSide::ProccessSend()
 						if(m_pClientSide->GetRequest()->GetBody()->IsEnd())
 						{
 							flag = FALSE;
+							SetCanRead(TRUE);
 							SetCanWrite(flag);
 							m_pClientSide->SetCanWrite(TRUE);
+							GetEvent()->ModEvent(EPOLLIN|EPOLLET);
 						}
 					}
 					else
 					{
+									//发送完成，注册读事件，使链接可以处理接受远程服务器数据
 						flag = FALSE;
+						SetCanRead(TRUE);
 						SetCanWrite(flag);
+						GetEvent()->ModEvent(EPOLLIN|EPOLLET);
 						//m_pClientSide->SetCanRead(TRUE);
 					}
-					GetEvent()->ModEvent(EPOLLIN|EPOLLET);
 				}
 			}
 			UnlockSendBuffer();
@@ -139,9 +151,12 @@ int RemoteSide::ClearHttpEnd()
 	m_pHttpResponse = new HttpResponse(m_pStream);
 	m_pStream->Sub(m_pStream->GetLength());
 	m_iState = STATUS_IDLE;
-	m_pClientSide->SetTransIdleState();
 	SetCanRead(TRUE);
-	m_pClientSide->SetCanWrite(FALSE);
+	if(m_pClientSide)
+	{
+					m_pClientSide->SetTransIdleState();
+					m_pClientSide->SetCanWrite(FALSE);
+	}
 	return 0;
 
 }
@@ -208,6 +223,7 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 		m_pClientSide->UnlockSendBuffer();
 		if(nLengthSend == 0)
 		{
+		//				SetCanRead(TRUE);
 			GetMasterThread()->InsertTask(m_pClientSide->GetSendTask());
 		}
 		else

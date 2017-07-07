@@ -113,7 +113,10 @@ int ClientSide::ProccessReceive(Stream* pStream)
 					pRemoteSide->GetSendStream()->Append(pBodyStream->GetData(),pBodyStream->GetLength());
 					delete pBodyStream;
 					SetCanWrite(TRUE);
+					m_pRemoteSide->SetCanWrite(TRUE);
+					//注册写事件，接下来此链接将处理Client::ProccessSend,下一步设置在ProccessSend玩之后注册写事件
 					GetEvent()->ModEvent(EPOLLOUT|EPOLLET);
+					m_pRemoteSide->GetEvent()->ModEvent(EPOLLOUT|EPOLLET);
 
 				}
 				if(pRemoteSide->IsConnected())
@@ -126,6 +129,7 @@ int ClientSide::ProccessReceive(Stream* pStream)
 			}
 			else
 			{
+							SetCanRead(TRUE);
 				return FALSE;
 			}
 		}
@@ -140,6 +144,7 @@ int ClientSide::ProccessReceive(Stream* pStream)
 				m_pRemoteSide->GetSendStream()->Append(pStream->GetData(),pStream->GetLength());
 				m_pRemoteSide->ProccessSend();
 				m_pStream->Sub(m_pStream->GetLength());
+				SetCanRead(TRUE);
 		}
 		else if(m_iTransState == CLIENT_STATE_WAITING)
 		{
@@ -224,7 +229,7 @@ int ClientSide::ProccessSend()
 					if(GetEvent()->IsOutReady())
 					{
 						//GetEvent()->CancelOutReady();
-						//GetMasterThread()->InsertTask(GetSendTask());
+						GetMasterThread()->InsertTask(GetSendTask());
 						UnlockSendBuffer();
 						return TRUE;
 					}
@@ -272,8 +277,11 @@ int ClientSide::ProccessSend()
 					{
 						if(m_pRemoteSide->GetResponse()->GetBody()->IsEnd())
 						{
+										//此时pin链接已完成一条请求，重置各个事件状态，Client注册读事件，Remote注册写事件
 							m_pRemoteSide->ClearHttpEnd();
 							m_pRemoteSide->SetClientSide(NULL);
+							m_pRemoteSide->SetCanRead(FALSE);
+							m_pRemoteSide->SetCanWrite(TRUE);
 							ClearHttpEnd();
 							SetCanRead(TRUE);
 							SetCanWrite(FALSE);
@@ -285,13 +293,17 @@ int ClientSide::ProccessSend()
 						}
 						else
 						{
+										//请求正在传输中,engine此时屏蔽了remote的数据到达处理函数，但会设置是否有数据到达,如果有数据到达则投递处理任务，没有则开启处理函数
 										if(m_pRemoteSide->GetEvent()->IsInReady())
 										{
+														m_pRemoteSide->SetCanRead(FALSE);
 														m_pRemoteSide->GetEvent()->CancelInReady();
 														GetMasterThread()->InsertTask(m_pRemoteSide->GetRecvTask());
 										}
 										else
+										{
 														m_pRemoteSide->SetCanRead(TRUE);
+										}
 						}
 					}
 					else
