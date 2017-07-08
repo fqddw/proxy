@@ -126,7 +126,25 @@ int RemoteSide::ProccessSend()
 							SetCanWrite(flag);
 							m_pClientSide->SetCanWrite(TRUE);
 							GetEvent()->ModEvent(EPOLLIN|EPOLLET);
+							m_pClientSide->GetEvent()->ModEvent(EPOLLET|EPOLLOUT);
 						}
+						else
+						{
+										if(m_pClientSide->GetEvent()->IsInReady())
+										{
+														printf("pull from client\n");
+														SetCanWrite(FALSE);
+														m_pClientSide->SetCanRead(FALSE);
+														m_pClientSide->GetEvent()->CancelInReady();
+														GetMasterThread()->InsertTask(m_pClientSide->GetRecvTask());
+										}
+										else
+										{
+														m_pClientSide->SetCanRead(TRUE);
+										}
+
+										flag = FALSE;
+					}
 					}
 					else
 					{
@@ -135,6 +153,8 @@ int RemoteSide::ProccessSend()
 						SetCanRead(TRUE);
 						SetCanWrite(flag);
 						GetEvent()->ModEvent(EPOLLIN|EPOLLET);
+						m_pClientSide->GetEvent()->ModEvent(EPOLLET|EPOLLOUT);
+						m_pClientSide->SetCanWrite(TRUE);
 						//m_pClientSide->SetCanRead(TRUE);
 					}
 				}

@@ -211,9 +211,10 @@ int ClientSide::ProccessSend()
 	//printf("Send Pending Length: %d\n",m_pSendStream->GetLength());
 	if(m_pSendStream->GetLength()<=0)
 	{
-		SetCanWrite(FALSE);
+		//SetCanWrite(FALSE);
 		return FALSE;
 	}
+	GetEvent()->CancelOutReady();
 		int totalSend = 0;
 		int flag = TRUE;
 		while(flag)
@@ -225,14 +226,16 @@ int ClientSide::ProccessSend()
 				flag = FALSE;
 				if(errno == EAGAIN)
 				{
-								SetCanWrite(TRUE);
+								printf("Client Send EAGAIN\n");
 					if(GetEvent()->IsOutReady())
 					{
-						//GetEvent()->CancelOutReady();
+								printf("Client Send EAGAIN Ready!\n");
 						GetMasterThread()->InsertTask(GetSendTask());
 						UnlockSendBuffer();
 						return TRUE;
 					}
+					else
+								SetCanWrite(TRUE);
 				}
 				else
 				{
@@ -289,6 +292,7 @@ int ClientSide::ProccessSend()
 
 							m_pRemoteSide->GetEvent()->ModEvent(EPOLLOUT|EPOLLET);
 							m_iTransState = CLIENT_STATE_IDLE;
+							m_pRemoteSide->SetStatusIdle();
 							//GetEvent()->ModEvent(EPOLLIN|EPOLLERR|EPOLLET|EPOLLRDHUP);
 						}
 						else
@@ -296,6 +300,8 @@ int ClientSide::ProccessSend()
 										//请求正在传输中,engine此时屏蔽了remote的数据到达处理函数，但会设置是否有数据到达,如果有数据到达则投递处理任务，没有则开启处理函数
 										if(m_pRemoteSide->GetEvent()->IsInReady())
 										{
+														printf("pull from remote\n");
+														SetCanWrite(FALSE);
 														m_pRemoteSide->SetCanRead(FALSE);
 														m_pRemoteSide->GetEvent()->CancelInReady();
 														GetMasterThread()->InsertTask(m_pRemoteSide->GetRecvTask());
@@ -308,10 +314,19 @@ int ClientSide::ProccessSend()
 					}
 					else
 					{
-						ClearHttpEnd();
-						m_iTransState = CLIENT_STATE_IDLE;
-						m_pRemoteSide->SetStatusIdle();
-						SetCanRead(TRUE);
+									m_pRemoteSide->ClearHttpEnd();
+							m_pRemoteSide->SetClientSide(NULL);
+							m_pRemoteSide->SetCanRead(FALSE);
+							m_pRemoteSide->SetCanWrite(TRUE);
+							ClearHttpEnd();
+							SetCanRead(TRUE);
+							SetCanWrite(FALSE);
+							GetEvent()->ModEvent(EPOLLIN|EPOLLET);
+
+							m_pRemoteSide->GetEvent()->ModEvent(EPOLLOUT|EPOLLET);
+							m_iTransState = CLIENT_STATE_IDLE;
+							return 0;
+
 						//SetCanWrite(FALSE);
 					}
 					//SetCanWrite(TRUE);
@@ -327,6 +342,10 @@ int ClientSide::ProccessSend()
 						m_pRemoteSide->SetCanRead(TRUE);
 					}
 					flag = FALSE;
+				}
+				else
+				{
+								printf("during transfer\n");
 				}
 			}
 		}
