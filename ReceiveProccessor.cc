@@ -54,6 +54,7 @@ int ReceiveProccessor::GetDataStream(Stream** ppStream)
 						if(m_pIOHandler->GetSide() == REMOTE_SIDE)
 							printf("sig pipe remote %d\n", m_pIOHandler->GetSendStream()->GetLength());
 
+						printf("ClearHttpEnd %s %d\n", __FILE__, __LINE__);
 						m_pIOHandler->ClearHttpEnd();
 				int sockfd = m_pIOHandler->GetEvent()->GetFD();
 				m_pIOHandler->GetEvent()->RemoveFromEngine();
@@ -86,7 +87,8 @@ int ReceiveProccessor::GetDataStream(Stream** ppStream)
 						if(m_pIOHandler->GetSide() == REMOTE_SIDE)
 										printf("remote close %d\n", m_pIOHandler->GetSendStream()->GetLength());
 										*/
-			m_pIOHandler->ClearHttpEnd();
+						printf("ClearHttpEnd %s %d %d %d\n", __FILE__, __LINE__, m_pIOHandler->GetSide(), errno);
+			//m_pIOHandler->ClearHttpEnd();
 			int sockfd = m_pIOHandler->GetEvent()->GetFD();
 			m_pIOHandler->GetEvent()->RemoveFromEngine();
 			g_pGlobalRemoteSidePool->Delete((RemoteSide*)m_pIOHandler);

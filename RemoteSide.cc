@@ -33,7 +33,8 @@ int RemoteSide::SetStatusIdle()
 	m_pHttpResponse = new HttpResponse(m_pStream);
 
 	m_iState = STATUS_IDLE; 
-	SetCanRead(TRUE);
+	SetCanRead(FALSE);
+	SetCanWrite(TRUE);
 	return TRUE;
 }
 
@@ -65,6 +66,8 @@ int RemoteSide::Connect()
 }
 int RemoteSide::ProccessSend()
 {
+				if(!m_pClientSide)
+								return FALSE;
 				//处理连接操作
 	if(m_isConnected == SOCKTE_STATUS_CONNECTING)
 	{
@@ -167,6 +170,7 @@ int RemoteSide::ProccessSend()
 extern MemList<RemoteSide*>* g_pGlobalRemoteSidePool;
 int RemoteSide::ClearHttpEnd()
 {
+				printf("Clear Http End\n");
 	delete m_pHttpResponse;
 	m_pHttpResponse = new HttpResponse(m_pStream);
 	m_pStream->Sub(m_pStream->GetLength());

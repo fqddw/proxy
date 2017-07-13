@@ -10,8 +10,6 @@
 #include "NetUtils.h"
 #include "arpa/inet.h"
 extern MemList<void*>* pGlobalList;
-#define HEADER_NOTFOUND 0
-#define HEADER_FOUND 1
 #define SEND_BUFFER_LENGTH 256*1024
 ClientSide::ClientSide():IOHandler(),m_pStream(new Stream()),m_pSendStream(new Stream()),m_iSendEndPos(0),m_iAvaibleDataSize(0)
 {
@@ -135,6 +133,10 @@ int ClientSide::ProccessReceive(Stream* pStream)
 		}
 		else if(m_iState == HEADER_FOUND && m_iTransState == CLIENT_STATE_RUNNING)
 		{
+						if(!m_pRemoteSide)
+						{
+										printf("NULL Remote Body\n");
+						}
 			if(m_pHttpRequest->GetBody())
 				if(m_pHttpRequest->GetBody()->IsEnd(pStream))
 				{
@@ -257,7 +259,7 @@ int ClientSide::ProccessSend()
 			}
 			else if(nSent == 0)
 			{
-					printf("SIGPIP WILL TRIGGER %d\n", m_pSendStream->GetLength());
+					printf("SIG CLOSE WILL TRIGGER %d\n", m_pSendStream->GetLength());
 					ClearHttpEnd();
 				m_pRemoteSide->SetClientSide(NULL);
 				m_pRemoteSide->SetStatusIdle();
@@ -280,6 +282,7 @@ int ClientSide::ProccessSend()
 					{
 						if(m_pRemoteSide->GetResponse()->GetBody()->IsEnd())
 						{
+										printf("End Here Already\n");
 										//此时pin链接已完成一条请求，重置各个事件状态，Client注册读事件，Remote注册写事件
 							m_pRemoteSide->ClearHttpEnd();
 							m_pRemoteSide->SetClientSide(NULL);
@@ -308,12 +311,14 @@ int ClientSide::ProccessSend()
 										}
 										else
 										{
+														SetCanWrite(FALSE);
 														m_pRemoteSide->SetCanRead(TRUE);
 										}
 						}
 					}
 					else
 					{
+									printf("ClientSide>>ProccessSend>>NoBody>>ClearHttpEnd\n");
 									m_pRemoteSide->ClearHttpEnd();
 							m_pRemoteSide->SetClientSide(NULL);
 							m_pRemoteSide->SetCanRead(FALSE);
@@ -325,6 +330,7 @@ int ClientSide::ProccessSend()
 
 							m_pRemoteSide->GetEvent()->ModEvent(EPOLLOUT|EPOLLET);
 							m_iTransState = CLIENT_STATE_IDLE;
+							m_pRemoteSide = NULL;
 							return 0;
 
 						//SetCanWrite(FALSE);

@@ -4,9 +4,6 @@
 #include "HttpHeader.h"
 #include "HttpBody.h"
 
-#define HEADER_NOTFOUND 0
-#define HEADER_FOUND 1
-
 class HttpResponse
 {
 		public:
