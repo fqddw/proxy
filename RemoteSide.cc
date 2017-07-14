@@ -33,8 +33,8 @@ int RemoteSide::SetStatusIdle()
 	m_pHttpResponse = new HttpResponse(m_pStream);
 
 	m_iState = STATUS_IDLE; 
-	SetCanRead(FALSE);
-	SetCanWrite(TRUE);
+	SetCanRead(TRUE);
+	SetCanWrite(FALSE);
 	return TRUE;
 }
 
@@ -66,6 +66,8 @@ int RemoteSide::Connect()
 }
 int RemoteSide::ProccessSend()
 {
+				if(m_pSendStream->GetLength() == 0)
+								return FALSE;
 				if(!m_pClientSide)
 								return FALSE;
 				//处理连接操作
@@ -128,6 +130,7 @@ int RemoteSide::ProccessSend()
 							SetCanRead(TRUE);
 							SetCanWrite(flag);
 							m_pClientSide->SetCanWrite(TRUE);
+							m_pClientSide->SetCanRead(FALSE);
 							GetEvent()->ModEvent(EPOLLIN|EPOLLET);
 							m_pClientSide->GetEvent()->ModEvent(EPOLLET|EPOLLOUT);
 						}
@@ -158,7 +161,7 @@ int RemoteSide::ProccessSend()
 						GetEvent()->ModEvent(EPOLLIN|EPOLLET);
 						m_pClientSide->GetEvent()->ModEvent(EPOLLET|EPOLLOUT);
 						m_pClientSide->SetCanWrite(TRUE);
-						//m_pClientSide->SetCanRead(TRUE);
+						m_pClientSide->SetCanRead(FALSE);
 					}
 				}
 			}
@@ -170,7 +173,6 @@ int RemoteSide::ProccessSend()
 extern MemList<RemoteSide*>* g_pGlobalRemoteSidePool;
 int RemoteSide::ClearHttpEnd()
 {
-				printf("Clear Http End\n");
 	delete m_pHttpResponse;
 	m_pHttpResponse = new HttpResponse(m_pStream);
 	m_pStream->Sub(m_pStream->GetLength());

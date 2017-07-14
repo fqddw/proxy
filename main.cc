@@ -131,6 +131,11 @@ int main(int argc,char** argv)
 	pServerStartTask->SetNetEngine(pEngine);
 	pServerStartTask->SetMasterThread(pMasterThread);
 	pMasterThread->InsertTask(pServerStartTask);
+
+	sem_t t;
+	sem_init(&t, 0, 0);
+	sem_wait(&t);
+
 	while(1)
 	{
 		int c = getchar();

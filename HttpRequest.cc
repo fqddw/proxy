@@ -88,6 +88,7 @@ int HttpRequest::LoadBody()
 	}
 	m_pHttpBody = new HttpBody();
 	char* chLength = m_pHttpHeader->GetField(HTTP_CONTENT_LENGTH);
+	printf("%s\n", chLength);
 	m_pHttpBody->SetContentLength(atoi(chLength));
 	return 0;
 }
