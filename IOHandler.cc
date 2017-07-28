@@ -1,5 +1,5 @@
 #include "IOHandler.h"
-IOHandler::IOHandler():m_pEvent(new IOEvent),m_bCanRead(TRUE),m_pConnResetProc(new ConnectionResetProccessor(this)),m_bCanWrite(TRUE),cs_(new CriticalSection())
+IOHandler::IOHandler():m_pEvent(new IOEvent),m_bCanRead(TRUE),m_pConnResetProc(new ConnectionResetProccessor(this)),m_bCanWrite(TRUE),cs_(new CriticalSection()),m_bClosed(FALSE)
 {
 }
 IOEvent* IOHandler::GetEvent()
@@ -136,4 +136,14 @@ int IOHandler::GetSide()
 Stream* IOHandler::GetSendStream()
 {
 				return NULL;
+}
+
+int IOHandler::IsClosed()
+{
+				return m_bClosed;
+}
+
+void IOHandler::SetClosed(int bClosed)
+{
+				m_bClosed = bClosed;
 }

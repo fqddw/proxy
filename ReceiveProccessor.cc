@@ -40,72 +40,25 @@ int ReceiveProccessor::GetDataStream(Stream** ppStream)
 		{
 			if(errno == EAGAIN)
 			{
+							printf("Total %d\n", total);
 				break;
-			}
-			else if(errno == EINTR)
-			{
-				printf("EINR\n");return 0;
-				//continue;
 			}
 			else
 			{
-						if(m_pIOHandler->GetSide() == CLIENT_SIDE)
-							printf("sig pipe client %d\n", m_pIOHandler->GetSendStream()->GetLength());
-						if(m_pIOHandler->GetSide() == REMOTE_SIDE)
-							printf("sig pipe remote %d\n", m_pIOHandler->GetSendStream()->GetLength());
-
-						printf("ClearHttpEnd %s %d\n", __FILE__, __LINE__);
-						m_pIOHandler->ClearHttpEnd();
-				int sockfd = m_pIOHandler->GetEvent()->GetFD();
-				m_pIOHandler->GetEvent()->RemoveFromEngine();
-				if(pGlobalList->Delete(m_pIOHandler))
-				{
-				}
-				if(m_pIOHandler->GetSide() == REMOTE_SIDE)
-				{
-					if(g_pGlobalRemoteSidePool->Delete(reinterpret_cast<RemoteSide*>(m_pIOHandler)))
-					{
-					}
-				}
-				close(sockfd);
-
-				return FALSE;
-				/*printf("ERROR\n");
-				int sockfd = m_pIOHandler->GetEvent()->GetFD();
-				m_pIOHandler->GetEvent()->RemoveFromEngine();
-				g_pGlobalRemoteSidePool->Delete((RemoteSide*)m_pIOHandler);
-
-				return FALSE;*/
+							printf("Receive Error\n");
+							if(*ppStream)
+											delete *ppStream;
+							m_pIOHandler->ProccessConnectionReset();
+							return FALSE;
 			}
 		}
 		if(n == 0)
 		{
-						/*
-						if(m_pIOHandler->GetSide() == CLIENT_SIDE)
-										printf("client close %d\n", m_pIOHandler->GetSendStream()->GetLength());
-
-						if(m_pIOHandler->GetSide() == REMOTE_SIDE)
-										printf("remote close %d\n", m_pIOHandler->GetSendStream()->GetLength());
-										*/
-			//m_pIOHandler->ClearHttpEnd();
-			int sockfd = m_pIOHandler->GetEvent()->GetFD();
-			m_pIOHandler->GetEvent()->RemoveFromEngine();
-			g_pGlobalRemoteSidePool->Delete((RemoteSide*)m_pIOHandler);
-			if(pGlobalList->Delete(m_pIOHandler))
-			{
-				//delete m_pIOHandler;
-			}
-			//m_pIOHandler->ProccessConnectionReset();
-			if(m_pIOHandler->GetSide() == REMOTE_SIDE)
-			{
-				if(g_pGlobalRemoteSidePool->Delete(reinterpret_cast<RemoteSide*>(m_pIOHandler)))
-				{
-				}
-			}
-
-			close(sockfd);
+						printf("SetClosed\n");
+						m_pIOHandler->SetClosed(TRUE);
 			break;
 		}
+		//printf("%s", buffer);
 		total += n;
 		if(*ppStream == NULL)
 			*ppStream = new Stream();
@@ -114,15 +67,10 @@ int ReceiveProccessor::GetDataStream(Stream** ppStream)
 	}
 		//m_pIOHandler->SetCanRead(TRUE);
 
-	if(total > 0)
+	if(total >= 0)
 	{
 		m_pIOHandler->ProccessReceive(*ppStream);
 	}
-	else
-	{
-					m_pIOHandler->SetCanRead(TRUE);
-	}
-
 	return TRUE;
 }
 

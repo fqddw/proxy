@@ -30,6 +30,8 @@ class ClientSide : public IOHandler
 		int GetSendEndPos();
 		int CanAppend(int);
 		int AppendSendStream(char*, int);
+		void SetRemoteState(int);
+		void SetCloseAsLength(int);
 	private:
 		int m_iState;
 		int m_iTransState;
@@ -39,5 +41,7 @@ class ClientSide : public IOHandler
 		int m_iAvaibleDataSize;
 		HttpRequest* m_pHttpRequest;
 		RemoteSide* m_pRemoteSide;
+		int m_iRemoteState;
+		int m_bCloseAsLength;
 };
 #endif

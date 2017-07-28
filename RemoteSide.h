@@ -36,15 +36,18 @@ class RemoteSide:public IOHandler
 		HttpResponse* GetResponse();
 		int ClearHttpEnd();
 		int GetSide();
+		void SetClientState(int);
+		int ProccessConnectionClose();
 	private:
-		int m_bCloseClient;
 		int m_isConnected;
 		int m_iSocket;
 		int m_iState;
+		int m_iClientState;
 		Stream* m_pStream;
 		Stream* m_pSendStream;
 		InetSocketAddress* m_pAddr;
 		HttpResponse* m_pHttpResponse;
 		ClientSide* m_pClientSide;
+		int m_bCloseClient;
 };
 #endif

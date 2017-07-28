@@ -104,7 +104,11 @@ Stream* HttpRequestHeader::ToHeader()
 	MemNode<pair<string,string>*>* pNode = GetKeyValueList()->GetHead();
 	while(pNode != NULL)
 	{
-		pStream->Append((char*)pNode->GetData()->first.c_str(),pNode->GetData()->first.size());
+					char* pKey = (char*)pNode->GetData()->first.c_str();
+					if(strstr(pKey, "Proxy-Connection"))
+									pKey = (char*)"Connection";
+					pStream->Append(pKey ,strlen(pKey));
+
 		pStream->Append((char*)": ",2);
 		pStream->Append((char*)pNode->GetData()->second.c_str(),pNode->GetData()->second.size());
 		pStream->Append((char*)"\r\n",2);

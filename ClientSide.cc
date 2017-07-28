@@ -11,7 +11,7 @@
 #include "arpa/inet.h"
 extern MemList<void*>* pGlobalList;
 #define SEND_BUFFER_LENGTH 256*1024
-ClientSide::ClientSide():IOHandler(),m_pStream(new Stream()),m_pSendStream(new Stream()),m_iSendEndPos(0),m_iAvaibleDataSize(0)
+ClientSide::ClientSide():IOHandler(),m_pStream(new Stream()),m_pSendStream(new Stream()),m_iSendEndPos(0),m_iAvaibleDataSize(0),m_bCloseAsLength(FALSE)
 {
 				GetEvent()->SetIOHandler(this);
 				m_iState = HEADER_NOTFOUND;
@@ -27,7 +27,7 @@ ClientSide::~ClientSide()
 								m_pHttpRequest = NULL;
 				}
 }
-ClientSide::ClientSide(int sockfd):IOHandler(),m_pStream(new Stream()),m_pSendStream(new Stream())
+ClientSide::ClientSide(int sockfd):IOHandler(),m_pStream(new Stream()),m_pSendStream(new Stream()),m_bCloseAsLength(FALSE)
 {
 				m_iTransState = CLIENT_STATE_IDLE;
 				m_iState = HEADER_NOTFOUND;
@@ -47,7 +47,7 @@ int ClientSide::ClearHttpEnd()
 				m_pStream->Sub(m_pStream->GetLength());
 				m_pSendStream->Sub(m_pSendStream->GetLength());
 				m_iState = HEADER_NOTFOUND;
-				//SetCanRead(TRUE);
+				SetCanRead(TRUE);
 				//m_pClientSide->SetCanWrite(FALSE);
 				return 0;
 
@@ -108,16 +108,10 @@ int ClientSide::ProccessReceive(Stream* pStream)
 
 																pRemoteSide->GetSendStream()->Append(pBodyStream->GetData(),pBodyStream->GetLength());
 																delete pBodyStream;
-																SetCanWrite(TRUE);
-																m_pRemoteSide->SetCanWrite(TRUE);
-																//注册写事件，接下来此链接将处理Client::ProccessSend,下一步设置在ProccessSend玩之后注册写事件
-																GetEvent()->ModEvent(EPOLLOUT|EPOLLET);
 
 												}
 												if(pRemoteSide->IsConnected())
 												{
-																pRemoteSide->SetCanWrite(TRUE);
-																//GetMasterThread()->InsertTask(m_pRemoteSide->GetSendTask());
 																pRemoteSide->ProccessSend();
 												}
 												m_pStream->Sub(m_pStream->GetLength());
@@ -147,6 +141,7 @@ int ClientSide::ProccessReceive(Stream* pStream)
 				}
 				else if(m_iTransState == CLIENT_STATE_WAITING)
 				{
+								printf("logic error here %s %d\n", __FILE__, __LINE__);
 								close(m_pRemoteSide->GetEvent()->GetFD());
 								m_pRemoteSide->SetClientSide(NULL);
 				}
@@ -185,6 +180,7 @@ RemoteSide* ClientSide::GetRemoteSide(InetSocketAddress* pAddr)
 												pRemoteSide->SetCanWrite(TRUE);
 												pRemoteSide->SetCanRead(FALSE);
 												pRemoteSide->SetClientSide(this);
+												pRemoteSide->SetClientState(STATE_RUNNING);
 
 												pRemoteSide->GetEvent()->ModEvent(EPOLLOUT|EPOLLERR|EPOLLET|EPOLLRDHUP);
 												break;
@@ -200,9 +196,11 @@ RemoteSide* ClientSide::GetRemoteSide(InetSocketAddress* pAddr)
 								pRemoteSide->SetCanRead(FALSE);
 
 								pRemoteSide->SetClientSide(this);
+								pRemoteSide->SetClientState(STATE_RUNNING);
 								pRemoteSide->GetEvent()->AddToEngine(EPOLLOUT|EPOLLERR|EPOLLET|EPOLLRDHUP);
 								g_pGlobalRemoteSidePool->Append(pRemoteSide);
 				}
+				m_iRemoteState = STATE_RUNNING;
 
 				//g_pGlobalRemoteSidePool->Unlock();
 				return pRemoteSide;
@@ -216,6 +214,11 @@ Stream* ClientSide::GetSendStream(){
 int ClientSide::ProccessSend()
 {
 				//printf("Send Pending Length: %d\n",m_pSendStream->GetLength());
+				if(m_iRemoteState == STATE_ABORT)
+				{
+								ProccessConnectionReset();
+								return TRUE;
+				}
 				if(m_pSendStream->GetLength()<=0)
 				{
 								//SetCanWrite(FALSE);
@@ -228,7 +231,7 @@ int ClientSide::ProccessSend()
 				{
 								LockSendBuffer();
 								int nSent = send(GetEvent()->GetFD(),m_pSendStream->GetData(),m_pSendStream->GetLength(),0);
-								if(nSent == -1)
+								if(nSent < 0)
 								{
 												flag = FALSE;
 												if(errno == EAGAIN)
@@ -244,36 +247,17 @@ int ClientSide::ProccessSend()
 												}
 												else
 												{
-																printf("SIG PIPE SEND %d\n", m_pSendStream->GetLength());
-																ClearHttpEnd();
-																printf("SIG PIPE SEND AFTER %d\n", m_pSendStream->GetLength());
-																m_pRemoteSide->SetClientSide(NULL);
-																m_pRemoteSide->GetEvent()->RemoveFromEngine();
-																close(m_pRemoteSide->GetEvent()->GetFD());
-																g_pGlobalRemoteSidePool->Delete(m_pRemoteSide);
-																//delete m_pRemoteSide;
-																int sockfd = GetEvent()->GetFD();
-																GetEvent()->RemoveFromEngine();
-																if(pGlobalList->Delete(this))
-																{
-																}
-																close(sockfd);
+																printf("Client Send Error\n");
+																m_pRemoteSide->SetClientState(STATE_ABORT);
+																ProccessConnectionReset();
+																return 0;
 												}
 								}
 								else if(nSent == 0)
 								{
-												printf("SIG CLOSE WILL TRIGGER %d\n", m_pSendStream->GetLength());
-												ClearHttpEnd();
-												m_pRemoteSide->SetClientSide(NULL);
-												m_pRemoteSide->SetStatusIdle();
-												m_pRemoteSide->GetEvent()->RemoveFromEngine();
-												close(m_pRemoteSide->GetEvent()->GetFD());
-												int sockfd = GetEvent()->GetFD();
-												GetEvent()->RemoveFromEngine();
-												if(pGlobalList->Delete(this))
-												{
-												}
-												close(sockfd);
+												m_pRemoteSide->SetClientState(STATE_ABORT);
+												ProccessConnectionReset();
+												return 0;
 								}
 								else
 								{
@@ -281,10 +265,31 @@ int ClientSide::ProccessSend()
 												m_pSendStream->Sub(nSent);
 												if(m_pSendStream->GetLength() == 0)
 												{
-																if(m_pRemoteSide->GetResponse()->GetState() == HEADER_NOTFOUND)
+																flag = FALSE;
+																printf("Client Send Queue Empty\n");
+																if(m_iRemoteState == STATE_NORMAL)
 																{
+																				printf("Client Send End\n");
+																				//此时pin链接已完成一条请求，重置各个事件状态，Client注册读事件
+																				if(m_bCloseAsLength == TRUE)
+																				{
+																								ProccessConnectionReset();
+																								return TRUE;
+																				}
+																				ClearHttpEnd();
+																				SetCanRead(TRUE);
+																				SetCanWrite(FALSE);
+																				m_iTransState = CLIENT_STATE_IDLE;
+																				GetEvent()->ModEvent(EPOLLIN|EPOLLET);
+
+																				return 0;
+																}
+																else
+																{
+																				//请求正在传输中,engine此时屏蔽了remote的数据到达处理函数，但会设置是否有数据到达,如果有数据到达则投递处理任务，没有则开启处理函数
 																				if(m_pRemoteSide->GetEvent()->IsInReady())
 																				{
+																								printf("Continue Post Receive\n");
 																								SetCanWrite(FALSE);
 																								m_pRemoteSide->SetCanRead(FALSE);
 																								m_pRemoteSide->GetEvent()->CancelInReady();
@@ -292,82 +297,17 @@ int ClientSide::ProccessSend()
 																				}
 																				else
 																				{
+																								printf("Continue Receive\n");
 																								SetCanWrite(FALSE);
 																								m_pRemoteSide->SetCanRead(TRUE);
 																				}
-
 																}
-																else
-																{
-																				if(m_pRemoteSide->GetResponse()->GetBody())
-																				{
-																								if(m_pRemoteSide->GetResponse()->GetBody()->IsEnd())
-																								{
-																												//此时pin链接已完成一条请求，重置各个事件状态，Client注册读事件
-																												m_pRemoteSide->ClearHttpEnd();
-																												m_pRemoteSide->SetClientSide(NULL);
-																												ClearHttpEnd();
-																												SetCanRead(TRUE);
-																												SetCanWrite(FALSE);
-																												GetEvent()->ModEvent(EPOLLIN|EPOLLET);
-
-																												m_iTransState = CLIENT_STATE_IDLE;
-																												m_pRemoteSide->SetStatusIdle();
-																								}
-																								else
-																								{
-																												//请求正在传输中,engine此时屏蔽了remote的数据到达处理函数，但会设置是否有数据到达,如果有数据到达则投递处理任务，没有则开启处理函数
-																												if(m_pRemoteSide->GetEvent()->IsInReady())
-																												{
-																																SetCanWrite(FALSE);
-																																m_pRemoteSide->SetCanRead(FALSE);
-																																m_pRemoteSide->GetEvent()->CancelInReady();
-																																GetMasterThread()->InsertTask(m_pRemoteSide->GetRecvTask());
-																												}
-																												else
-																												{
-																																SetCanWrite(FALSE);
-																																m_pRemoteSide->SetCanRead(TRUE);
-																												}
-																								}
-																				}
-																				else
-																				{
-																								m_pRemoteSide->ClearHttpEnd();
-																								m_pRemoteSide->SetClientSide(NULL);
-																								m_pRemoteSide->SetCanRead(TRUE);
-																								m_pRemoteSide->SetCanWrite(FALSE);
-																								ClearHttpEnd();
-																								SetCanRead(TRUE);
-																								SetCanWrite(FALSE);
-																								GetEvent()->ModEvent(EPOLLIN|EPOLLET);
-
-																								//m_pRemoteSide->GetEvent()->ModEvent(EPOLLOUT|EPOLLET);
-																								m_iTransState = CLIENT_STATE_IDLE;
-																								m_pRemoteSide = NULL;
-																								return 0;
-
-																								//SetCanWrite(FALSE);
-																				}
-																}
-																//SetCanWrite(TRUE);
-																if(m_pRemoteSide->GetEvent()->IsInReady())
-																{
-																				m_pRemoteSide->GetEvent()->CancelInReady();
-																				UnlockSendBuffer();
-																				GetMasterThread()->InsertTask(m_pRemoteSide->GetRecvTask());
-																				return TRUE;
-																}
-																else
-																{
-																				m_pRemoteSide->SetCanRead(TRUE);
-																}
-																flag = FALSE;
 												}
 												else
 												{
 																printf("during transfer\n");
 												}
+												//SetCanWrite(TRUE);
 								}
 				}
 				return FALSE;
@@ -379,10 +319,47 @@ void ClientSide::SetTransIdleState()
 }
 int ClientSide::ProccessConnectionReset()
 {
-				if(m_pRemoteSide)
+				//如果远端正常关闭则代表远端已经自我清理
+				///如果远端没有正常关闭，则远端已经自我清理完毕，并已经通知本地
+				//逻辑本地与远端可互换
+				if(m_iTransState == CLIENT_STATE_IDLE)
 				{
-								//m_pRemoteSide->SetClientSide(NULL);
 				}
+				else
+				{
+								switch(m_iRemoteState)
+								{
+												//正常结束为NORMAL
+												case STATE_NORMAL:
+																{
+																}
+																break;
+																//正在传输，此时应该标记远端为ABORT
+												case STATE_RUNNING:
+																{
+																				printf("m_pClientSide Clean Here\n");
+																				m_pRemoteSide->SetClientState(STATE_ABORT);
+																				m_pRemoteSide->SetClientSide(NULL);
+																				m_pRemoteSide = NULL;
+																}
+																break;
+																//远端已经关闭且自我清理
+												case STATE_ABORT:
+																{
+																				m_pRemoteSide = NULL;
+																}
+																break;
+												default:
+																;
+								}
+								ClearHttpEnd();
+				}
+				int sockfd = GetEvent()->GetFD();
+				GetEvent()->RemoveFromEngine();
+				pGlobalList->Delete(this);
+				close(sockfd);
+				m_pRemoteSide = NULL;
+				delete this;
 }
 
 HttpRequest* ClientSide::GetRequest()
@@ -412,4 +389,14 @@ int ClientSide::AppendSendStream(char* pData, int nSize)
 				if(CanAppend(nSize))
 				{
 				}
+}
+
+void ClientSide::SetRemoteState(int iState)
+{
+				m_iRemoteState = iState;
+}
+
+void ClientSide::SetCloseAsLength(int bCloseAsLength)
+{
+								m_bCloseAsLength = bCloseAsLength;
 }

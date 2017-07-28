@@ -11,6 +11,10 @@
 #define HANDLER_RUNNING 2
 #define REMOTE_SIDE 1
 #define CLIENT_SIDE 2
+
+#define STATE_NORMAL 0
+#define STATE_RUNNING 1
+#define STATE_ABORT 2
 class SendProccessor;
 class ReceiveProccessor;
 class ConnectionResetProccessor;
@@ -40,6 +44,8 @@ class IOHandler
 		virtual int GetSide();
 		virtual Stream* GetSendStream();
 		virtual int ClearHttpEnd(){return 0;};
+		int IsClosed();
+		void SetClosed(int);
 	private:
 		IOEvent* m_pEvent;
 		MasterThread* m_pMasterThread;
@@ -47,6 +53,7 @@ class IOHandler
 		int m_bCanRead;
 		int m_bCanWrite;
 		CriticalSection* cs_;
+		int m_bClosed;
 };
 
 
