@@ -46,6 +46,9 @@ int IOHandler::Dispatch(int events)
 	{
 		if(m_bCanWrite)
 		{
+						if(!IsServer())
+										SetCanWrite(FALSE);
+
 			GetMasterThread()->InsertTask(GetSendTask());
 		}
 		else

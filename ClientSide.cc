@@ -71,6 +71,9 @@ int ClientSide::ProccessReceive(Stream* pStream)
 								if(m_pHttpRequest->IsHeaderEnd())
 								{
 												m_pHttpRequest->LoadHttpHeader();
+												if(m_pHttpRequest->GetHeader()->GetRequestLine()->GetMethod() == HTTP_METHOD_CONNECT)
+												{
+												}
 												m_pHttpRequest->GetAuthStatus();
 												m_iState = HEADER_FOUND;
 												InetSocketAddress* pAddr = NULL;
@@ -110,15 +113,14 @@ int ClientSide::ProccessReceive(Stream* pStream)
 																delete pBodyStream;
 
 												}
-												if(pRemoteSide->IsConnected())
+												/*if(pRemoteSide->IsConnected())
 												{
 																pRemoteSide->ProccessSend();
-												}
+												}*/
 												m_pStream->Sub(m_pStream->GetLength());
 								}
 								else
 								{
-												SetCanRead(TRUE);
 												return FALSE;
 								}
 				}
@@ -134,10 +136,11 @@ int ClientSide::ProccessReceive(Stream* pStream)
 																m_iState = HEADER_NOTFOUND;
 																m_iTransState = CLIENT_STATE_WAITING;
 												}
+								int nLength = m_pRemoteSide->GetSendStream()->GetLength();
 								m_pRemoteSide->GetSendStream()->Append(pStream->GetData(),pStream->GetLength());
-								m_pRemoteSide->ProccessSend();
+								if(nLength == 0)
+												m_pRemoteSide->ProccessSend();
 								m_pStream->Sub(m_pStream->GetLength());
-								SetCanRead(TRUE);
 				}
 				else if(m_iTransState == CLIENT_STATE_WAITING)
 				{
@@ -266,10 +269,8 @@ int ClientSide::ProccessSend()
 												if(m_pSendStream->GetLength() == 0)
 												{
 																flag = FALSE;
-																printf("Client Send Queue Empty\n");
 																if(m_iRemoteState == STATE_NORMAL)
 																{
-																				printf("Client Send End\n");
 																				//此时pin链接已完成一条请求，重置各个事件状态，Client注册读事件
 																				if(m_bCloseAsLength == TRUE)
 																				{
@@ -289,7 +290,6 @@ int ClientSide::ProccessSend()
 																				//请求正在传输中,engine此时屏蔽了remote的数据到达处理函数，但会设置是否有数据到达,如果有数据到达则投递处理任务，没有则开启处理函数
 																				if(m_pRemoteSide->GetEvent()->IsInReady())
 																				{
-																								printf("Continue Post Receive\n");
 																								SetCanWrite(FALSE);
 																								m_pRemoteSide->SetCanRead(FALSE);
 																								m_pRemoteSide->GetEvent()->CancelInReady();
@@ -297,7 +297,6 @@ int ClientSide::ProccessSend()
 																				}
 																				else
 																				{
-																								printf("Continue Receive\n");
 																								SetCanWrite(FALSE);
 																								m_pRemoteSide->SetCanRead(TRUE);
 																				}
@@ -305,7 +304,6 @@ int ClientSide::ProccessSend()
 												}
 												else
 												{
-																printf("during transfer\n");
 												}
 												//SetCanWrite(TRUE);
 								}
@@ -337,7 +335,6 @@ int ClientSide::ProccessConnectionReset()
 																//正在传输，此时应该标记远端为ABORT
 												case STATE_RUNNING:
 																{
-																				printf("m_pClientSide Clean Here\n");
 																				m_pRemoteSide->SetClientState(STATE_ABORT);
 																				m_pRemoteSide->SetClientSide(NULL);
 																				m_pRemoteSide = NULL;

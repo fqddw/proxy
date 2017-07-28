@@ -124,6 +124,9 @@ int HttpRequestLine::GetMethodId(char* pMethod)
 		if(pMethod[0] == 'P' && pMethod[1] == 'O' && pMethod[2] == 'S' && pMethod[3] == 'T')
 			return HTTP_METHOD_POST;
 	}
+	if(strlen(pMethod) == strlen("CONNECT"))
+					if(strstr(pMethod, "CONNECT"))
+									return HTTP_METHOD_CONNECT;
 	return HTTP_METHOD_GET;
 }
 

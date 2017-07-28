@@ -68,7 +68,11 @@ int RemoteSide::Connect()
 int RemoteSide::ProccessSend()
 {
 				if(m_pSendStream->GetLength() == 0)
+				{
+								SetCanWrite(TRUE);
 								return FALSE;
+				}
+
 				/*if(!m_pClientSide)
 								return FALSE;*/
 				//处理连接操作
@@ -79,11 +83,12 @@ int RemoteSide::ProccessSend()
 		m_isConnected = TRUE;
 		//GetEvent()->ModEvent(EPOLLIN|EPOLLET);
 	}
-	if(!IsConnected())
-	{
-		Connect();
-		return FALSE;
-	}
+				if(!IsConnected())
+				{
+								Connect();
+								SetCanWrite(TRUE);
+								return FALSE;
+				}
 
 		int totalSend = 0;
 		int flag = TRUE;
@@ -115,6 +120,7 @@ int RemoteSide::ProccessSend()
 			}
 			else
 			{
+							printf("%d %d\n", nSent, m_pSendStream->GetLength());
 				totalSend += nSent;
 				m_pSendStream->Sub(nSent);
 				if(m_pSendStream->GetLength() == 0)
@@ -135,7 +141,6 @@ int RemoteSide::ProccessSend()
 						{
 										if(m_pClientSide->GetEvent()->IsInReady())
 										{
-														printf("pull from client\n");
 														SetCanWrite(FALSE);
 														m_pClientSide->SetCanRead(FALSE);
 														m_pClientSide->GetEvent()->CancelInReady();
@@ -176,6 +181,7 @@ int RemoteSide::ClearHttpEnd()
 	m_pStream->Sub(m_pStream->GetLength());
 	m_iState = STATUS_IDLE;
 	SetCanRead(TRUE);
+	SetCanWrite(FALSE);
 	if(m_pClientSide)
 	{
 					m_pClientSide->SetTransIdleState();
@@ -190,9 +196,7 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 	{
 					if(IsClosed())
 					{
-									printf("May Clean Here Before\n");
 									ProccessConnectionClose();
-									printf("May Clean Here After\n");
 					}
 					else
 									SetCanRead(TRUE);
@@ -202,8 +206,7 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 	{
 					printf("MemLeak Here %d\n", pStream->GetLength());
 					delete pStream;
-		GetEvent()->RemoveFromEngine();
-		close(GetEvent()->GetFD());
+					ProccessConnectionReset();
 		return 0;
 	}
 	Stream* pUserStream = pStream;
@@ -250,7 +253,6 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 
 					if(m_iClientState != STATE_RUNNING)
 					{
-									printf("isEnd Wrong Here\n");
 									ClearHttpEnd();
 									ProccessConnectionReset();
 									return 0;
@@ -263,7 +265,6 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 		ClientSide* pClientSide = m_pClientSide;
 		if(isEnd)
 		{
-						printf("Remote Pull End\n");
 						//如果拉取信息结束,则解耦
 						if(m_iClientState == STATE_RUNNING)
 						{

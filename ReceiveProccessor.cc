@@ -40,12 +40,10 @@ int ReceiveProccessor::GetDataStream(Stream** ppStream)
 		{
 			if(errno == EAGAIN)
 			{
-							printf("Total %d\n", total);
 				break;
 			}
 			else
 			{
-							printf("Receive Error\n");
 							if(*ppStream)
 											delete *ppStream;
 							m_pIOHandler->ProccessConnectionReset();
@@ -54,7 +52,6 @@ int ReceiveProccessor::GetDataStream(Stream** ppStream)
 		}
 		if(n == 0)
 		{
-						printf("SetClosed\n");
 						m_pIOHandler->SetClosed(TRUE);
 			break;
 		}
