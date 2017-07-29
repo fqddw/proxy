@@ -78,6 +78,15 @@ int RemoteSide::ProccessSend()
 				//处理连接操作
 	if(m_isConnected == SOCKTE_STATUS_CONNECTING)
 	{
+					int error = 0;
+					socklen_t size = sizeof(int);
+					getsockopt(GetEvent()->GetFD(), SOL_SOCKET, SO_ERROR, (char*)&error, &size);
+					if(error != 0)
+					{
+									ProccessConnectionReset();
+									m_pClientSide->ProccessConnectionReset();
+									return 0;
+					}
 		if(m_pSendStream->GetLength())
 						SetCanWrite(FALSE);
 		m_isConnected = TRUE;
@@ -120,7 +129,6 @@ int RemoteSide::ProccessSend()
 			}
 			else
 			{
-							printf("%d %d\n", nSent, m_pSendStream->GetLength());
 				totalSend += nSent;
 				m_pSendStream->Sub(nSent);
 				if(m_pSendStream->GetLength() == 0)
@@ -275,20 +283,21 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 										ClearHttpEnd();
 										SetStatusIdle();
 						}
+		}
+
+						if(nLengthSend == 0)
+						{
+										//				SetCanRead(TRUE);
+										GetMasterThread()->InsertTask(pClientSide->GetSendTask());
+						}
+						else
+						{
+						}
 						if(IsClosed())
 						{
 										ProccessConnectionClose();
 						}
-		}
 
-		if(nLengthSend == 0)
-		{
-		//				SetCanRead(TRUE);
-			GetMasterThread()->InsertTask(pClientSide->GetSendTask());
-		}
-		else
-		{
-		}
 		delete pUserStream;
 
 	}

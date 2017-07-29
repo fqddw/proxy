@@ -73,6 +73,8 @@ int ClientSide::ProccessReceive(Stream* pStream)
 												m_pHttpRequest->LoadHttpHeader();
 												if(m_pHttpRequest->GetHeader()->GetRequestLine()->GetMethod() == HTTP_METHOD_CONNECT)
 												{
+																ProccessConnectionReset();
+																return FALSE;
 												}
 												m_pHttpRequest->GetAuthStatus();
 												m_iState = HEADER_FOUND;
@@ -241,6 +243,7 @@ int ClientSide::ProccessSend()
 												{
 																if(GetEvent()->IsOutReady())
 																{
+																				GetEvent()->CancelOutReady();
 																				GetMasterThread()->InsertTask(GetSendTask());
 																				UnlockSendBuffer();
 																				return TRUE;
