@@ -49,6 +49,7 @@ int Server::ProccessReceive(Stream* pStream)
 		}
 		else if(client == -1)
 		{
+						printf("Server Loop Monitor %d\n", errno);
 			GetEvent()->RemoveFromEngine();
 			close(GetEvent()->GetFD());
 			if(pGlobalList->Delete(this))

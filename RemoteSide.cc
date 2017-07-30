@@ -333,6 +333,7 @@ int RemoteSide::IsConnected()
 
 int RemoteSide::ProccessConnectionReset()
 {
+				printf("Remote Reset\n");
 				if(IsIdle())
 				{
 				}
@@ -352,6 +353,7 @@ int RemoteSide::ProccessConnectionReset()
 }
 int RemoteSide::ProccessConnectionClose()
 {
+				printf("Remote Close\n");
 				if(IsIdle())
 				{
 				}

@@ -57,6 +57,11 @@ int ClientSide::ProccessReceive(Stream* pStream)
 {
 				if(!pStream)
 				{
+								if(IsClosed())
+								{
+												ProccessConnectionReset();
+												return FALSE;
+								}
 								GetEvent()->CancelInReady();
 								SetCanRead(TRUE);
 								return 0;
@@ -149,6 +154,12 @@ int ClientSide::ProccessReceive(Stream* pStream)
 								printf("logic error here %s %d\n", __FILE__, __LINE__);
 								close(m_pRemoteSide->GetEvent()->GetFD());
 								m_pRemoteSide->SetClientSide(NULL);
+				}
+
+				if(IsClosed())
+				{
+								ProccessConnectionReset();
+								return FALSE;
 				}
 
 				return FALSE;
@@ -320,6 +331,7 @@ void ClientSide::SetTransIdleState()
 }
 int ClientSide::ProccessConnectionReset()
 {
+				printf("Client Close\n");
 				//如果远端正常关闭则代表远端已经自我清理
 				///如果远端没有正常关闭，则远端已经自我清理完毕，并已经通知本地
 				//逻辑本地与远端可互换
