@@ -69,7 +69,7 @@ int RemoteSide::ProccessSend()
 {
 				if(m_pSendStream->GetLength() == 0)
 				{
-								SetCanWrite(TRUE);
+								//SetCanWrite(TRUE);
 								return FALSE;
 				}
 
