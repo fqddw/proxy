@@ -133,6 +133,8 @@ int RemoteSide::ProccessSend()
 				m_pSendStream->Sub(nSent);
 				if(m_pSendStream->GetLength() == 0)
 				{
+								if(m_iClientState != STATE_ABORT)
+								{
 					if(m_pClientSide->GetRequest()->GetBody())
 					{
 						if(m_pClientSide->GetRequest()->GetBody()->IsEnd())
@@ -140,10 +142,10 @@ int RemoteSide::ProccessSend()
 							flag = FALSE;
 							SetCanRead(TRUE);
 							SetCanWrite(flag);
-							m_pClientSide->SetCanWrite(TRUE);
-							m_pClientSide->SetCanRead(FALSE);
+							//m_pClientSide->SetCanWrite(TRUE);
+							//m_pClientSide->SetCanRead(FALSE);
 							GetEvent()->ModEvent(EPOLLIN|EPOLLET);
-							m_pClientSide->GetEvent()->ModEvent(EPOLLET|EPOLLOUT);
+							//m_pClientSide->GetEvent()->ModEvent(EPOLLET|EPOLLOUT);
 						}
 						else
 						{
@@ -169,11 +171,16 @@ int RemoteSide::ProccessSend()
 						SetCanRead(TRUE);
 						SetCanWrite(flag);
 						GetEvent()->ModEvent(EPOLLIN|EPOLLET);
-						m_pClientSide->SetCanWrite(TRUE);
-						m_pClientSide->SetCanRead(FALSE);
+						//m_pClientSide->SetCanWrite(TRUE);
+						//m_pClientSide->SetCanRead(FALSE);
 
-						m_pClientSide->GetEvent()->ModEvent(EPOLLET|EPOLLOUT);
+						//m_pClientSide->GetEvent()->ModEvent(EPOLLET|EPOLLOUT);
 					}
+								}
+								else
+								{
+												ProccessConnectionReset();
+								}
 				}
 			}
 			UnlockSendBuffer();
@@ -338,9 +345,12 @@ int RemoteSide::ProccessConnectionReset()
 				}
 				else
 				{
-								m_pClientSide->SetRemoteState(STATE_ABORT);
-								m_iClientState = STATE_NORMAL;
-								ClearHttpEnd();
+								if(m_iClientState != STATE_ABORT)
+								{
+												m_pClientSide->SetRemoteState(STATE_ABORT);
+												m_iClientState = STATE_NORMAL;
+												ClearHttpEnd();
+								}
 				}
 	int sockfd = GetEvent()->GetFD();
 	GetEvent()->RemoveFromEngine();
@@ -357,9 +367,12 @@ int RemoteSide::ProccessConnectionClose()
 				}
 				else
 				{
+								if(m_iClientState != STATE_ABORT)
+								{
 								m_pClientSide->SetRemoteState(STATE_NORMAL);
 								m_iClientState = STATE_NORMAL;
 								ClearHttpEnd();
+								}
 				}
 	int sockfd = GetEvent()->GetFD();
 	GetEvent()->RemoveFromEngine();

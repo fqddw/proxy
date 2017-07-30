@@ -82,7 +82,11 @@ int ClientSide::ProccessReceive(Stream* pStream)
 																ProccessConnectionReset();
 																return FALSE;
 												}
-												m_pHttpRequest->GetAuthStatus();
+												int authResult = m_pHttpRequest->GetAuthStatus();
+												if(!authResult)
+												{
+																return FALSE;
+												}
 												m_iState = HEADER_FOUND;
 												InetSocketAddress* pAddr = NULL;
 												pAddr = NetUtils::GetHostByName(m_pHttpRequest->GetHeader()->GetUrl()->GetHost(),m_pHttpRequest->GetHeader()->GetUrl()->GetPort());
@@ -98,7 +102,7 @@ int ClientSide::ProccessReceive(Stream* pStream)
 												Stream* pSendStream = m_pHttpRequest->GetHeader()->ToHeader();
 												pRemoteSide->GetSendStream()->Append(pSendStream->GetData(),pSendStream->GetLength());
 												delete pSendStream;
-												SetCanWrite(TRUE);
+												//SetCanWrite(TRUE);
 												//GetEvent()->ModEvent(EPOLLOUT|EPOLLET);
 
 												int hasBody = m_pHttpRequest->HasBody();
@@ -150,6 +154,7 @@ int ClientSide::ProccessReceive(Stream* pStream)
 								if(nLength == 0)
 												m_pRemoteSide->ProccessSend();
 								m_pStream->Sub(m_pStream->GetLength());
+								SetCanRead(TRUE);
 				}
 				else if(m_iTransState == CLIENT_STATE_WAITING)
 				{
@@ -240,7 +245,7 @@ int ClientSide::ProccessSend()
 				}
 				if(m_pSendStream->GetLength()<=0)
 				{
-								SetCanWrite(TRUE);
+								//SetCanWrite(TRUE);
 								return FALSE;
 				}
 				GetEvent()->CancelOutReady();
@@ -263,7 +268,10 @@ int ClientSide::ProccessSend()
 																				return TRUE;
 																}
 																else
+																{
 																				SetCanWrite(TRUE);
+																				GetEvent()->ModEvent(EPOLLOUT|EPOLLET);
+																}
 												}
 												else
 												{
@@ -317,6 +325,9 @@ int ClientSide::ProccessSend()
 																								m_pRemoteSide->SetCanRead(TRUE);
 																				}
 																}
+																SetCanWrite(FALSE);
+																SetCanRead(TRUE);
+																GetEvent()->ModEvent(EPOLLIN|EPOLLET);
 												}
 												else
 												{
