@@ -48,6 +48,7 @@ int ClientSide::ClearHttpEnd()
 				m_pSendStream->Sub(m_pSendStream->GetLength());
 				m_iState = HEADER_NOTFOUND;
 				SetCanRead(TRUE);
+				SetCanWrite(FALSE);
 				//m_pClientSide->SetCanWrite(FALSE);
 				return 0;
 
@@ -128,6 +129,7 @@ int ClientSide::ProccessReceive(Stream* pStream)
 								}
 								else
 								{
+												SetCanRead(TRUE);
 												return FALSE;
 								}
 				}
@@ -198,6 +200,7 @@ RemoteSide* ClientSide::GetRemoteSide(InetSocketAddress* pAddr)
 												pRemoteSide->SetClientSide(this);
 												pRemoteSide->SetClientState(STATE_RUNNING);
 
+												m_iRemoteState = STATE_RUNNING;
 												pRemoteSide->GetEvent()->ModEvent(EPOLLOUT|EPOLLERR|EPOLLET|EPOLLRDHUP);
 												break;
 								}
@@ -213,10 +216,10 @@ RemoteSide* ClientSide::GetRemoteSide(InetSocketAddress* pAddr)
 
 								pRemoteSide->SetClientSide(this);
 								pRemoteSide->SetClientState(STATE_RUNNING);
+								m_iRemoteState = STATE_RUNNING;
 								pRemoteSide->GetEvent()->AddToEngine(EPOLLOUT|EPOLLERR|EPOLLET|EPOLLRDHUP);
 								g_pGlobalRemoteSidePool->Append(pRemoteSide);
 				}
-				m_iRemoteState = STATE_RUNNING;
 
 				//g_pGlobalRemoteSidePool->Unlock();
 				return pRemoteSide;
@@ -237,7 +240,7 @@ int ClientSide::ProccessSend()
 				}
 				if(m_pSendStream->GetLength()<=0)
 				{
-								//SetCanWrite(FALSE);
+								SetCanWrite(TRUE);
 								return FALSE;
 				}
 				GetEvent()->CancelOutReady();
@@ -264,7 +267,6 @@ int ClientSide::ProccessSend()
 												}
 												else
 												{
-																printf("Client Send Error\n");
 																m_pRemoteSide->SetClientState(STATE_ABORT);
 																ProccessConnectionReset();
 																return 0;
@@ -331,7 +333,6 @@ void ClientSide::SetTransIdleState()
 }
 int ClientSide::ProccessConnectionReset()
 {
-				printf("Client Close\n");
 				//如果远端正常关闭则代表远端已经自我清理
 				///如果远端没有正常关闭，则远端已经自我清理完毕，并已经通知本地
 				//逻辑本地与远端可互换
