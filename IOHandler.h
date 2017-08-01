@@ -51,7 +51,6 @@ class IOHandler
 	private:
 		IOEvent* m_pEvent;
 		MasterThread* m_pMasterThread;
-		ConnectionResetProccessor* m_pConnResetProc;
 		int m_bCanRead;
 		int m_bCanWrite;
 		CriticalSection* cs_;

@@ -1,5 +1,5 @@
 #include "IOHandler.h"
-IOHandler::IOHandler():m_pEvent(new IOEvent),m_bCanRead(TRUE),m_pConnResetProc(new ConnectionResetProccessor(this)),m_bCanWrite(TRUE),cs_(new CriticalSection()),m_bClosed(FALSE)
+IOHandler::IOHandler():m_pEvent(new IOEvent),m_bCanRead(TRUE),m_bCanWrite(TRUE),cs_(new CriticalSection()),m_bClosed(FALSE)
 {
 }
 IOEvent* IOHandler::GetEvent()
@@ -25,6 +25,9 @@ MasterThread* IOHandler::GetMasterThread()
 IOHandler::~IOHandler()
 {
 	delete m_pEvent;
+	m_pEvent = NULL;
+	delete cs_;
+	cs_ = NULL;
 }
 #include "stdio.h"
 int IOHandler::Dispatch(int events)
