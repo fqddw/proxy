@@ -394,6 +394,8 @@ int RemoteSide::ProccessConnectionClose()
 								m_pClientSide->SetRemoteState(STATE_NORMAL);
 								m_iClientState = STATE_NORMAL;
 								ClearHttpEnd();
+								GetMasterThread()->InsertTask(m_pClientSide->GetRecvTask());
+								m_pClientSide = NULL;
 								}
 				}
 	int sockfd = GetEvent()->GetFD();

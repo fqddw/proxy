@@ -395,7 +395,7 @@ int ClientSide::ProccessConnectionReset()
 																{
 																				m_pRemoteSide->SetClientState(STATE_ABORT);
 																				m_pRemoteSide->SetClientSide(NULL);
-																				GetMasterThread()->InsertTask(GetRecvTask());
+																				GetMasterThread()->InsertTask(m_pRemoteSide->GetRecvTask());
 																				m_pRemoteSide = NULL;
 																}
 																break;
