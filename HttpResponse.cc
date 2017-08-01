@@ -87,7 +87,6 @@ int HttpResponse::LoadHttpHeader()
 				memcpy(pMajorVer,pData+nStart,len);
 				int nMajorVer = atoi(pMajorVer);
 				state = PS_BEFORE_SENIORVER;
-				m_pHeader->SetResponseLine(new HttpResponseLine());
 				m_pHeader->GetResponseLine()->SetMajorVersion(nMajorVer);
 			}
 		}

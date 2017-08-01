@@ -69,12 +69,6 @@ int RemoteSide::Connect()
 }
 int RemoteSide::ProccessSend()
 {
-				if(CanWrite())
-				{
-								SetCanRead(TRUE);
-								SetCanWrite(FALSE);
-								GetEvent()->ModEvent(EPOLLIN|EPOLLET);
-				}
 				if(m_pSendStream->GetLength() == 0)
 				{
 								//SetCanWrite(TRUE);
@@ -110,6 +104,13 @@ int RemoteSide::ProccessSend()
 								SetCanWrite(TRUE);
 								return FALSE;
 				}
+				if(GetEvent()->GetEventInt() & EPOLLOUT)
+				{
+								SetCanRead(TRUE);
+								SetCanWrite(FALSE);
+								GetEvent()->ModEvent(EPOLLIN|EPOLLET);
+				}
+
 
 		int totalSend = 0;
 		int flag = TRUE;
@@ -370,6 +371,7 @@ int RemoteSide::ProccessConnectionReset()
 												m_pClientSide->SetRemoteState(STATE_ABORT);
 												m_iClientState = STATE_NORMAL;
 												ClearHttpEnd();
+												GetMasterThread()->InsertTask(m_pClientSide->GetRecvTask());
 								}
 				}
 	int sockfd = GetEvent()->GetFD();

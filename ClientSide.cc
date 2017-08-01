@@ -11,7 +11,7 @@
 #include "arpa/inet.h"
 extern MemList<void*>* pGlobalList;
 #define SEND_BUFFER_LENGTH 256*1024
-ClientSide::ClientSide():IOHandler(),m_pStream(new Stream()),m_pSendStream(new Stream()),m_iSendEndPos(0),m_iAvaibleDataSize(0),m_bCloseAsLength(FALSE)
+ClientSide::ClientSide():IOHandler(),m_pStream(new Stream()),m_pSendStream(new Stream()),m_iSendEndPos(0),m_iAvaibleDataSize(0),m_bCloseAsLength(FALSE),m_iRemoteState(STATE_NORMAL)
 {
 				m_iSide = CLIENT_SIDE;
 				GetEvent()->SetIOHandler(this);
@@ -28,7 +28,7 @@ ClientSide::~ClientSide()
 								m_pHttpRequest = NULL;
 				}
 }
-ClientSide::ClientSide(int sockfd):IOHandler(),m_pStream(new Stream()),m_pSendStream(new Stream()),m_bCloseAsLength(FALSE)
+ClientSide::ClientSide(int sockfd):IOHandler(),m_pStream(new Stream()),m_pSendStream(new Stream()),m_bCloseAsLength(FALSE),m_iRemoteState(STATE_NORMAL)
 {
 				m_iSide = CLIENT_SIDE;
 				m_iTransState = CLIENT_STATE_IDLE;
@@ -271,7 +271,10 @@ int ClientSide::ProccessSend()
 				{
 								LockSendBuffer();
 								if(IsClosed())
+								{
 												printf("Internal Close\n");
+												return 0;
+								}
 								int nSent = send(GetEvent()->GetFD(),m_pSendStream->GetData(),m_pSendStream->GetLength(),0);
 								if(nSent < 0)
 								{

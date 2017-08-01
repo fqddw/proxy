@@ -8,7 +8,7 @@ HttpResponseLine::HttpResponseLine():m_pStatusText(NULL)
 HttpResponseLine::~HttpResponseLine()
 {
 				if(m_pStatusText)
-								delete m_pStatusText;
+								delete [] m_pStatusText;
 				m_pStatusText = NULL;
 }
 

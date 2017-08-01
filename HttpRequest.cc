@@ -42,7 +42,7 @@ int HttpRequest::LoadHttpHeader()
 	string strHeaderString = String_Stream.substr(0,posHeaderEnd);
 	int nLineEnd = strHeaderString.find("\r\n");
 	string stringHttpRequestLine = strHeaderString.substr(0,nLineEnd);
-	HttpRequestLine* pLine = new HttpRequestLine();
+	HttpRequestLine* pLine = pHeader->GetRequestLine();
 	pLine->AppendString((char*)stringHttpRequestLine.data(),stringHttpRequestLine.size());
 	pLine->Parse();
 	pHeader->SetRequestLine(pLine);
