@@ -48,7 +48,6 @@ int HttpRequest::LoadHttpHeader()
 	pHeader->SetRequestLine(pLine);
 	HttpUrl* pHttpUrl = pLine->GetUrl();
 	pHttpUrl->Parse();
-	pHeader->SetUrl(pHttpUrl);
 
 	HttpKeyValueList* pKeyValueList = new HttpKeyValueList();
 	pHeader->SetKeyValueList(pKeyValueList);

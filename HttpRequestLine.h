@@ -6,6 +6,7 @@ class HttpRequestLine
 {
 	public:
 		HttpRequestLine();
+		~HttpRequestLine();
 		char* ToString();
 		char* GetMethodString();
 		int SetUrl(char*);

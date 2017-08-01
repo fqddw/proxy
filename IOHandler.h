@@ -46,6 +46,8 @@ class IOHandler
 		virtual int ClearHttpEnd(){return 0;};
 		int IsClosed();
 		void SetClosed(int);
+	public:
+		int m_iSide;
 	private:
 		IOEvent* m_pEvent;
 		MasterThread* m_pMasterThread;

@@ -45,10 +45,12 @@ InetSocketAddress* RemoteSide::GetAddr()
 }
 RemoteSide::RemoteSide():IOHandler(),m_pSendStream(new Stream),m_pStream(new Stream),m_iState(STATUS_BLOCKING),m_isConnected(FALSE),m_iClientState(STATE_NORMAL),m_bCloseClient(FALSE)
 {
+				m_iSide = REMOTE_SIDE;
 	GetEvent()->SetIOHandler(this);
 }
 RemoteSide::RemoteSide(InetSocketAddress* pAddr):IOHandler(),m_pSendStream(new Stream),m_pStream(new Stream),m_iState(STATUS_BLOCKING),m_isConnected(FALSE),m_iClientState(STATE_NORMAL),m_bCloseClient(FALSE)
 {
+				m_iSide = REMOTE_SIDE;
 	GetEvent()->SetIOHandler(this);
 	m_pAddr = pAddr;
 	int sockfd = socket(AF_INET,SOCK_STREAM,0);
@@ -67,6 +69,12 @@ int RemoteSide::Connect()
 }
 int RemoteSide::ProccessSend()
 {
+				if(CanWrite())
+				{
+								SetCanRead(TRUE);
+								SetCanWrite(FALSE);
+								GetEvent()->ModEvent(EPOLLIN|EPOLLET);
+				}
 				if(m_pSendStream->GetLength() == 0)
 				{
 								//SetCanWrite(TRUE);
@@ -83,8 +91,8 @@ int RemoteSide::ProccessSend()
 					getsockopt(GetEvent()->GetFD(), SOL_SOCKET, SO_ERROR, (char*)&error, &size);
 					if(error != 0)
 					{
-									ProccessConnectionReset();
-									m_pClientSide->ProccessConnectionReset();
+									//ProccessConnectionReset();
+									//m_pClientSide->ProccessConnectionReset();
 									return 0;
 					}
 		if(m_pSendStream->GetLength())
@@ -111,20 +119,28 @@ int RemoteSide::ProccessSend()
 				if(errno == EAGAIN)
 				{
 								//重新启动可写触发的响应
-								SetCanWrite(TRUE);
-					printf("--------------------------\n");
+								if(GetEvent()->IsOutReady())
+								{
+												GetEvent()->CancelOutReady();
+												GetMasterThread()->InsertTask(GetSendTask());
+												UnlockSendBuffer();
+												return TRUE;
+								}
+								else
+								{
+												SetCanRead(FALSE);
+												SetCanWrite(TRUE);
+												GetEvent()->ModEvent(EPOLLOUT|EPOLLET);
+								}
 				}
-				else if(errno == EINTR)
-					printf("||||||||||||||||||\n");
 				else
 				{
-					printf("%d +++++++++++++++++++\n",errno);
-					ProccessConnectionReset();
+								SetClosed(TRUE);
 					return 0;
 				}
 			}else if(nSent == 0)
 			{
-							ProccessConnectionReset();
+							//ProccessConnectionReset();
 				return 0;
 			}
 			else
@@ -172,14 +188,14 @@ int RemoteSide::ProccessSend()
 						SetCanWrite(flag);
 						GetEvent()->ModEvent(EPOLLIN|EPOLLET);
 						//m_pClientSide->SetCanWrite(TRUE);
-						//m_pClientSide->SetCanRead(FALSE);
+						m_pClientSide->SetCanRead(FALSE);
 
 						//m_pClientSide->GetEvent()->ModEvent(EPOLLET|EPOLLOUT);
 					}
 								}
 								else
 								{
-												ProccessConnectionReset();
+												//ProccessConnectionReset();
 								}
 				}
 			}
@@ -219,7 +235,6 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 	}
 	if(!m_pClientSide)
 	{
-					printf("MemLeak Here %d\n", pStream->GetLength());
 					delete pStream;
 					ProccessConnectionReset();
 		return 0;

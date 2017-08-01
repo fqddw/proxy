@@ -1,12 +1,15 @@
 #include "HttpResponseLine.h"
 #include "CommonType.h"
 
-HttpResponseLine::HttpResponseLine()
+HttpResponseLine::HttpResponseLine():m_pStatusText(NULL)
 {
 }
 
 HttpResponseLine::~HttpResponseLine()
 {
+				if(m_pStatusText)
+								delete m_pStatusText;
+				m_pStatusText = NULL;
 }
 
 int HttpResponseLine::SetCode(int iCode)

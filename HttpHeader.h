@@ -34,21 +34,20 @@ class HttpHeader
 class HttpRequestHeader : public HttpHeader
 {
 	public:
+		HttpRequestHeader();
 		~HttpRequestHeader();
-		HttpUrl* GetUrl();
 		int GetMethod();
 		Stream* ToHeader();
 		int SetRequestLine(HttpRequestLine*);
 		HttpRequestLine* GetRequestLine();
-		int SetUrl(HttpUrl*);
 	private:
 		HttpRequestLine* m_pRequestLine;
-		HttpUrl* m_pUrl;
 };
 
 class HttpResponseHeader : public HttpHeader
 {
 	public:
+		HttpResponseHeader();
 		~HttpResponseHeader();
 		HttpResponseLine* GetResponseLine();
 		Stream* ToHeader();

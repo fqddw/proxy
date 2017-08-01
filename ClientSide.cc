@@ -13,6 +13,7 @@ extern MemList<void*>* pGlobalList;
 #define SEND_BUFFER_LENGTH 256*1024
 ClientSide::ClientSide():IOHandler(),m_pStream(new Stream()),m_pSendStream(new Stream()),m_iSendEndPos(0),m_iAvaibleDataSize(0),m_bCloseAsLength(FALSE)
 {
+				m_iSide = CLIENT_SIDE;
 				GetEvent()->SetIOHandler(this);
 				m_iState = HEADER_NOTFOUND;
 				m_iTransState = CLIENT_STATE_IDLE;
@@ -29,6 +30,7 @@ ClientSide::~ClientSide()
 }
 ClientSide::ClientSide(int sockfd):IOHandler(),m_pStream(new Stream()),m_pSendStream(new Stream()),m_bCloseAsLength(FALSE)
 {
+				m_iSide = CLIENT_SIDE;
 				m_iTransState = CLIENT_STATE_IDLE;
 				m_iState = HEADER_NOTFOUND;
 				GetEvent()->SetFD(sockfd);
@@ -89,7 +91,7 @@ int ClientSide::ProccessReceive(Stream* pStream)
 												}
 												m_iState = HEADER_FOUND;
 												InetSocketAddress* pAddr = NULL;
-												pAddr = NetUtils::GetHostByName(m_pHttpRequest->GetHeader()->GetUrl()->GetHost(),m_pHttpRequest->GetHeader()->GetUrl()->GetPort());
+												pAddr = NetUtils::GetHostByName(m_pHttpRequest->GetHeader()->GetRequestLine()->GetUrl()->GetHost(),m_pHttpRequest->GetHeader()->GetRequestLine()->GetUrl()->GetPort());
 												if(!pAddr)
 												{
 																char* pText = (char*)"HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n";
@@ -130,6 +132,7 @@ int ClientSide::ProccessReceive(Stream* pStream)
 																pRemoteSide->ProccessSend();
 												}*/
 												m_pStream->Sub(m_pStream->GetLength());
+												SetCanRead(TRUE);
 								}
 								else
 								{
@@ -141,7 +144,6 @@ int ClientSide::ProccessReceive(Stream* pStream)
 				{
 								if(!m_pRemoteSide)
 								{
-												printf("NULL Remote Body\n");
 								}
 								if(m_pHttpRequest->GetBody())
 												if(m_pHttpRequest->GetBody()->IsEnd(pStream))
@@ -158,7 +160,6 @@ int ClientSide::ProccessReceive(Stream* pStream)
 				}
 				else if(m_iTransState == CLIENT_STATE_WAITING)
 				{
-								printf("logic error here %s %d\n", __FILE__, __LINE__);
 								close(m_pRemoteSide->GetEvent()->GetFD());
 								m_pRemoteSide->SetClientSide(NULL);
 				}
@@ -237,10 +238,10 @@ Stream* ClientSide::GetSendStream(){
 
 int ClientSide::ProccessSend()
 {
-				//printf("Send Pending Length: %d\n",m_pSendStream->GetLength());
 				if(m_iRemoteState == STATE_ABORT)
 				{
-								ProccessConnectionReset();
+								SetClosed(TRUE);
+								//ProccessConnectionReset();
 								return TRUE;
 				}
 				if(m_pSendStream->GetLength()<=0)
@@ -249,6 +250,12 @@ int ClientSide::ProccessSend()
 								return FALSE;
 				}
 				GetEvent()->CancelOutReady();
+				if(CanWrite())
+				{
+								SetCanWrite(FALSE);
+								SetCanRead(TRUE);
+								GetEvent()->ModEvent(EPOLLIN|EPOLLET);
+				}
 				int totalSend = 0;
 				int flag = TRUE;
 				while(flag)
@@ -269,21 +276,25 @@ int ClientSide::ProccessSend()
 																}
 																else
 																{
+																				SetCanRead(FALSE);
 																				SetCanWrite(TRUE);
 																				GetEvent()->ModEvent(EPOLLOUT|EPOLLET);
+																				return TRUE;
 																}
 												}
 												else
 												{
 																m_pRemoteSide->SetClientState(STATE_ABORT);
-																ProccessConnectionReset();
+																SetClosed(TRUE);
+																//ProccessConnectionReset();
 																return 0;
 												}
 								}
 								else if(nSent == 0)
 								{
 												m_pRemoteSide->SetClientState(STATE_ABORT);
-												ProccessConnectionReset();
+												SetClosed(TRUE);
+												//ProccessConnectionReset();
 												return 0;
 								}
 								else
@@ -298,7 +309,8 @@ int ClientSide::ProccessSend()
 																				//此时pin链接已完成一条请求，重置各个事件状态，Client注册读事件
 																				if(m_bCloseAsLength == TRUE)
 																				{
-																								ProccessConnectionReset();
+																								SetClosed(TRUE);
+																								//ProccessConnectionReset();
 																								return TRUE;
 																				}
 																				ClearHttpEnd();
@@ -325,9 +337,9 @@ int ClientSide::ProccessSend()
 																								m_pRemoteSide->SetCanRead(TRUE);
 																				}
 																}
-																SetCanWrite(FALSE);
+																/*SetCanWrite(FALSE);
 																SetCanRead(TRUE);
-																GetEvent()->ModEvent(EPOLLIN|EPOLLET);
+																GetEvent()->ModEvent(EPOLLIN|EPOLLET);*/
 												}
 												else
 												{

@@ -15,16 +15,6 @@ Stream* HttpHeader::ToHeader()
 		return NULL;
 }
 
-int HttpRequestHeader::SetUrl(HttpUrl* pUrl)
-{
-		m_pUrl = pUrl;
-		return TRUE;
-}
-HttpUrl* HttpRequestHeader::GetUrl()
-{
-		return m_pUrl;
-}
-
 int HttpRequestHeader::GetMethod()
 {
 	return
@@ -145,14 +135,13 @@ HttpRequestHeader::~HttpRequestHeader()
 		delete m_pRequestLine;
 		m_pRequestLine = NULL;
 	}
-	if(m_pUrl != NULL)
-	{
-		delete m_pUrl;
-		m_pUrl = NULL;
-	}
-
 }
-
+HttpRequestHeader::HttpRequestHeader():m_pRequestLine(NULL)
+{
+}
+HttpResponseHeader::HttpResponseHeader():m_pHttpResponseLine(NULL)
+{
+}
 HttpResponseHeader::~HttpResponseHeader()
 {
 	if(m_pHttpResponseLine != NULL)
