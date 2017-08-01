@@ -1,6 +1,6 @@
 #include "IOEvent.h"
 #include "NetEngine.h"
-IOEvent::IOEvent():m_iFD((int)NULL),m_pHandler(NULL),m_iOutReady(FALSE),m_iInReady(FALSE)
+IOEvent::IOEvent():m_iFD((int)NULL),m_pHandler(NULL),m_iOutReady(FALSE),m_iInReady(FALSE),m_iEvent(0)
 {
 }
 IOEvent::IOEvent(IOHandler* pHandler)
@@ -42,6 +42,7 @@ void IOEvent::SetNetEngine(NetEngine* pNetEngine)
 
 int IOEvent::AddToEngine(int events)
 {
+				m_iEvent = events;
 	m_pEngine->AddFileDescriptor(m_pHandler,events);
 	return TRUE;
 }
@@ -81,5 +82,11 @@ int IOEvent::IsOutReady()
 }
 int IOEvent::ModEvent(int event)
 {
+				m_iEvent = event;
 	m_pEngine->ModFileDescriptor(m_pHandler,event);
+}
+
+int IOEvent::GetEventInt()
+{
+				return m_iEvent;
 }

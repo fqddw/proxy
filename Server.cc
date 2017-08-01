@@ -68,7 +68,7 @@ int Server::ProccessReceive(Stream* pStream)
 		pClientSideHandler->GetEvent()->SetNetEngine(GetEvent()->GetNetEngine());
 		pClientSideHandler->SetMasterThread(GetMasterThread());
 		pClientSideHandler->SetCanWrite(FALSE);
-		pClientSideHandler->GetEvent()->AddToEngine(EPOLLOUT|EPOLLIN|EPOLLERR|EPOLLET|EPOLLRDHUP);
+		pClientSideHandler->GetEvent()->AddToEngine(EPOLLIN|EPOLLET);
 	}
 	return TRUE;
 }

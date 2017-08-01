@@ -109,8 +109,8 @@ MemList<RemoteSide*>* g_pGlobalRemoteSidePool;
 
 int main(int argc,char** argv)
 {	
-				if(fork() !=0)
-								return 0;
+				/*if(fork() !=0)
+								return 0;*/
 	g_pGlobalRemoteSidePool = new MemList<RemoteSide*>();
 	pGlobalList = new MemList<void*>();
 	g_pDNSCache = new DNSCache();

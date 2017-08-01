@@ -26,7 +26,9 @@ class IOEvent
 		void CancelOutReady();
 		int IsOutReady();
 
+		int GetEventInt();
 	private:
+		int m_iEvent;
 		int m_iInReady;
 		int m_iOutReady;
 		int m_iFD;

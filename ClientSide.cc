@@ -87,6 +87,8 @@ int ClientSide::ProccessReceive(Stream* pStream)
 												int authResult = m_pHttpRequest->GetAuthStatus();
 												if(!authResult)
 												{
+																const char* pUnAuth = "HTTP/1.1 407 Proxy Authentication Required\r\nProxy-Authenticate: Digest realm=\"testrealm@host.com\",qop=\"auth,auth-int\",nonce=\"dcd98b7102dd2f0e8b11d0f600bfb0c093\",opaque=\"5ccc069c403ebaf9f0171e9517f40e41\"\r\nContent-Length: 0\r\n\r\n";
+																send(GetEvent()->GetFD(), pUnAuth, strlen(pUnAuth),0);
 																return FALSE;
 												}
 												m_iState = HEADER_FOUND;
@@ -96,7 +98,7 @@ int ClientSide::ProccessReceive(Stream* pStream)
 												{
 																char* pText = (char*)"HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n";
 																send(GetEvent()->GetFD(),pText,strlen(pText),0);
-																close(GetEvent()->GetFD());
+																ProccessConnectionReset();
 																return 0;
 												}
 												RemoteSide* pRemoteSide = GetRemoteSide(pAddr);
@@ -238,29 +240,38 @@ Stream* ClientSide::GetSendStream(){
 
 int ClientSide::ProccessSend()
 {
+				//远端退出
 				if(m_iRemoteState == STATE_ABORT)
 				{
 								SetClosed(TRUE);
 								//ProccessConnectionReset();
 								return TRUE;
 				}
+				//应该不可能出现这种情况
 				if(m_pSendStream->GetLength()<=0)
 				{
 								//SetCanWrite(TRUE);
 								return FALSE;
 				}
 				GetEvent()->CancelOutReady();
-				if(CanWrite())
+				if(GetEvent()->GetEventInt() & EPOLLOUT)
 				{
+								if(GetEvent()->GetEventInt() & EPOLLIN)
+								printf("EPOLLOUT TRIGGER %d\n", GetEvent()->GetEventInt());
 								SetCanWrite(FALSE);
 								SetCanRead(TRUE);
 								GetEvent()->ModEvent(EPOLLIN|EPOLLET);
+				}
+				else
+				{
 				}
 				int totalSend = 0;
 				int flag = TRUE;
 				while(flag)
 				{
 								LockSendBuffer();
+								if(IsClosed())
+												printf("Internal Close\n");
 								int nSent = send(GetEvent()->GetFD(),m_pSendStream->GetData(),m_pSendStream->GetLength(),0);
 								if(nSent < 0)
 								{
@@ -269,6 +280,7 @@ int ClientSide::ProccessSend()
 												{
 																if(GetEvent()->IsOutReady())
 																{
+																				printf("RESEND\n");
 																				GetEvent()->CancelOutReady();
 																				GetMasterThread()->InsertTask(GetSendTask());
 																				UnlockSendBuffer();
@@ -276,6 +288,7 @@ int ClientSide::ProccessSend()
 																}
 																else
 																{
+																				printf("MODTOEPOLLOUT\n");
 																				SetCanRead(FALSE);
 																				SetCanWrite(TRUE);
 																				GetEvent()->ModEvent(EPOLLOUT|EPOLLET);
@@ -317,7 +330,6 @@ int ClientSide::ProccessSend()
 																				SetCanRead(TRUE);
 																				SetCanWrite(FALSE);
 																				m_iTransState = CLIENT_STATE_IDLE;
-																				GetEvent()->ModEvent(EPOLLIN|EPOLLET);
 
 																				return 0;
 																}
@@ -334,6 +346,7 @@ int ClientSide::ProccessSend()
 																				else
 																				{
 																								SetCanWrite(FALSE);
+																								SetCanRead(TRUE);
 																								m_pRemoteSide->SetCanRead(TRUE);
 																				}
 																}

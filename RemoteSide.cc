@@ -160,12 +160,12 @@ int RemoteSide::ProccessSend()
 						if(m_pClientSide->GetRequest()->GetBody()->IsEnd())
 						{
 							flag = FALSE;
-							/*SetCanRead(TRUE);
+							SetCanRead(TRUE);
 							SetCanWrite(flag);
 							//m_pClientSide->SetCanWrite(TRUE);
 							//m_pClientSide->SetCanRead(FALSE);
 							GetEvent()->ModEvent(EPOLLIN|EPOLLET);
-							//m_pClientSide->GetEvent()->ModEvent(EPOLLET|EPOLLOUT);*/
+							//m_pClientSide->GetEvent()->ModEvent(EPOLLET|EPOLLOUT);
 						}
 						else
 						{
