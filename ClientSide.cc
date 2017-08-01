@@ -244,6 +244,7 @@ int ClientSide::ProccessSend()
 				if(m_iRemoteState == STATE_ABORT)
 				{
 								SetClosed(TRUE);
+								ProccessReceive(NULL);
 								//ProccessConnectionReset();
 								return TRUE;
 				}
@@ -302,6 +303,7 @@ int ClientSide::ProccessSend()
 												{
 																m_pRemoteSide->SetClientState(STATE_ABORT);
 																SetClosed(TRUE);
+																ProccessReceive(NULL);
 																//ProccessConnectionReset();
 																return 0;
 												}
@@ -310,6 +312,7 @@ int ClientSide::ProccessSend()
 								{
 												m_pRemoteSide->SetClientState(STATE_ABORT);
 												SetClosed(TRUE);
+												ProccessReceive(NULL);
 												//ProccessConnectionReset();
 												return 0;
 								}
@@ -392,6 +395,7 @@ int ClientSide::ProccessConnectionReset()
 																{
 																				m_pRemoteSide->SetClientState(STATE_ABORT);
 																				m_pRemoteSide->SetClientSide(NULL);
+																				GetMasterThread()->InsertTask(GetRecvTask());
 																				m_pRemoteSide = NULL;
 																}
 																break;
