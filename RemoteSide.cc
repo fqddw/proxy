@@ -62,7 +62,8 @@ RemoteSide::RemoteSide(InetSocketAddress* pAddr):
 								m_iState(STATUS_BLOCKING),
 								m_isConnected(FALSE),
 								m_iClientState(STATE_NORMAL),
-								m_bCloseClient(FALSE)
+								m_bCloseClient(FALSE),
+								m_bShouldClose(FALSE)
 {
 				m_iSide = REMOTE_SIDE;
 				GetEvent()->SetIOHandler(this);
@@ -293,6 +294,10 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 												char* pConnection = m_pHttpResponse->GetHeader()->GetField(HTTP_CONNECTION);
 												if(pConnection)
 												{
+																				if(strstr(pConnection, "close"))
+																				{
+																												m_bShouldClose = TRUE;
+																				}
 																if(strstr(pConnection,"close") && m_pHttpResponse->GetHeader()->GetField(HTTP_CONTENT_LENGTH) == NULL && m_pHttpResponse->GetHeader()->GetField(HTTP_TRANSFER_ENCODING) == NULL)
 																{
 																				m_bCloseClient = TRUE;
@@ -332,6 +337,7 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 								int nLengthSend = m_pClientSide->GetSendStream()->GetLength();
 								m_pClientSide->LockSendBuffer();
 								m_pClientSide->GetSendStream()->Append(pUserStream->GetData(),pUserStream->GetLength());
+								delete pUserStream;
 								m_pClientSide->UnlockSendBuffer();
 								ClientSide* pClientSide = m_pClientSide;
 								if(isEnd)
@@ -346,12 +352,18 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 																ClearHttpEnd();
 																SetStatusIdle();
 												}
+												SetCanRead(TRUE);
 								}
 
 								if(nLengthSend == 0)
 								{
 																//printf("Multi Thread RecvTask %s %d\n", __FILE__, __LINE__);
 												GetMasterThread()->InsertTask(pClientSide->GetSendTask());
+												if(m_bShouldClose && isEnd)
+												{
+																				ProccessConnectionClose();
+																				return 0;
+												}
 												//pClientSide->ProccessSend();
 								}
 								else
@@ -362,7 +374,6 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 												ProccessConnectionClose();
 								}
 
-								delete pUserStream;
 
 				}
 

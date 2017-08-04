@@ -129,7 +129,6 @@ int IOHandler::UnlockSendBuffer()
 Task* IOHandler::GetRecvTask()
 {
 								AddRef();
-								printf("Ref %d\n", GetRefCount());
 	ReceiveProccessor* task = new ReceiveProccessor(this);
 	task->CancelRepeatable();
 	return task;
@@ -138,7 +137,6 @@ Task* IOHandler::GetRecvTask()
 Task* IOHandler::GetSendTask()
 {
 								AddRef();
-								printf("Ref %d\n", GetRefCount());
 	SendProccessor* task = new SendProccessor(this);
 	task->CancelRepeatable();
 	return task;

@@ -48,6 +48,7 @@ class RemoteSide:public IOHandler
 		InetSocketAddress* m_pAddr;
 		HttpResponse* m_pHttpResponse;
 		ClientSide* m_pClientSide;
+		int m_bShouldClose;
 		int m_bCloseClient;
 };
 #endif
