@@ -5,11 +5,15 @@
 #include "string"
 #include "HttpUrl.h"
 using namespace std;
-HttpRequest::HttpRequest():m_pHttpBody(NULL),m_pHttpHeader(NULL)
+HttpRequest::HttpRequest():
+								m_pHttpBody(NULL),
+								m_pHttpHeader(NULL)
 {
 }
 
-HttpRequest::HttpRequest(Stream* pStream):m_pHttpBody(NULL),m_pHttpHeader(NULL)
+HttpRequest::HttpRequest(Stream* pStream):
+								m_pHttpBody(NULL),
+								m_pHttpHeader(NULL)
 {
 	m_pStream = pStream;
 }

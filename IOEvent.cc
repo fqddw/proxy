@@ -1,6 +1,11 @@
 #include "IOEvent.h"
 #include "NetEngine.h"
-IOEvent::IOEvent():m_iFD((int)NULL),m_pHandler(NULL),m_iOutReady(FALSE),m_iInReady(FALSE),m_iEvent(0)
+IOEvent::IOEvent():
+								m_iFD((int)NULL),
+								m_pHandler(NULL),
+								m_iOutReady(FALSE),
+								m_iInReady(FALSE),
+								m_iEvent(0)
 {
 }
 IOEvent::IOEvent(IOHandler* pHandler)

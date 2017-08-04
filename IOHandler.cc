@@ -1,5 +1,11 @@
 #include "IOHandler.h"
-IOHandler::IOHandler():m_pEvent(new IOEvent),m_bCanRead(TRUE),m_bCanWrite(TRUE),cs_(new CriticalSection()),m_bClosed(FALSE)
+IOHandler::IOHandler():
+								m_pEvent(new IOEvent),
+								m_bCanRead(TRUE),
+								m_bCanWrite(TRUE),
+								cs_(new CriticalSection()),
+								m_bClosed(FALSE),
+								m_iRefCount(1)
 {
 }
 IOEvent* IOHandler::GetEvent()
@@ -122,6 +128,8 @@ int IOHandler::UnlockSendBuffer()
 
 Task* IOHandler::GetRecvTask()
 {
+								AddRef();
+								printf("Ref %d\n", GetRefCount());
 	ReceiveProccessor* task = new ReceiveProccessor(this);
 	task->CancelRepeatable();
 	return task;
@@ -129,6 +137,8 @@ Task* IOHandler::GetRecvTask()
 
 Task* IOHandler::GetSendTask()
 {
+								AddRef();
+								printf("Ref %d\n", GetRefCount());
 	SendProccessor* task = new SendProccessor(this);
 	task->CancelRepeatable();
 	return task;
@@ -152,4 +162,23 @@ int IOHandler::IsClosed()
 void IOHandler::SetClosed(int bClosed)
 {
 				m_bClosed = bClosed;
+}
+
+void IOHandler::AddRef()
+{
+								m_iRefCount++;
+}
+
+void IOHandler::Release()
+{
+								m_iRefCount--;
+								if(m_iRefCount == 0)
+								{
+																//delete this;
+								}
+}
+
+int IOHandler::GetRefCount()
+{
+								return m_iRefCount;
 }

@@ -11,7 +11,14 @@
 #include "arpa/inet.h"
 extern MemList<void*>* pGlobalList;
 #define SEND_BUFFER_LENGTH 256*1024
-ClientSide::ClientSide():IOHandler(),m_pStream(new Stream()),m_pSendStream(new Stream()),m_iSendEndPos(0),m_iAvaibleDataSize(0),m_bCloseAsLength(FALSE),m_iRemoteState(STATE_NORMAL)
+ClientSide::ClientSide():
+								IOHandler(),
+								m_pStream(new Stream()),
+								m_pSendStream(new Stream()),
+								m_iSendEndPos(0),
+								m_iAvaibleDataSize(0),
+								m_bCloseAsLength(FALSE),
+								m_iRemoteState(STATE_NORMAL)
 {
 				m_iSide = CLIENT_SIDE;
 				GetEvent()->SetIOHandler(this);
@@ -28,7 +35,12 @@ ClientSide::~ClientSide()
 								m_pHttpRequest = NULL;
 				}
 }
-ClientSide::ClientSide(int sockfd):IOHandler(),m_pStream(new Stream()),m_pSendStream(new Stream()),m_bCloseAsLength(FALSE),m_iRemoteState(STATE_NORMAL)
+ClientSide::ClientSide(int sockfd):
+								IOHandler(),
+								m_pStream(new Stream()),
+								m_pSendStream(new Stream()),
+								m_bCloseAsLength(FALSE),
+								m_iRemoteState(STATE_NORMAL)
 {
 				m_iSide = CLIENT_SIDE;
 				m_iTransState = CLIENT_STATE_IDLE;
@@ -156,12 +168,18 @@ int ClientSide::ProccessReceive(Stream* pStream)
 								int nLength = m_pRemoteSide->GetSendStream()->GetLength();
 								m_pRemoteSide->GetSendStream()->Append(pStream->GetData(),pStream->GetLength());
 								if(nLength == 0)
-												m_pRemoteSide->ProccessSend();
+								{
+
+																printf("Multi Thread RecvTask %s %d\n", __FILE__, __LINE__);
+																GetMasterThread()->InsertTask(m_pRemoteSide->GetSendTask());
+								}
+												//m_pRemoteSide->ProccessSend();
 								m_pStream->Sub(m_pStream->GetLength());
 								SetCanRead(TRUE);
 				}
 				else if(m_iTransState == CLIENT_STATE_WAITING)
 				{
+												printf("logic error!\n");
 								close(m_pRemoteSide->GetEvent()->GetFD());
 								m_pRemoteSide->SetClientSide(NULL);
 				}
@@ -209,7 +227,7 @@ RemoteSide* ClientSide::GetRemoteSide(InetSocketAddress* pAddr)
 												pRemoteSide->SetClientState(STATE_RUNNING);
 
 												m_iRemoteState = STATE_RUNNING;
-												pRemoteSide->GetEvent()->ModEvent(EPOLLOUT|EPOLLERR|EPOLLET|EPOLLRDHUP);
+												pRemoteSide->GetEvent()->ModEvent(EPOLLOUT|EPOLLET);
 												break;
 								}
 				}
@@ -225,7 +243,7 @@ RemoteSide* ClientSide::GetRemoteSide(InetSocketAddress* pAddr)
 								pRemoteSide->SetClientSide(this);
 								pRemoteSide->SetClientState(STATE_RUNNING);
 								m_iRemoteState = STATE_RUNNING;
-								pRemoteSide->GetEvent()->AddToEngine(EPOLLOUT|EPOLLERR|EPOLLET|EPOLLRDHUP);
+								pRemoteSide->GetEvent()->AddToEngine(EPOLLOUT|EPOLLET);
 								g_pGlobalRemoteSidePool->Append(pRemoteSide);
 				}
 
@@ -244,7 +262,7 @@ int ClientSide::ProccessSend()
 				if(m_iRemoteState == STATE_ABORT)
 				{
 								SetClosed(TRUE);
-								ProccessReceive(NULL);
+								//ProccessReceive(NULL);
 								//ProccessConnectionReset();
 								return TRUE;
 				}
@@ -258,7 +276,6 @@ int ClientSide::ProccessSend()
 				if(GetEvent()->GetEventInt() & EPOLLOUT)
 				{
 								if(GetEvent()->GetEventInt() & EPOLLIN)
-								printf("EPOLLOUT TRIGGER %d\n", GetEvent()->GetEventInt());
 								SetCanWrite(FALSE);
 								SetCanRead(TRUE);
 								GetEvent()->ModEvent(EPOLLIN|EPOLLET);
@@ -273,7 +290,6 @@ int ClientSide::ProccessSend()
 								LockSendBuffer();
 								if(IsClosed())
 								{
-												printf("Internal Close\n");
 												return 0;
 								}
 								int nSent = send(GetEvent()->GetFD(),m_pSendStream->GetData(),m_pSendStream->GetLength(),0);
@@ -284,15 +300,14 @@ int ClientSide::ProccessSend()
 												{
 																if(GetEvent()->IsOutReady())
 																{
-																				printf("RESEND\n");
 																				GetEvent()->CancelOutReady();
+																				printf("Multi Thread RecvTask %s %d\n", __FILE__, __LINE__);
 																				GetMasterThread()->InsertTask(GetSendTask());
 																				UnlockSendBuffer();
 																				return TRUE;
 																}
 																else
 																{
-																				printf("MODTOEPOLLOUT\n");
 																				SetCanRead(FALSE);
 																				SetCanWrite(TRUE);
 																				GetEvent()->ModEvent(EPOLLOUT|EPOLLET);
@@ -303,7 +318,7 @@ int ClientSide::ProccessSend()
 												{
 																m_pRemoteSide->SetClientState(STATE_ABORT);
 																SetClosed(TRUE);
-																ProccessReceive(NULL);
+																//ProccessReceive(NULL);
 																//ProccessConnectionReset();
 																return 0;
 												}
@@ -312,7 +327,7 @@ int ClientSide::ProccessSend()
 								{
 												m_pRemoteSide->SetClientState(STATE_ABORT);
 												SetClosed(TRUE);
-												ProccessReceive(NULL);
+												//ProccessReceive(NULL);
 												//ProccessConnectionReset();
 												return 0;
 								}
@@ -329,7 +344,7 @@ int ClientSide::ProccessSend()
 																				if(m_bCloseAsLength == TRUE)
 																				{
 																								SetClosed(TRUE);
-																								//ProccessConnectionReset();
+																								ProccessConnectionReset();
 																								return TRUE;
 																				}
 																				ClearHttpEnd();
@@ -395,7 +410,8 @@ int ClientSide::ProccessConnectionReset()
 																{
 																				m_pRemoteSide->SetClientState(STATE_ABORT);
 																				m_pRemoteSide->SetClientSide(NULL);
-																				GetMasterThread()->InsertTask(m_pRemoteSide->GetRecvTask());
+																				printf("Multi Thread RecvTask %s %d\n", __FILE__, __LINE__);
+																				//GetMasterThread()->InsertTask(m_pRemoteSide->GetRecvTask());
 																				m_pRemoteSide = NULL;
 																}
 																break;

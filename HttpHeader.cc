@@ -136,10 +136,12 @@ HttpRequestHeader::~HttpRequestHeader()
 		m_pRequestLine = NULL;
 	}
 }
-HttpRequestHeader::HttpRequestHeader():m_pRequestLine(new HttpRequestLine())
+HttpRequestHeader::HttpRequestHeader():
+								m_pRequestLine(new HttpRequestLine())
 {
 }
-HttpResponseHeader::HttpResponseHeader():m_pHttpResponseLine(new HttpResponseLine())
+HttpResponseHeader::HttpResponseHeader():
+								m_pHttpResponseLine(new HttpResponseLine())
 {
 }
 HttpResponseHeader::~HttpResponseHeader()

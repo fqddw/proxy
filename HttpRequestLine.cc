@@ -4,7 +4,10 @@
 #include "unistd.h"
 #include "HttpRequestLine.h"
 #include "CommonType.h"
-HttpRequestLine::HttpRequestLine():m_pString(0),m_iStringLength(0),m_pUrl(NULL)
+HttpRequestLine::HttpRequestLine():
+								m_pString(0),
+								m_iStringLength(0),
+								m_pUrl(NULL)
 {
 }
 HttpUrl* HttpRequestLine::GetUrl()

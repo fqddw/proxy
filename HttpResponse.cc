@@ -3,10 +3,15 @@
 #include "unistd.h"
 #include "memory.h"
 #include "stdlib.h"
-HttpResponse::HttpResponse():m_pBody(NULL)
+HttpResponse::HttpResponse():
+								m_pBody(NULL)
 {
 }
-HttpResponse::HttpResponse(Stream* pStream):m_pStream(pStream),m_pHeader(NULL),m_iState(HEADER_NOTFOUND),m_pBody(NULL)
+HttpResponse::HttpResponse(Stream* pStream):
+								m_pStream(pStream),
+								m_pHeader(NULL),
+								m_iState(HEADER_NOTFOUND),
+								m_pBody(NULL)
 {
 }
 

@@ -6,5 +6,6 @@ SendProccessor::SendProccessor(IOHandler* pIOHandler):m_pIOHandler(pIOHandler),T
 int SendProccessor::Run()
 {
 	m_pIOHandler->ProccessSend();
+	m_pIOHandler->Release();
 	return 0;
 }

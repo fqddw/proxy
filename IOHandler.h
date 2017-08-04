@@ -46,6 +46,9 @@ class IOHandler
 		virtual int ClearHttpEnd(){return 0;};
 		int IsClosed();
 		void SetClosed(int);
+		void Release();
+		void AddRef();
+		int GetRefCount();
 	public:
 		int m_iSide;
 	private:
@@ -55,6 +58,7 @@ class IOHandler
 		int m_bCanWrite;
 		CriticalSection* cs_;
 		int m_bClosed;
+		int m_iRefCount;
 };
 
 
