@@ -419,7 +419,7 @@ int RemoteSide::ProccessConnectionReset()
 												m_iClientState = STATE_NORMAL;
 												ClearHttpEnd();
 												printf("Multi Thread RecvTask %s %d\n", __FILE__, __LINE__);
-												GetMasterThread()->InsertTask(m_pClientSide->GetRecvTask());
+												//GetMasterThread()->InsertTask(m_pClientSide->GetRecvTask());
 								}
 				}
 				int sockfd = GetEvent()->GetFD();

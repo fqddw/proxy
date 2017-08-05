@@ -42,6 +42,7 @@ int IOHandler::Dispatch(int events)
 	{
 		if(m_bCanRead)
 		{
+			GetEvent()->CancelInReady();
 			if(!IsServer())
 				SetCanRead(FALSE);
 			GetMasterThread()->InsertTask(GetRecvTask());
