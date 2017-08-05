@@ -195,7 +195,7 @@ int RemoteSide::ProccessSend()
 																								}
 																								else
 																								{
-																												if(m_pClientSide->GetEvent()->IsInReady())
+																												/*if(m_pClientSide->GetEvent()->IsInReady())
 																												{
 																																SetCanRead(FALSE);
 																																m_pClientSide->SetCanRead(FALSE);
@@ -206,7 +206,7 @@ int RemoteSide::ProccessSend()
 																												else
 																												{
 																																m_pClientSide->SetCanRead(TRUE);
-																												}
+																												}*/
 
 																												flag = FALSE;
 																								}
