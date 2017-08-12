@@ -129,7 +129,10 @@ int IOHandler::UnlockSendBuffer()
 
 Task* IOHandler::GetRecvTask()
 {
+								//if(m_iRefCount > 1 && !IsServer())
+										//						return NULL;
 								AddRef();
+								printf("RefCount Recv %d %d\n", m_bClosed, m_iRefCount);
 	ReceiveProccessor* task = new ReceiveProccessor(this);
 	task->CancelRepeatable();
 	return task;
@@ -137,7 +140,10 @@ Task* IOHandler::GetRecvTask()
 
 Task* IOHandler::GetSendTask()
 {
+								//if(m_iRefCount > 1 && !IsServer())
+										//						return NULL;
 								AddRef();
+								printf("RefCount Send %d %d\n", m_bClosed, m_iRefCount);
 	SendProccessor* task = new SendProccessor(this);
 	task->CancelRepeatable();
 	return task;
@@ -173,7 +179,7 @@ void IOHandler::Release()
 								m_iRefCount--;
 								if(m_iRefCount == 0)
 								{
-																//delete this;
+																delete this;
 								}
 }
 

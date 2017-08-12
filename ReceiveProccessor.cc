@@ -46,7 +46,7 @@ int ReceiveProccessor::GetDataStream(Stream** ppStream)
 			else
 			{
 							if(*ppStream)
-											delete *ppStream;
+								delete *ppStream;
 							m_pIOHandler->ProccessConnectionReset();
 							return FALSE;
 			}

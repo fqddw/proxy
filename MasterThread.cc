@@ -175,6 +175,8 @@ int MasterThread::DispatchTask(Task* pTask)
 
 int MasterThread::InsertTask(Task* pTask)
 {
+	if(!pTask)
+		return 0;
 	pTaskQueue->Insert(pTask);
 	EnterRunning();
 	return 0;
