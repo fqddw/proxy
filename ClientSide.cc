@@ -18,7 +18,9 @@ ClientSide::ClientSide():
 	m_iSendEndPos(0),
 	m_iAvaibleDataSize(0),
 	m_bCloseAsLength(FALSE),
-	m_iRemoteState(STATE_NORMAL)
+	m_iRemoteState(STATE_NORMAL),
+	m_bSSL(FALSE),
+	m_iSSLState(SSL_START)
 {
 	m_iSide = CLIENT_SIDE;
 	GetEvent()->SetIOHandler(this);
@@ -40,7 +42,9 @@ ClientSide::ClientSide(int sockfd):
 	m_pStream(new Stream()),
 	m_pSendStream(new Stream()),
 	m_bCloseAsLength(FALSE),
-	m_iRemoteState(STATE_NORMAL)
+	m_iRemoteState(STATE_NORMAL),
+	m_bSSL(FALSE),
+	m_iSSLState(SSL_START)
 {
 	m_iSide = CLIENT_SIDE;
 	m_iTransState = CLIENT_STATE_IDLE;
@@ -68,18 +72,68 @@ int ClientSide::ClearHttpEnd()
 
 }
 #include "stdlib.h"
+int ClientSide::SSLTransferRecv(Stream* pStream)
+{
+	int iLength = m_pRemoteSide->GetSendStream()->GetLength();
+	m_pRemoteSide->GetSendStream()->Append(pStream->GetData(), pStream->GetLength());
+	if(iLength == 0)
+	{
+		GetMasterThread()->InsertTask(m_pRemoteSide->GetSendTask());
+	}
+	else
+	{
+		printf("Remote Sending In Proccess\n");
+	}
+	delete pStream;
+	//SetCanRead(TRUE);
+	return TRUE;
+}
+
+int ClientSide::SSLTransferCreate()
+{
+	SetCanRead(TRUE);
+	m_bSSL = TRUE;
+	InetSocketAddress* pAddr = NetUtils::GetHostByName(GetRequest()->GetHeader()->GetRequestLine()->GetUrl()->GetHost(),GetRequest()->GetHeader()->GetRequestLine()->GetUrl()->GetPort());
+
+	if(!pAddr)
+		exit(0);
+	m_iSSLState = SSL_REMOTE_CONNECTING;
+	RemoteSide* pRemoteSide = new RemoteSide(pAddr);
+	m_pRemoteSide = pRemoteSide;
+	pRemoteSide->EnableSSL();
+	pRemoteSide->GetEvent()->SetNetEngine(GetEvent()->GetNetEngine());
+	pRemoteSide->SetMasterThread(GetMasterThread());
+	pRemoteSide->SetCanWrite(TRUE);
+	pRemoteSide->SetCanRead(FALSE);
+
+	pRemoteSide->SetClientSide(this);
+	pRemoteSide->SetClientState(STATE_RUNNING);
+	m_iRemoteState = STATE_RUNNING;
+	pRemoteSide->GetEvent()->AddToEngine(EPOLLOUT|EPOLLET);
+	return TRUE;
+}
 int ClientSide::ProccessReceive(Stream* pStream)
 {
 	if(!pStream)
 	{
 		if(IsClosed())
 		{
+			if(m_iRemoteState==STATE_RUNNING)
+			{
+				m_pRemoteSide->SetClosed(TRUE);
+				//GetMasterThread()->InsertTask(m_pRemoteSide->GetRecvTask());
+			}
 			ProccessConnectionReset();
 			return FALSE;
 		}
 		GetEvent()->CancelInReady();
 		SetCanRead(TRUE);
 		return 0;
+	}
+	if(m_bSSL)
+	{
+		SSLTransferRecv(pStream);
+		return TRUE;
 	}
 
 
@@ -91,11 +145,6 @@ int ClientSide::ProccessReceive(Stream* pStream)
 		if(m_pHttpRequest->IsHeaderEnd())
 		{
 			m_pHttpRequest->LoadHttpHeader();
-			if(m_pHttpRequest->GetHeader()->GetRequestLine()->GetMethod() == HTTP_METHOD_CONNECT)
-			{
-				ProccessConnectionReset();
-				return FALSE;
-			}
 			int authResult = m_pHttpRequest->GetAuthStatus();
 			if(!authResult)
 			{
@@ -113,6 +162,14 @@ int ClientSide::ProccessReceive(Stream* pStream)
 				ProccessConnectionReset();
 				return 0;
 			}
+			if(m_pHttpRequest->GetHeader()->GetRequestLine()->GetMethod() == HTTP_METHOD_CONNECT)
+			{
+				SetCanRead(TRUE);
+				SSLTransferCreate();
+				//ProccessConnectionReset();
+				return FALSE;
+			}
+
 			RemoteSide* pRemoteSide = GetRemoteSide(pAddr);
 			m_pRemoteSide = pRemoteSide;
 			Stream* pSendStream = m_pHttpRequest->GetHeader()->ToHeader();

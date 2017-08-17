@@ -22,7 +22,7 @@ class IOHandler
 {
 	public:
 		IOHandler();
-		~IOHandler();
+		virtual ~IOHandler();
 		IOEvent* GetEvent();
 		int SetMasterThread(MasterThread*);
 		MasterThread* GetMasterThread();

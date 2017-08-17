@@ -3,9 +3,13 @@
 
 class Digest
 {
-								public:
-																Digest();
-																Stream* CalcH1();
-																Stream* CalcH2();
-																Stream* CalcResponse();
+	public:
+		Digest();
+		Digest(Stream*);
+		Stream* CalcH1();
+		Stream* CalcH2();
+		Stream* CalcResponse();
+		int Parse();
+	private:
+		Stream* m_pStream;
 };

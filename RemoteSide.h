@@ -15,7 +15,7 @@ class RemoteSide:public IOHandler
 	public:
 		RemoteSide();
 		RemoteSide(InetSocketAddress*);
-		~RemoteSide();
+		virtual ~RemoteSide();
 		int Connect();
 		int GetState();
 		int SetState(int);
@@ -38,6 +38,7 @@ class RemoteSide:public IOHandler
 		int GetSide();
 		void SetClientState(int);
 		int ProccessConnectionClose();
+		void EnableSSL();
 	private:
 		int m_isConnected;
 		int m_iSocket;
@@ -50,5 +51,6 @@ class RemoteSide:public IOHandler
 		ClientSide* m_pClientSide;
 		int m_bShouldClose;
 		int m_bCloseClient;
+		int m_bSSL;
 };
 #endif

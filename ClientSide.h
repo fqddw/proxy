@@ -8,12 +8,14 @@
 #define CLIENT_STATE_IDLE 1
 #define CLIENT_STATE_RUNNING 2
 #define CLIENT_STATE_WAITING 3
+#define SSL_REMOTE_CONNECTING 1
+#define SSL_START 0
 class RemoteSide;
 class ClientSide : public IOHandler
 {
 	public:
 		ClientSide();
-		~ClientSide();
+		virtual ~ClientSide();
 		ClientSide(int);
 		int Proccess();
 		RemoteSide* GetRemoteSide(InetSocketAddress*);
@@ -32,6 +34,8 @@ class ClientSide : public IOHandler
 		int AppendSendStream(char*, int);
 		void SetRemoteState(int);
 		void SetCloseAsLength(int);
+		int SSLTransferRecv(Stream*);
+		int SSLTransferCreate();
 	private:
 		int m_iState;
 		int m_iTransState;
@@ -43,5 +47,7 @@ class ClientSide : public IOHandler
 		RemoteSide* m_pRemoteSide;
 		int m_iRemoteState;
 		int m_bCloseAsLength;
+		int m_bSSL;
+		int m_iSSLState;
 };
 #endif
