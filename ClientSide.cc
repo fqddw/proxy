@@ -68,8 +68,12 @@ int ClientSide::ClearHttpEnd()
 	SetCanRead(TRUE);
 	SetCanWrite(FALSE);
 	//m_pClientSide->SetCanWrite(FALSE);
+	if(IsClosed())
+	{
+		//ProccessConnectionReset();
+		return FALSE;
+	}
 	return 0;
-
 }
 #include "stdlib.h"
 int ClientSide::SSLTransferRecv(Stream* pStream)
@@ -82,10 +86,14 @@ int ClientSide::SSLTransferRecv(Stream* pStream)
 	}
 	else
 	{
-		printf("Remote Sending In Proccess\n");
+		//printf("Remote Sending In Proccess\n");
 	}
 	delete pStream;
 	//SetCanRead(TRUE);
+	if(IsClosed())
+	{
+		//printf("Stalled\n");
+	}
 	return TRUE;
 }
 
@@ -118,6 +126,7 @@ int ClientSide::ProccessReceive(Stream* pStream)
 	{
 		if(IsClosed())
 		{
+			//printf("Client Close %s %d\n", GetRequest()->GetHeader()->GetRequestLine()->GetUrl()->GetHost(), m_pSendStream->GetLength());
 			if(m_iRemoteState==STATE_RUNNING)
 			{
 				m_pRemoteSide->SetClosed(TRUE);
@@ -227,7 +236,7 @@ int ClientSide::ProccessReceive(Stream* pStream)
 		if(nLength == 0)
 		{
 
-			printf("Multi Thread RecvTask %s %d\n", __FILE__, __LINE__);
+			//printf("Multi Thread RecvTask %s %d\n", __FILE__, __LINE__);
 			GetMasterThread()->InsertTask(m_pRemoteSide->GetSendTask());
 		}
 		//m_pRemoteSide->ProccessSend();
@@ -236,7 +245,7 @@ int ClientSide::ProccessReceive(Stream* pStream)
 	}
 	else if(m_iTransState == CLIENT_STATE_WAITING)
 	{
-		printf("logic error!\n");
+		//printf("logic error!\n");
 		close(m_pRemoteSide->GetEvent()->GetFD());
 		m_pRemoteSide->SetClientSide(NULL);
 	}
@@ -342,6 +351,7 @@ int ClientSide::ProccessSend()
 	}
 	int totalSend = 0;
 	int flag = TRUE;
+	//printf("Client Send Data %s %d\n", GetRequest()->GetHeader()->GetRequestLine()->GetUrl()->GetHost(), m_pSendStream->GetLength());
 	while(flag)
 	{
 		LockSendBuffer();
@@ -350,6 +360,7 @@ int ClientSide::ProccessSend()
 			return 0;
 		}
 		int nSent = send(GetEvent()->GetFD(),m_pSendStream->GetData(),m_pSendStream->GetLength(),0);
+		//printf("Client Send %s\n", m_pSendStream->GetData());
 		if(nSent < 0)
 		{
 			flag = FALSE;
@@ -358,7 +369,7 @@ int ClientSide::ProccessSend()
 				if(GetEvent()->IsOutReady())
 				{
 					GetEvent()->CancelOutReady();
-					printf("Multi Thread RecvTask %s %d\n", __FILE__, __LINE__);
+					//printf("Multi Thread RecvTask %s %d\n", __FILE__, __LINE__);
 					GetMasterThread()->InsertTask(GetSendTask());
 					UnlockSendBuffer();
 					return TRUE;
@@ -408,12 +419,18 @@ int ClientSide::ProccessSend()
 					SetCanRead(TRUE);
 					SetCanWrite(FALSE);
 					m_iTransState = CLIENT_STATE_IDLE;
+					/*if(m_bSSL)
+						printf("Remote SSL Close\n");*/
 
 					return 0;
 				}
 				else
 				{
 					//请求正在传输中,engine此时屏蔽了remote的数据到达处理函数，但会设置是否有数据到达,如果有数据到达则投递处理任务，没有则开启处理函数
+					if(GetEvent()->IsInReady())
+					{
+						//printf("May Lost Data Here\n");
+					}
 					if(m_pRemoteSide->GetEvent()->IsInReady())
 					{
 						SetCanWrite(FALSE);
@@ -469,7 +486,8 @@ int ClientSide::ProccessConnectionReset()
 				{
 					m_pRemoteSide->SetClientState(STATE_ABORT);
 					m_pRemoteSide->SetClientSide(NULL);
-					printf("Multi Thread RecvTask %s %d\n", __FILE__, __LINE__);
+					m_pRemoteSide->ProccessConnectionReset();
+					//printf("Multi Thread RecvTask %s %d\n", __FILE__, __LINE__);
 					//GetMasterThread()->InsertTask(m_pRemoteSide->GetRecvTask());
 					m_pRemoteSide = NULL;
 				}

@@ -47,12 +47,14 @@ int ReceiveProccessor::GetDataStream(Stream** ppStream)
 			{
 							if(*ppStream)
 								delete *ppStream;
+							//m_pIOHandler->SetClosed(TRUE);
 							m_pIOHandler->ProccessConnectionReset();
 							return FALSE;
 			}
 		}
 		if(n == 0)
 		{
+			printf("Close Here\n");
 						m_pIOHandler->SetClosed(TRUE);
 			break;
 		}
