@@ -54,7 +54,6 @@ int ReceiveProccessor::GetDataStream(Stream** ppStream)
 		}
 		if(n == 0)
 		{
-			printf("Close Here\n");
 						m_pIOHandler->SetClosed(TRUE);
 			break;
 		}
