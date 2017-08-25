@@ -7,5 +7,6 @@ int SendProccessor::Run()
 {
 	m_pIOHandler->ProccessSend();
 	m_pIOHandler->Release();
+	m_pIOHandler->ReleaseSendRefCount();
 	return 0;
 }

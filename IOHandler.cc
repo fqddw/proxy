@@ -5,7 +5,9 @@ IOHandler::IOHandler():
 								m_bCanWrite(TRUE),
 								cs_(new CriticalSection()),
 								m_bClosed(FALSE),
-								m_iRefCount(1)
+								m_iRefCount(1),
+								m_iSendRefCount(0),
+								m_iRecvRefCount(0)
 {
 }
 IOEvent* IOHandler::GetEvent()
@@ -132,6 +134,7 @@ Task* IOHandler::GetRecvTask()
 								//if(m_iRefCount > 1 && !IsServer())
 										//						return NULL;
 								AddRef();
+								AddRecvRefCount();
 	ReceiveProccessor* task = new ReceiveProccessor(this);
 	task->CancelRepeatable();
 	return task;
@@ -142,6 +145,7 @@ Task* IOHandler::GetSendTask()
 								//if(m_iRefCount > 1 && !IsServer())
 										//						return NULL;
 								AddRef();
+								AddSendRefCount();
 	SendProccessor* task = new SendProccessor(this);
 	task->CancelRepeatable();
 	return task;
@@ -184,4 +188,32 @@ void IOHandler::Release()
 int IOHandler::GetRefCount()
 {
 								return m_iRefCount;
+}
+
+void IOHandler::AddRecvRefCount()
+{
+	m_iRecvRefCount++;
+}
+
+int IOHandler::GetRecvRefCount()
+{
+	return m_iRecvRefCount;
+}
+int IOHandler::GetSendRefCount()
+{
+	return m_iSendRefCount;
+}
+void IOHandler::AddSendRefCount()
+{
+	m_iSendRefCount++;
+}
+
+void IOHandler::ReleaseSendRefCount()
+{
+								m_iSendRefCount--;
+}
+
+void IOHandler::ReleaseRecvRefCount()
+{
+								m_iRecvRefCount--;
 }

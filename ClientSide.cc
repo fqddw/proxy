@@ -92,6 +92,7 @@ int ClientSide::SSLTransferRecv(Stream* pStream)
 	//SetCanRead(TRUE);
 	if(IsClosed())
 	{
+		ProccessConnectionReset();
 		//printf("Stalled\n");
 	}
 	return TRUE;
@@ -117,11 +118,19 @@ int ClientSide::SSLTransferCreate()
 	pRemoteSide->SetClientSide(this);
 	pRemoteSide->SetClientState(STATE_RUNNING);
 	m_iRemoteState = STATE_RUNNING;
+	//printf("Create Connection SSL %s %d\n", GetRequest()->GetHeader()->GetRequestLine()->GetUrl()->GetHost(), GetEvent()->GetFD());
 	pRemoteSide->GetEvent()->AddToEngine(EPOLLOUT|EPOLLET);
 	return TRUE;
 }
 int ClientSide::ProccessReceive(Stream* pStream)
 {
+	if(IsClosed() && m_bSSL)
+	{
+		if(pStream)
+			delete pStream;
+		ProccessConnectionReset();
+		return FALSE;
+	}
 	if(!pStream)
 	{
 		if(IsClosed())
@@ -357,6 +366,7 @@ int ClientSide::ProccessSend()
 		LockSendBuffer();
 		if(IsClosed())
 		{
+			//printf("Send Close\n");
 			return 0;
 		}
 		int nSent = send(GetEvent()->GetFD(),m_pSendStream->GetData(),m_pSendStream->GetLength(),0);
@@ -370,12 +380,13 @@ int ClientSide::ProccessSend()
 				{
 					GetEvent()->CancelOutReady();
 					//printf("Multi Thread RecvTask %s %d\n", __FILE__, __LINE__);
-					GetMasterThread()->InsertTask(GetSendTask());
+					//GetMasterThread()->InsertTask(GetSendTask());
 					UnlockSendBuffer();
 					return TRUE;
 				}
 				else
 				{
+					//printf("EPOLLOUT TRIGGER\n");
 					SetCanRead(FALSE);
 					SetCanWrite(TRUE);
 					GetEvent()->ModEvent(EPOLLOUT|EPOLLET);
@@ -405,6 +416,7 @@ int ClientSide::ProccessSend()
 			m_pSendStream->Sub(nSent);
 			if(m_pSendStream->GetLength() == 0)
 			{
+				//printf("Send Finish %d\n", GetEvent()->GetFD());
 				flag = FALSE;
 				if(m_iRemoteState == STATE_NORMAL)
 				{
@@ -464,8 +476,12 @@ void ClientSide::SetTransIdleState()
 }
 int ClientSide::ProccessConnectionReset()
 {
+	//printf("%d %d\n", GetEvent()->GetFD(), GetRefCount());
+	//printf("%d %d %d %d\n", GetEvent()->GetFD(), GetRefCount(), GetRecvRefCount(), GetSendRefCount());
 	if(GetRefCount() > 2)
+	{
 		return 0;
+	}
 	//如果远端正常关闭则代表远端已经自我清理
 	///如果远端没有正常关闭，则远端已经自我清理完毕，并已经通知本地
 	//逻辑本地与远端可互换
@@ -508,6 +524,7 @@ int ClientSide::ProccessConnectionReset()
 	pGlobalList->Delete(this);
 	close(sockfd);
 	m_pRemoteSide = NULL;
+	Release();
 }
 
 HttpRequest* ClientSide::GetRequest()

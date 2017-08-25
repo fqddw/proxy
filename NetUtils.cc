@@ -28,8 +28,8 @@ InetSocketAddress* NetUtils::GetHostByName(char* pHostName,int port)
 		struct timespec end = Time::GetNow();
 		struct timespec sub = Time::Sub(end, start);
 		if (ret != 0) {
-			fprintf(stderr,"getaddrinfo: %s %s/n", pHostName,
-					gai_strerror(ret));
+			/*fprintf(stderr,"getaddrinfo: %s %s/n", pHostName,
+					gai_strerror(ret));*/
 			return NULL;
 		}
 		int index = 0;

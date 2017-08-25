@@ -49,6 +49,12 @@ class IOHandler
 		void Release();
 		void AddRef();
 		int GetRefCount();
+		int GetRecvRefCount();
+		int GetSendRefCount();
+		void AddRecvRefCount();
+		void AddSendRefCount();
+		void ReleaseSendRefCount();
+		void ReleaseRecvRefCount();
 	public:
 		int m_iSide;
 	private:
@@ -59,6 +65,8 @@ class IOHandler
 		CriticalSection* cs_;
 		int m_bClosed;
 		int m_iRefCount;
+		int m_iRecvRefCount;
+		int m_iSendRefCount;
 };
 
 

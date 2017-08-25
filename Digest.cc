@@ -4,6 +4,10 @@ Digest::Digest()
 {
 }
 
+int Digest::Parse()
+{
+	char chDigest[] = "Digest";
+}
 Stream* Digest::CalcH1()
 {
 }
