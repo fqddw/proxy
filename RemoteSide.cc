@@ -83,9 +83,9 @@ int RemoteSide::Connect()
 	struct sockaddr sa = m_pAddr->ToSockAddr();
 	m_isConnected = SOCKET_STATUS_CONNECTING;
 	int ret = connect(m_iSocket,&sa,sizeof(sa));
-	SetCanRead(FALSE);
+	/*SetCanRead(FALSE);
 	SetCanWrite(TRUE);
-	GetEvent()->ModEvent(EPOLLOUT|EPOLLET);
+	GetEvent()->ModEvent(EPOLLOUT|EPOLLET);*/
 	return ret;
 }
 int RemoteSide::ProccessSend()

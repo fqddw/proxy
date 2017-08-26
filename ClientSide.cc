@@ -216,7 +216,10 @@ int ClientSide::ProccessReceive(Stream* pStream)
 				delete pBodyStream;
 
 			}
-			GetMasterThread()->InsertTask(pRemoteSide->GetSendTask());
+			pRemoteSide->SetCanRead(FALSE);
+			pRemoteSide->SetCanWrite(TRUE);
+			pRemoteSide->GetEvent()->ModEvent(EPOLLOUT|EPOLLET);
+			//GetMasterThread()->InsertTask(pRemoteSide->GetSendTask());
 			/*if(pRemoteSide->IsConnected())
 			  {
 			  pRemoteSide->ProccessSend();
