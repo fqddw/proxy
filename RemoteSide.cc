@@ -81,24 +81,33 @@ RemoteSide::RemoteSide(InetSocketAddress* pAddr):
 int RemoteSide::Connect()
 {
 	struct sockaddr sa = m_pAddr->ToSockAddr();
-	m_isConnected = SOCKTE_STATUS_CONNECTING;
+	m_isConnected = SOCKET_STATUS_CONNECTING;
 	int ret = connect(m_iSocket,&sa,sizeof(sa));
+	SetCanRead(FALSE);
+	SetCanWrite(TRUE);
+	GetEvent()->ModEvent(EPOLLOUT|EPOLLET);
 	return ret;
 }
 int RemoteSide::ProccessSend()
 {
-	/*
 	if(m_pSendStream->GetLength() == 0)
 	{
+	/*
 		SetCanWrite(FALSE);
 		return FALSE;
-	}
 	*/
+	}
 
 	/*if(!m_pClientSide)
 	  return FALSE;*/
 	//处理连接操作
-	if(m_isConnected == SOCKTE_STATUS_CONNECTING)
+	if(m_isConnected == SOCKET_STATUS_PRE_CONNECTING)
+	{
+		m_isConnected = SOCKET_STATUS_CONNECTING;
+		SetCanWrite(TRUE);
+		return TRUE;
+	}
+	if(m_isConnected == SOCKET_STATUS_CONNECTING)
 	{
 		int error = 0;
 		socklen_t size = sizeof(int);
@@ -119,6 +128,8 @@ int RemoteSide::ProccessSend()
 		}
 		//SetCanRead(TRUE);
 		m_isConnected = TRUE;
+		SetCanRead(TRUE);
+		SetCanWrite(FALSE);
 		GetEvent()->ModEvent(EPOLLIN|EPOLLET);
 		if(m_bSSL)
 		{
@@ -166,12 +177,13 @@ int RemoteSide::ProccessSend()
 				{
 					GetEvent()->CancelOutReady();
 					//printf("Multi Thread RecvTask %s %d\n", __FILE__, __LINE__);
-					GetMasterThread()->InsertTask(GetSendTask());
+					//GetMasterThread()->InsertTask(GetSendTask());
 					UnlockSendBuffer();
 					return TRUE;
 				}
 				else
 				{
+					printf("Remote EPOLLOUT\n");
 					SetCanRead(FALSE);
 					SetCanWrite(TRUE);
 					GetEvent()->ModEvent(EPOLLOUT|EPOLLET);
@@ -185,7 +197,7 @@ int RemoteSide::ProccessSend()
 			}
 		}else if(nSent == 0)
 		{
-			//printf("0 send\n");
+			printf("0 send\n");
 			SetClosed(TRUE);
 			//ProccessConnectionReset();
 			return 0;

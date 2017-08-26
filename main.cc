@@ -126,7 +126,7 @@ int main(int argc,char** argv)
 	pThread->Start();
 
 	MasterThread* pMasterThread = new MasterThread(new EventPump());
-	pMasterThread->SetWorkerCount(1);
+	pMasterThread->SetWorkerCount(100);
 	pMasterThread->Create();
 	ServerStartTask* pServerStartTask = new ServerStartTask();
 	pServerStartTask->CancelRepeatable();

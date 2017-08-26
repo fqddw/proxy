@@ -8,7 +8,8 @@
 #include "HttpResponse.h"
 #define STATUS_BLOCKING 1
 #define STATUS_IDLE 2
-#define SOCKTE_STATUS_CONNECTING 3
+#define SOCKET_STATUS_CONNECTING 3
+#define SOCKET_STATUS_PRE_CONNECTING 4
 class ClientSide;
 class RemoteSide:public IOHandler
 {

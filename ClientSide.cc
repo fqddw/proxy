@@ -216,6 +216,7 @@ int ClientSide::ProccessReceive(Stream* pStream)
 				delete pBodyStream;
 
 			}
+			GetMasterThread()->InsertTask(pRemoteSide->GetSendTask());
 			/*if(pRemoteSide->IsConnected())
 			  {
 			  pRemoteSide->ProccessSend();
@@ -296,13 +297,12 @@ RemoteSide* ClientSide::GetRemoteSide(InetSocketAddress* pAddr)
 		{
 			pSide->SetStatusBlocking();
 			pRemoteSide = pSide;
-			pRemoteSide->SetCanWrite(TRUE);
-			pRemoteSide->SetCanRead(FALSE);
+			pRemoteSide->SetCanWrite(FALSE);
+			pRemoteSide->SetCanRead(TRUE);
 			pRemoteSide->SetClientSide(this);
 			pRemoteSide->SetClientState(STATE_RUNNING);
 
 			m_iRemoteState = STATE_RUNNING;
-			pRemoteSide->GetEvent()->ModEvent(EPOLLOUT|EPOLLET);
 			break;
 		}
 	}
@@ -312,13 +312,13 @@ RemoteSide* ClientSide::GetRemoteSide(InetSocketAddress* pAddr)
 		pRemoteSide = new RemoteSide(pAddr);
 		pRemoteSide->GetEvent()->SetNetEngine(GetEvent()->GetNetEngine());
 		pRemoteSide->SetMasterThread(GetMasterThread());
-		pRemoteSide->SetCanWrite(TRUE);
-		pRemoteSide->SetCanRead(FALSE);
+		pRemoteSide->SetCanWrite(FALSE);
+		pRemoteSide->SetCanRead(TRUE);
 
 		pRemoteSide->SetClientSide(this);
 		pRemoteSide->SetClientState(STATE_RUNNING);
 		m_iRemoteState = STATE_RUNNING;
-		pRemoteSide->GetEvent()->AddToEngine(EPOLLOUT|EPOLLET);
+		pRemoteSide->GetEvent()->AddToEngine(EPOLLIN|EPOLLET);
 		g_pGlobalRemoteSidePool->Append(pRemoteSide);
 	}
 
@@ -404,6 +404,7 @@ int ClientSide::ProccessSend()
 		}
 		else if(nSent == 0)
 		{
+			printf("Client Send 0\n");
 			m_pRemoteSide->SetClientState(STATE_ABORT);
 			SetClosed(TRUE);
 			//ProccessReceive(NULL);
