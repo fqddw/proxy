@@ -22,8 +22,8 @@ int ReceiveProccessor::Run()
 		}else{
 			m_pIOHandler->GetEvent()->CancelInReady();
 			int ret = GetDataStream(&pStream);
-			m_pIOHandler->Release();
 			m_pIOHandler->ReleaseRecvRefCount();
+			m_pIOHandler->Release();
 		}
 		return 0;
 }

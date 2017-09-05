@@ -218,8 +218,10 @@ int ClientSide::ProccessReceive(Stream* pStream)
 			}
 			pRemoteSide->SetCanRead(FALSE);
 			pRemoteSide->SetCanWrite(TRUE);
-			pRemoteSide->GetEvent()->ModEvent(EPOLLOUT|EPOLLET);
-			//GetMasterThread()->InsertTask(pRemoteSide->GetSendTask());
+			if(pRemoteSide->IsConnected())
+				pRemoteSide->GetEvent()->ModEvent(EPOLLOUT|EPOLLET);
+			else
+				GetMasterThread()->InsertTask(pRemoteSide->GetSendTask());
 			/*if(pRemoteSide->IsConnected())
 			  {
 			  pRemoteSide->ProccessSend();
@@ -290,7 +292,7 @@ RemoteSide* ClientSide::GetRemoteSide(int fd)
 }
 RemoteSide* ClientSide::GetRemoteSide(InetSocketAddress* pAddr)
 {
-	//g_pGlobalRemoteSidePool->Lock();
+	g_pGlobalRemoteSidePool->Lock();
 	RemoteSide* pRemoteSide=NULL;
 	MemNode<RemoteSide*>* pSocketPool = g_pGlobalRemoteSidePool->GetHead();
 	for(;pSocketPool!=NULL;pSocketPool = pSocketPool->GetNext())
@@ -310,6 +312,7 @@ RemoteSide* ClientSide::GetRemoteSide(InetSocketAddress* pAddr)
 		}
 	}
 
+	g_pGlobalRemoteSidePool->Unlock();
 	if(!pRemoteSide)
 	{
 		pRemoteSide = new RemoteSide(pAddr);
@@ -325,7 +328,6 @@ RemoteSide* ClientSide::GetRemoteSide(InetSocketAddress* pAddr)
 		g_pGlobalRemoteSidePool->Append(pRemoteSide);
 	}
 
-	//g_pGlobalRemoteSidePool->Unlock();
 	return pRemoteSide;
 }
 
@@ -486,6 +488,11 @@ int ClientSide::ProccessConnectionReset()
 	{
 		return 0;
 	}
+	if(IsRealClosed())
+	{
+		return 0;
+	}
+	SetRealClosed(TRUE);
 	//如果远端正常关闭则代表远端已经自我清理
 	///如果远端没有正常关闭，则远端已经自我清理完毕，并已经通知本地
 	//逻辑本地与远端可互换
@@ -525,7 +532,7 @@ int ClientSide::ProccessConnectionReset()
 	}
 	int sockfd = GetEvent()->GetFD();
 	GetEvent()->RemoveFromEngine();
-	pGlobalList->Delete(this);
+	//pGlobalList->Delete(this);
 	close(sockfd);
 	m_pRemoteSide = NULL;
 	Release();

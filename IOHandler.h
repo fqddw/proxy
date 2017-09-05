@@ -45,7 +45,9 @@ class IOHandler
 		virtual Stream* GetSendStream();
 		virtual int ClearHttpEnd(){return 0;};
 		int IsClosed();
+		int IsRealClosed();
 		void SetClosed(int);
+		void SetRealClosed(int);
 		void Release();
 		void AddRef();
 		int GetRefCount();
@@ -55,6 +57,8 @@ class IOHandler
 		void AddSendRefCount();
 		void ReleaseSendRefCount();
 		void ReleaseRecvRefCount();
+		void Lock();
+		void Unlock();
 	public:
 		int m_iSide;
 	private:
@@ -67,6 +71,8 @@ class IOHandler
 		int m_iRefCount;
 		int m_iRecvRefCount;
 		int m_iSendRefCount;
+		int m_bRealClosed;
+		int m_bDeleted;
 };
 
 

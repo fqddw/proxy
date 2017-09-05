@@ -84,8 +84,8 @@ int RemoteSide::Connect()
 	m_isConnected = SOCKET_STATUS_CONNECTING;
 	int ret = connect(m_iSocket,&sa,sizeof(sa));
 	/*SetCanRead(FALSE);
-	SetCanWrite(TRUE);
-	GetEvent()->ModEvent(EPOLLOUT|EPOLLET);*/
+	SetCanWrite(TRUE);*/
+	GetEvent()->ModEvent(EPOLLOUT|EPOLLET);
 	return ret;
 }
 int RemoteSide::ProccessSend()
@@ -338,7 +338,7 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 		//printf("received data %s\n", m_pClientSide->GetRequest()->GetHeader()->GetRequestLine()->GetUrl()->GetHost());
 		int iLength = m_pClientSide->GetSendStream()->GetLength();
 		m_pClientSide->GetSendStream()->Append(pStream->GetData(), pStream->GetLength());
-		if(iLength == 0)
+		if(iLength == 0 && !m_pClientSide->IsRealClosed())
 		{
 			GetMasterThread()->InsertTask(m_pClientSide->GetSendTask());
 		}
@@ -480,6 +480,12 @@ int RemoteSide::ProccessConnectionReset()
 {
 	if(GetRefCount() > 2)
 		return 0;
+	if(IsRealClosed())
+	{
+		return 0;
+	}
+	SetRealClosed(TRUE);
+
 	if(IsIdle())
 	{
 	}
@@ -511,6 +517,12 @@ int RemoteSide::ProccessConnectionClose()
 {
 	if(GetRefCount() > 2)
 		return 0;
+	if(IsRealClosed())
+	{
+		return 0;
+	}
+	SetRealClosed(TRUE);
+
 	if(IsIdle())
 	{
 	}

@@ -1,4 +1,6 @@
 #include "IOHandler.h"
+#include "MemList.h"
+extern MemList<void*>* pGlobalList;
 IOHandler::IOHandler():
 								m_pEvent(new IOEvent),
 								m_bCanRead(TRUE),
@@ -7,8 +9,11 @@ IOHandler::IOHandler():
 								m_bClosed(FALSE),
 								m_iRefCount(1),
 								m_iSendRefCount(0),
-								m_iRecvRefCount(0)
+								m_iRecvRefCount(0),
+								m_bRealClosed(0),
+								m_bDeleted(FALSE)
 {
+	pGlobalList->Append(this);
 }
 IOEvent* IOHandler::GetEvent()
 {
@@ -178,10 +183,20 @@ void IOHandler::AddRef()
 
 void IOHandler::Release()
 {
+	Lock();
 								m_iRefCount--;
+								if(m_iRefCount < 0)
+									printf("Ref %d %d\n", m_iRefCount, m_iSide);
+								Unlock();
 								if(m_iRefCount == 0)
 								{
-																delete this;
+									pGlobalList->Delete(this);
+									if(!m_bDeleted)
+									{
+										m_bDeleted = TRUE;
+										delete this;
+									}
+
 								}
 }
 
@@ -192,7 +207,9 @@ int IOHandler::GetRefCount()
 
 void IOHandler::AddRecvRefCount()
 {
+	Lock();
 	m_iRecvRefCount++;
+	Unlock();
 }
 
 int IOHandler::GetRecvRefCount()
@@ -216,4 +233,24 @@ void IOHandler::ReleaseSendRefCount()
 void IOHandler::ReleaseRecvRefCount()
 {
 								m_iRecvRefCount--;
+}
+
+int IOHandler::IsRealClosed()
+{
+	return m_bRealClosed;
+}
+
+void IOHandler::SetRealClosed(int bRealClosed)
+{
+	m_bRealClosed = bRealClosed;
+}
+
+void IOHandler::Lock()
+{
+	cs_->Enter();
+}
+
+void IOHandler::Unlock()
+{
+	cs_->Leave();
 }
