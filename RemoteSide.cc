@@ -133,6 +133,11 @@ int RemoteSide::ProccessSend()
 		GetEvent()->ModEvent(EPOLLIN|EPOLLET);
 		if(m_bSSL)
 		{
+			if(!m_pClientSide)
+			{
+				ProccessConnectionReset();
+				return 0;
+			}
 			SetCanWrite(FALSE);
 			if(m_iClientState != STATE_RUNNING)
 			{
@@ -183,7 +188,7 @@ int RemoteSide::ProccessSend()
 				}
 				else
 				{
-					printf("Remote EPOLLOUT\n");
+					//printf("Remote EPOLLOUT\n");
 					SetCanRead(FALSE);
 					SetCanWrite(TRUE);
 					GetEvent()->ModEvent(EPOLLOUT|EPOLLET);
@@ -338,7 +343,7 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 		//printf("received data %s\n", m_pClientSide->GetRequest()->GetHeader()->GetRequestLine()->GetUrl()->GetHost());
 		int iLength = m_pClientSide->GetSendStream()->GetLength();
 		m_pClientSide->GetSendStream()->Append(pStream->GetData(), pStream->GetLength());
-		if(iLength == 0 && !m_pClientSide->IsRealClosed())
+		if(m_pClientSide && iLength == 0/*GetSendRefCount() == 0*/ && !m_pClientSide->IsRealClosed())
 		{
 			GetMasterThread()->InsertTask(m_pClientSide->GetSendTask());
 		}
@@ -528,9 +533,9 @@ int RemoteSide::ProccessConnectionClose()
 	}
 	else
 	{
-		if(m_iClientState != STATE_ABORT)
+		if(m_iClientState != STATE_ABORT || m_iClientState != STATE_NORMAL)
 		{
-			if(1)//m_pClientSide)
+			if(m_pClientSide)
 			{
 				m_pClientSide->SetRemoteState(STATE_NORMAL);
 				m_pClientSide->SetCloseAsLength(TRUE);
@@ -538,6 +543,7 @@ int RemoteSide::ProccessConnectionClose()
 				ClearHttpEnd();
 				//printf("Multi Thread RecvTask %s %d %s\n", __FILE__, __LINE__, m_pClientSide->GetRequest()->GetHeader()->GetRequestLine()->GetUrl()->GetHost());
 				if((m_bCloseClient || m_bSSL) && m_pClientSide->GetSendStream()->GetLength() == 0)
+				/*if(m_bSSL)*/
 					m_pClientSide->ProccessConnectionReset();
 				//GetMasterThread()->InsertTask(m_pClientSide->GetRecvTask());
 				m_pClientSide = NULL;

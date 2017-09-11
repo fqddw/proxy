@@ -8,6 +8,8 @@
 #include <signal.h>
 #include "MemList.h"
 #include "DNSCache.h"
+#include<sys/types.h>
+#include<sys/wait.h>
 void* threadProc(void* ptr)
 {
 	Task* pTaskWrapper = (Task*)ptr;
@@ -109,8 +111,12 @@ MemList<RemoteSide*>* g_pGlobalRemoteSidePool;
 
 int main(int argc,char** argv)
 {	
-				/*if(fork() !=0)
-								return 0;*/
+				/*while(fork() !=0)
+				{
+					int status;
+					wait(&status);
+					return 0;
+				}*/
 	g_pGlobalRemoteSidePool = new MemList<RemoteSide*>();
 	pGlobalList = new MemList<void*>();
 	g_pDNSCache = new DNSCache();

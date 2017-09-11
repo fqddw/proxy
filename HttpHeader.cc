@@ -53,6 +53,7 @@ char* HttpHeader::GetField(int iFieldIndex)
 		{HTTP_CONNECTION,"Connection"},
 		{HTTP_TRANSFER_ENCODING,"Transfer-Encoding"},
 		{HTTP_COOKIE, "Cookie"},
+		{HTTP_PROXY_AUTHENTICATION, "Proxy-Authorization"},
 	};
 	int i=0;
 	for(;i<sizeof(sFields)/sizeof(FIELD);i++)

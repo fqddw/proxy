@@ -28,6 +28,11 @@ int Stream::Append(char* pData,int length)
 	cs_->Leave();
 	return TRUE;
 }
+int Stream::Append(Stream* pStream)
+{
+	return Append(pStream->GetData(), pStream->GetLength());
+}
+
 Stream::Stream():m_pData(NULL),m_iLength(0),cs_(new CriticalSection())
 {
 }
@@ -51,6 +56,8 @@ Stream::~Stream()
 #include "stdio.h"
 int Stream::Sub(int offset)
 {
+	if(m_iLength == 0)
+		return 0;
 	cs_->Enter();
 	int newLength = m_iLength - offset;
 	if(newLength == 0)
@@ -92,4 +99,37 @@ Stream* Stream::GetPartStream(int begin,int end)
 	delete []pReturnString;
 	return pStream;
 
+}
+
+int Stream::Equal(Stream* pDest)
+{
+	if(pDest->m_iLength != m_iLength)
+	{
+		return FALSE;
+	}
+
+	int i = 0;
+	for(;i<m_iLength;i++)
+	{
+		if(m_pData[i] != pDest->m_pData[i])
+			return FALSE;
+	}
+	return TRUE;
+}
+
+int Stream::Equal(char* pDest)
+{
+	int len = strlen(pDest);
+	if(len != m_iLength)
+	{
+		return FALSE;
+	}
+
+	int i = 0;
+	for(;i<m_iLength;i++)
+	{
+		if(m_pData[i] != pDest[i])
+			return FALSE;
+	}
+	return TRUE;
 }

@@ -68,11 +68,11 @@ int ClientSide::ClearHttpEnd()
 	SetCanRead(TRUE);
 	SetCanWrite(FALSE);
 	//m_pClientSide->SetCanWrite(FALSE);
-	if(IsClosed())
+	/*if(IsClosed())
 	{
-		//ProccessConnectionReset();
+		ProccessConnectionReset();
 		return FALSE;
-	}
+	}*/
 	return 0;
 }
 #include "stdlib.h"
@@ -80,7 +80,7 @@ int ClientSide::SSLTransferRecv(Stream* pStream)
 {
 	int iLength = m_pRemoteSide->GetSendStream()->GetLength();
 	m_pRemoteSide->GetSendStream()->Append(pStream->GetData(), pStream->GetLength());
-	if(iLength == 0)
+	if(/*iLength == 0*/GetSendRefCount() == 0)
 	{
 		GetMasterThread()->InsertTask(m_pRemoteSide->GetSendTask());
 	}
@@ -122,6 +122,7 @@ int ClientSide::SSLTransferCreate()
 	pRemoteSide->GetEvent()->AddToEngine(EPOLLOUT|EPOLLET);
 	return TRUE;
 }
+#include "Digest.h"
 int ClientSide::ProccessReceive(Stream* pStream)
 {
 	if(IsClosed() && m_bSSL)
@@ -163,13 +164,30 @@ int ClientSide::ProccessReceive(Stream* pStream)
 		if(m_pHttpRequest->IsHeaderEnd())
 		{
 			m_pHttpRequest->LoadHttpHeader();
-			int authResult = m_pHttpRequest->GetAuthStatus();
-			if(!authResult)
+			/*char* pAuthString = m_pHttpRequest->GetHeader()->GetField(HTTP_PROXY_AUTHENTICATION);
+			if(pAuthString)
 			{
-				const char* pUnAuth = "HTTP/1.1 407 Proxy Authentication Required\r\nProxy-Authenticate: Digest realm=\"testrealm@host.com\",qop=\"auth,auth-int\",nonce=\"dcd98b7102dd2f0e8b11d0f600bfb0c093\",opaque=\"5ccc069c403ebaf9f0171e9517f40e41\"\r\nContent-Length: 0\r\n\r\n";
-				send(GetEvent()->GetFD(), pUnAuth, strlen(pUnAuth),0);
-				return FALSE;
+				Stream* pAuthStream = new Stream();
+				pAuthStream->Append(pAuthString, strlen(pAuthString));
+				Digest* pDigest = new Digest(pAuthStream);
+				pDigest->Parse();
+				char* pData = pDigest->CalcH1()->GetData();
+				int i;
+				for (i=0;i<16;i++) 
+					printf ("%02x",(unsigned char)pData[i]);
+				printf("\n");
+				//printf("%s\n", pDigest->CalcH1()->GetData());
 			}
+			int authResult = m_pHttpRequest->GetAuthStatus();
+			if(authResult)
+			{
+				const char* pUnAuth = "HTTP/1.1 407 Proxy Authentication Required\r\nProxy-Authenticate: Digest realm=\"testrealm@host.com\",nonce=\"dcd98b7102dd2f0e8b11d0f600bfb0c093\",opaque=\"5ccc069c403ebaf9f0171e9517f40e41\"\r\nContent-Length: 0\r\n\r\n";
+				send(GetEvent()->GetFD(), pUnAuth, strlen(pUnAuth),0);
+				ClearHttpEnd();
+				m_iState = HEADER_NOTFOUND;
+				m_iTransState = CLIENT_STATE_IDLE;
+				return FALSE;
+			}*/
 			m_iState = HEADER_FOUND;
 			InetSocketAddress* pAddr = NULL;
 			pAddr = NetUtils::GetHostByName(m_pHttpRequest->GetHeader()->GetRequestLine()->GetUrl()->GetHost(),m_pHttpRequest->GetHeader()->GetRequestLine()->GetUrl()->GetPort());
@@ -261,8 +279,8 @@ int ClientSide::ProccessReceive(Stream* pStream)
 	else if(m_iTransState == CLIENT_STATE_WAITING)
 	{
 		//printf("logic error!\n");
-		close(m_pRemoteSide->GetEvent()->GetFD());
-		m_pRemoteSide->SetClientSide(NULL);
+		ProccessConnectionReset();
+		return FALSE;
 	}
 
 	if(IsClosed())
@@ -410,7 +428,7 @@ int ClientSide::ProccessSend()
 		else if(nSent == 0)
 		{
 			printf("Client Send 0\n");
-			m_pRemoteSide->SetClientState(STATE_ABORT);
+			//m_pRemoteSide->SetClientState(STATE_ABORT);
 			SetClosed(TRUE);
 			//ProccessReceive(NULL);
 			//ProccessConnectionReset();
