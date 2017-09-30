@@ -89,6 +89,7 @@ int IOEvent::ModEvent(int event)
 {
 				m_iEvent = event;
 	m_pEngine->ModFileDescriptor(m_pHandler,event);
+	return 0;
 }
 
 int IOEvent::GetEventInt()

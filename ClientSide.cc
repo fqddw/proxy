@@ -119,7 +119,7 @@ int ClientSide::SSLTransferCreate()
 	pRemoteSide->SetClientState(STATE_RUNNING);
 	m_iRemoteState = STATE_RUNNING;
 	//printf("Create Connection SSL %s %d\n", GetRequest()->GetHeader()->GetRequestLine()->GetUrl()->GetHost(), GetEvent()->GetFD());
-	pRemoteSide->GetEvent()->AddToEngine(EPOLLOUT|EPOLLET);
+	pRemoteSide->GetEvent()->AddToEngine(EPOLLOUT|EPOLLET|EPOLLONESHOT);
 	return TRUE;
 }
 #include "Digest.h"
@@ -200,6 +200,7 @@ int ClientSide::ProccessReceive(Stream* pStream)
 			}
 			if(m_pHttpRequest->GetHeader()->GetRequestLine()->GetMethod() == HTTP_METHOD_CONNECT)
 			{
+				delete pAddr;
 				SetCanRead(TRUE);
 				SSLTransferCreate();
 				//ProccessConnectionReset();
@@ -237,7 +238,7 @@ int ClientSide::ProccessReceive(Stream* pStream)
 			pRemoteSide->SetCanRead(FALSE);
 			pRemoteSide->SetCanWrite(TRUE);
 			if(pRemoteSide->IsConnected())
-				pRemoteSide->GetEvent()->ModEvent(EPOLLOUT|EPOLLET);
+				pRemoteSide->GetEvent()->ModEvent(EPOLLOUT|EPOLLET|EPOLLONESHOT);
 			else
 				GetMasterThread()->InsertTask(pRemoteSide->GetSendTask());
 			/*if(pRemoteSide->IsConnected())
@@ -249,6 +250,7 @@ int ClientSide::ProccessReceive(Stream* pStream)
 		}
 		else
 		{
+			GetEvent()->ModEvent(EPOLLIN|EPOLLET|EPOLLONESHOT);
 			SetCanRead(TRUE);
 			return FALSE;
 		}
@@ -307,6 +309,7 @@ RemoteSide* ClientSide::GetRemoteSide(int fd)
 			break;
 		}
 	}
+	return NULL;
 }
 RemoteSide* ClientSide::GetRemoteSide(InetSocketAddress* pAddr)
 {
@@ -412,7 +415,7 @@ int ClientSide::ProccessSend()
 					//printf("EPOLLOUT TRIGGER\n");
 					SetCanRead(FALSE);
 					SetCanWrite(TRUE);
-					GetEvent()->ModEvent(EPOLLOUT|EPOLLET);
+					GetEvent()->ModEvent(EPOLLOUT|EPOLLET|EPOLLONESHOT);
 					return TRUE;
 				}
 			}
@@ -442,6 +445,7 @@ int ClientSide::ProccessSend()
 			{
 				//printf("Send Finish %d\n", GetEvent()->GetFD());
 				flag = FALSE;
+				m_pRemoteSide->GetEvent()->ModEvent(EPOLLIN|EPOLLET|EPOLLONESHOT);
 				if(m_iRemoteState == STATE_NORMAL)
 				{
 					//此时pin链接已完成一条请求，重置各个事件状态，Client注册读事件
@@ -554,6 +558,7 @@ int ClientSide::ProccessConnectionReset()
 	close(sockfd);
 	m_pRemoteSide = NULL;
 	Release();
+	return 0;
 }
 
 HttpRequest* ClientSide::GetRequest()
@@ -583,6 +588,7 @@ int ClientSide::AppendSendStream(char* pData, int nSize)
 	if(CanAppend(nSize))
 	{
 	}
+	return 0;
 }
 
 void ClientSide::SetRemoteState(int iState)

@@ -39,6 +39,7 @@ HttpResponseLine* HttpResponseHeader::GetResponseLine()
 int HttpResponseHeader::SetResponseLine(HttpResponseLine* pResponseLine)
 {
 	m_pHttpResponseLine = pResponseLine;
+	return 0;
 }
 typedef struct _FIELD_
 {

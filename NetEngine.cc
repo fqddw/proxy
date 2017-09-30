@@ -46,7 +46,7 @@ int NetEngine::Loop()
 				printf("NULL HANDLER\n");
 				continue;
 			}
-			if(pGlobalList->Find(pHandler))
+			if(1)//pGlobalList->Find(pHandler))
 			{
 				pHandler->Dispatch((ees+iterator)->events);
 			}

@@ -194,7 +194,7 @@ void IOHandler::Release()
 									if(!m_bDeleted)
 									{
 										m_bDeleted = TRUE;
-										delete this;
+										//delete this;
 									}
 
 								}

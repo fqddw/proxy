@@ -85,7 +85,7 @@ int RemoteSide::Connect()
 	int ret = connect(m_iSocket,&sa,sizeof(sa));
 	/*SetCanRead(FALSE);
 	SetCanWrite(TRUE);*/
-	GetEvent()->ModEvent(EPOLLOUT|EPOLLET);
+	GetEvent()->ModEvent(EPOLLOUT|EPOLLET|EPOLLONESHOT);
 	return ret;
 }
 int RemoteSide::ProccessSend()
@@ -130,7 +130,7 @@ int RemoteSide::ProccessSend()
 		m_isConnected = TRUE;
 		SetCanRead(TRUE);
 		SetCanWrite(FALSE);
-		GetEvent()->ModEvent(EPOLLIN|EPOLLET);
+		GetEvent()->ModEvent(EPOLLIN|EPOLLET|EPOLLONESHOT);
 		if(m_bSSL)
 		{
 			if(!m_pClientSide)
@@ -142,6 +142,7 @@ int RemoteSide::ProccessSend()
 			if(m_iClientState != STATE_RUNNING)
 			{
 			}
+			m_pClientSide->GetEvent()->ModEvent(EPOLLIN|EPOLLET|EPOLLONESHOT);
 			const char* pConnEstablished= "HTTP/1.1 200 Connection Established\r\nContent-Length: 0\r\n\r\n";
 			int len = strlen(pConnEstablished);
 			m_pClientSide->GetSendStream()->Append((char*)pConnEstablished, len);
@@ -162,7 +163,7 @@ int RemoteSide::ProccessSend()
 	{
 		SetCanRead(TRUE);
 		SetCanWrite(FALSE);
-		GetEvent()->ModEvent(EPOLLIN|EPOLLET);
+		GetEvent()->ModEvent(EPOLLIN|EPOLLET|EPOLLONESHOT);
 	}
 
 	GetEvent()->CancelOutReady();
@@ -191,7 +192,7 @@ int RemoteSide::ProccessSend()
 					//printf("Remote EPOLLOUT\n");
 					SetCanRead(FALSE);
 					SetCanWrite(TRUE);
-					GetEvent()->ModEvent(EPOLLOUT|EPOLLET);
+					GetEvent()->ModEvent(EPOLLOUT|EPOLLET|EPOLLONESHOT);
 				}
 			}
 			else
@@ -214,6 +215,7 @@ int RemoteSide::ProccessSend()
 			m_pSendStream->Sub(nSent);
 			if(m_pSendStream->GetLength() == 0)
 			{
+				m_pClientSide->GetEvent()->ModEvent(EPOLLIN|EPOLLET|EPOLLONESHOT);
 				if(m_iClientState != STATE_ABORT)
 				{
 					if(!m_bSSL)
@@ -364,8 +366,8 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 	if(m_pHttpResponse->GetState() == HEADER_NOTFOUND)
 	{
 		m_pStream->Append(pStream->GetData(),pStream->GetLength());
-		int iHeaderSize = 0;
-		if(iHeaderSize = m_pHttpResponse->IsHeaderEnd())
+		int iHeaderSize = m_pHttpResponse->IsHeaderEnd();
+		if(iHeaderSize)
 		{
 			m_pHttpResponse->SetState(HEADER_FOUND);
 			m_pHttpResponse->LoadHttpHeader();

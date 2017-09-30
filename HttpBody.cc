@@ -178,6 +178,7 @@ int HttpBody::Parse(Stream* pStream)
 			}
 		}
 	}
+	return TRUE;
 }
 
 int HttpBody::SetContentLength(int length)

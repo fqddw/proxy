@@ -22,6 +22,7 @@ int Time::Compare(struct timespec dst,struct timespec src)
 		else
 			return 0;
 	}
+	return FALSE;
 }
 
 struct timespec Time::Sub(struct timespec dst,struct timespec src)

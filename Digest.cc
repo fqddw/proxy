@@ -13,7 +13,7 @@
 class UserCenter
 {
 	public:
-		static Stream* getPassword(Stream*){};
+		static Stream* getPassword(Stream*){return NULL;};
 };
 Digest::Digest()
 {
@@ -163,6 +163,7 @@ int Digest::Parse()
 	}
 	m_pKeyValueList = pKeyValueList;
 	Load();
+	return TRUE;
 }
 int Digest::Load()
 {
