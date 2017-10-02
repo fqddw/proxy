@@ -105,11 +105,13 @@ int IOHandler::IsServer()
 
 void IOHandler::SetCanWrite(int flag)
 {
+	flag = TRUE;
 	m_bCanWrite = flag;
 }
 
 void IOHandler::SetCanRead(int flag)
 {
+	flag = TRUE;
 	m_bCanRead = flag;
 }
 int IOHandler::CanRead()
@@ -194,7 +196,7 @@ void IOHandler::Release()
 									if(!m_bDeleted)
 									{
 										m_bDeleted = TRUE;
-										//delete this;
+										delete this;
 									}
 
 								}

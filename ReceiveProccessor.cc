@@ -63,7 +63,7 @@ int ReceiveProccessor::GetDataStream(Stream** ppStream)
 		if(*ppStream == NULL)
 			*ppStream = new Stream();
 		(*ppStream)->Append(buffer,n);
-		//break;
+		break;
 	}
 		//m_pIOHandler->SetCanRead(TRUE);
 

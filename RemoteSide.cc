@@ -430,7 +430,10 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 
 				ClearHttpEnd();
 				if(!m_bShouldClose)
+				{
 					SetStatusIdle();
+					GetEvent()->ModEvent(EPOLLIN|EPOLLET|EPOLLONESHOT);
+				}
 				else
 					SetClosed(TRUE);
 			}
@@ -506,7 +509,7 @@ int RemoteSide::ProccessConnectionReset()
 				m_iClientState = STATE_NORMAL;
 				ClearHttpEnd();
 				//printf("Multi Thread RecvTask %s %d\n", __FILE__, __LINE__);
-				m_pClientSide->ProccessConnectionReset();
+				//m_pClientSide->ProccessConnectionReset();
 				//GetMasterThread()->InsertTask(m_pClientSide->GetRecvTask());
 				m_pClientSide = NULL;
 			}
@@ -535,18 +538,19 @@ int RemoteSide::ProccessConnectionClose()
 	}
 	else
 	{
-		if(m_iClientState != STATE_ABORT || m_iClientState != STATE_NORMAL)
+		if(m_iClientState != STATE_ABORT && m_iClientState != STATE_NORMAL)
 		{
 			if(m_pClientSide)
 			{
 				m_pClientSide->SetRemoteState(STATE_NORMAL);
+				m_pClientSide->SetRemoteSide(NULL);
 				m_pClientSide->SetCloseAsLength(TRUE);
 				m_iClientState = STATE_NORMAL;
 				ClearHttpEnd();
 				//printf("Multi Thread RecvTask %s %d %s\n", __FILE__, __LINE__, m_pClientSide->GetRequest()->GetHeader()->GetRequestLine()->GetUrl()->GetHost());
-				if((m_bCloseClient || m_bSSL) && m_pClientSide->GetSendStream()->GetLength() == 0)
+				if((m_bCloseClient || m_bSSL) && m_pClientSide->GetSendStream()->GetLength() == 0);
 				/*if(m_bSSL)*/
-					m_pClientSide->ProccessConnectionReset();
+					//m_pClientSide->ProccessConnectionReset();
 				//GetMasterThread()->InsertTask(m_pClientSide->GetRecvTask());
 				m_pClientSide = NULL;
 			}

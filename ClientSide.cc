@@ -78,6 +78,11 @@ int ClientSide::ClearHttpEnd()
 #include "stdlib.h"
 int ClientSide::SSLTransferRecv(Stream* pStream)
 {
+	if(!m_pRemoteSide)
+	{
+		ProccessConnectionReset();
+		return 0;
+	}
 	int iLength = m_pRemoteSide->GetSendStream()->GetLength();
 	m_pRemoteSide->GetSendStream()->Append(pStream->GetData(), pStream->GetLength());
 	if(/*iLength == 0*/GetSendRefCount() == 0)
@@ -445,7 +450,6 @@ int ClientSide::ProccessSend()
 			{
 				//printf("Send Finish %d\n", GetEvent()->GetFD());
 				flag = FALSE;
-				m_pRemoteSide->GetEvent()->ModEvent(EPOLLIN|EPOLLET|EPOLLONESHOT);
 				if(m_iRemoteState == STATE_NORMAL)
 				{
 					//此时pin链接已完成一条请求，重置各个事件状态，Client注册读事件
@@ -466,6 +470,8 @@ int ClientSide::ProccessSend()
 				}
 				else
 				{
+					m_pRemoteSide->GetEvent()->ModEvent(EPOLLIN|EPOLLET|EPOLLONESHOT);
+					return 0;
 					//请求正在传输中,engine此时屏蔽了remote的数据到达处理函数，但会设置是否有数据到达,如果有数据到达则投递处理任务，没有则开启处理函数
 					if(GetEvent()->IsInReady())
 					{
@@ -535,7 +541,7 @@ int ClientSide::ProccessConnectionReset()
 				{
 					m_pRemoteSide->SetClientState(STATE_ABORT);
 					m_pRemoteSide->SetClientSide(NULL);
-					m_pRemoteSide->ProccessConnectionReset();
+					//m_pRemoteSide->ProccessConnectionReset();
 					//printf("Multi Thread RecvTask %s %d\n", __FILE__, __LINE__);
 					//GetMasterThread()->InsertTask(m_pRemoteSide->GetRecvTask());
 					m_pRemoteSide = NULL;
@@ -599,4 +605,9 @@ void ClientSide::SetRemoteState(int iState)
 void ClientSide::SetCloseAsLength(int bCloseAsLength)
 {
 	m_bCloseAsLength = bCloseAsLength;
+}
+
+void ClientSide::SetRemoteSide(RemoteSide* pRemoteSide)
+{
+	m_pRemoteSide = pRemoteSide;
 }

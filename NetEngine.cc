@@ -31,7 +31,6 @@ int NetEngine::Loop()
 	while(1)
 	{
 		m_iNFDS = epoll_wait(m_iFD, ees,MAX_WAIT, INFINITE);
-		Lock();
 		int iterator = 0;
 		for(;iterator < m_iNFDS; iterator++)
 		{
@@ -60,16 +59,15 @@ int NetEngine::Loop()
 
 		}
 		m_iNFDS = 0;
-		Unlock();
 	}
 	return 0;
 }
 int NetEngine::RemoveFileDescriptor(IOHandler* pHandler)
 {
-	Lock();
 	EPOLLEVENT ee = {0};
 	ee = pHandler->GetEvent()->ToEpollEvent(EPOLLERR|EPOLLET);
 	ee.data.ptr = NULL;
+	/*
 	int i = 0;
 	int bFind = FALSE;
 	for(;i < m_iNFDS; i++)
@@ -88,8 +86,8 @@ int NetEngine::RemoveFileDescriptor(IOHandler* pHandler)
 	}
 	if(bFind)
 		m_iNFDS--;
+		*/
 	int ret = epoll_ctl(m_iFD,EPOLL_CTL_DEL,pHandler->GetEvent()->GetFD(),&ee);
-	Unlock();
 	return ret;
 }
 int NetEngine::ModFileDescriptor(IOHandler* pHandler,int event)
