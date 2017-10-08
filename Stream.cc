@@ -15,11 +15,12 @@ int Stream::Append(char* pData,int length)
 	if(!length)
 		return FALSE;
 	cs_->Enter();
-	char* pNewData = new char[m_iLength+length];
+	int newLength = m_iLength+length;
+	char* pNewData = new char[newLength];
 	if(m_pData)
 	{
 		memcpy(pNewData,m_pData,m_iLength);
-		delete [] m_pData;
+		delete []  m_pData;
 		m_pData = NULL;
 	}
 	memcpy(pNewData+m_iLength,pData,length);
@@ -47,7 +48,7 @@ Stream::~Stream()
 {
 	if(m_pData)
 	{
-		delete [] m_pData;
+		delete []  m_pData;
 		m_pData = NULL;
 	}
 	m_iLength = 0;
@@ -64,7 +65,7 @@ int Stream::Sub(int offset)
 	{
 		if(m_pData != NULL)
 		{
-			delete [] m_pData;
+			delete []  m_pData;
 		}
 		m_iLength = 0;
 		m_pData = NULL;
@@ -73,7 +74,7 @@ int Stream::Sub(int offset)
 	}
 	char* pNewData = new char[newLength];
 	memcpy(pNewData, m_pData+offset, newLength);
-	delete [] m_pData;
+	delete []  m_pData;
 	m_pData = pNewData;
 	m_iLength = newLength;
 	cs_->Leave();
@@ -96,7 +97,7 @@ Stream* Stream::GetPartStream(int begin,int end)
 	memcpy(pReturnString,m_pData+begin,length);
 	Stream* pStream = new Stream();
 	pStream->Append(pReturnString,length);
-	delete []pReturnString;
+	delete []  pReturnString;
 	return pStream;
 
 }

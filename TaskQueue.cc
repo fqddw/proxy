@@ -22,6 +22,7 @@ void TaskQueue::Insert(Task* pTask)
 			break;
 		}
 	}
+	//printf("CURSIZE %d\n", tasks_.size());
 	tasks_.insert(it,pTask);
 	cs_->Leave();
 }

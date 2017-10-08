@@ -36,12 +36,13 @@ int ReceiveProccessor::GetDataStream(Stream** ppStream)
 	m_pIOHandler->SetCanRead(FALSE);
 	for(;;)
 	{
-		char buffer[256*1024] = {'\0'};
-		int n = recv(m_pIOHandler->GetEvent()->GetFD(),buffer,256*1024,0);
+		char buffer[4*1024] = {'\0'};
+		int n = recv(m_pIOHandler->GetEvent()->GetFD(),buffer,4*1024,0);
 		if(n < 0)
 		{
 			if(errno == EAGAIN)
 			{
+				printf("Recv EAGAIN\n");
 				break;
 			}
 			else

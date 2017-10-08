@@ -192,7 +192,7 @@ void IOHandler::Release()
 								Unlock();
 								if(m_iRefCount == 0)
 								{
-									pGlobalList->Delete(this);
+									//pGlobalList->Delete(this);
 									if(!m_bDeleted)
 									{
 										m_bDeleted = TRUE;

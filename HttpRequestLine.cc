@@ -18,8 +18,9 @@ char* HttpRequestLine::ToString()
 {
 	char* pMethod = GetMethodString();
 	char* pUrl = m_pUrl->ToString();
-	char* pRequestString = new char[strlen(pMethod)+1+strlen(pUrl)+1+8+1];
-	pRequestString[strlen(pMethod)+1+strlen(pUrl)+1+8] = '\0';
+	int reqLen = strlen(pMethod)+1+strlen(pUrl)+1+8+1;
+	char* pRequestString = new char[reqLen];
+	pRequestString[reqLen-1] = '\0';
 	memcpy(pRequestString,pMethod,strlen(pMethod));
 	memcpy(pRequestString+strlen(pMethod)," ",1);
 	memcpy(pRequestString+strlen(pMethod)+1,pUrl,strlen(pUrl));

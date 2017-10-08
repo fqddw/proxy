@@ -37,6 +37,7 @@ class ClientSide : public IOHandler
 		int SSLTransferRecv(Stream*);
 		int SSLTransferCreate();
 		void SetRemoteSide(RemoteSide*);
+		Stream* GetStream();
 	private:
 		int m_iState;
 		int m_iTransState;

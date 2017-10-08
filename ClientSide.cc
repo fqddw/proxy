@@ -30,7 +30,9 @@ ClientSide::ClientSide():
 ClientSide::~ClientSide()
 {
 	delete m_pStream;
+	m_pStream = NULL;
 	delete m_pSendStream;
+	m_pSendStream = NULL;
 	if(m_pHttpRequest)
 	{
 		delete m_pHttpRequest;
@@ -78,28 +80,28 @@ int ClientSide::ClearHttpEnd()
 #include "stdlib.h"
 int ClientSide::SSLTransferRecv(Stream* pStream)
 {
-	if(!m_pRemoteSide)
+	if(m_iRemoteState != STATE_RUNNING)
 	{
 		ProccessConnectionReset();
 		return 0;
 	}
 	int iLength = m_pRemoteSide->GetSendStream()->GetLength();
 	m_pRemoteSide->GetSendStream()->Append(pStream->GetData(), pStream->GetLength());
-	if(/*iLength == 0*/GetSendRefCount() == 0)
+	if(iLength == 0/*GetSendRefCount() == 0*/)
 	{
 		GetMasterThread()->InsertTask(m_pRemoteSide->GetSendTask());
 	}
 	else
 	{
-		//printf("Remote Sending In Proccess\n");
+		printf("Remote Sending In Proccess\n");
 	}
 	delete pStream;
 	//SetCanRead(TRUE);
-	if(IsClosed())
+	/*if(IsClosed())
 	{
 		ProccessConnectionReset();
 		//printf("Stalled\n");
-	}
+	}*/
 	return TRUE;
 }
 
@@ -124,7 +126,8 @@ int ClientSide::SSLTransferCreate()
 	pRemoteSide->SetClientState(STATE_RUNNING);
 	m_iRemoteState = STATE_RUNNING;
 	//printf("Create Connection SSL %s %d\n", GetRequest()->GetHeader()->GetRequestLine()->GetUrl()->GetHost(), GetEvent()->GetFD());
-	pRemoteSide->GetEvent()->AddToEngine(EPOLLOUT|EPOLLET|EPOLLONESHOT);
+	pRemoteSide->GetEvent()->AddToEngine(EPOLLIN|/*EPOLLET|*/EPOLLONESHOT);
+	GetMasterThread()->InsertTask(pRemoteSide->GetSendTask());
 	return TRUE;
 }
 #include "Digest.h"
@@ -195,6 +198,8 @@ int ClientSide::ProccessReceive(Stream* pStream)
 			}*/
 			m_iState = HEADER_FOUND;
 			InetSocketAddress* pAddr = NULL;
+			//if(strstr(m_pHttpRequest->GetHeader()->GetRequestLine()->GetUrl()->GetHost(), "p.l.youku.com"))
+					//return 0;
 			pAddr = NetUtils::GetHostByName(m_pHttpRequest->GetHeader()->GetRequestLine()->GetUrl()->GetHost(),m_pHttpRequest->GetHeader()->GetRequestLine()->GetUrl()->GetPort());
 			if(!pAddr)
 			{
@@ -205,11 +210,16 @@ int ClientSide::ProccessReceive(Stream* pStream)
 			}
 			if(m_pHttpRequest->GetHeader()->GetRequestLine()->GetMethod() == HTTP_METHOD_CONNECT)
 			{
+				//printf("%s", m_pStream->GetData());
 				delete pAddr;
 				SetCanRead(TRUE);
 				SSLTransferCreate();
 				//ProccessConnectionReset();
 				return FALSE;
+			}
+			else
+			{
+				//printf("Url %s %s\n", m_pHttpRequest->GetHeader()->GetRequestLine()->GetUrl()->GetHost(), m_pHttpRequest->GetHeader()->GetRequestLine()->GetUrl()->ToString());
 			}
 
 			RemoteSide* pRemoteSide = GetRemoteSide(pAddr);
@@ -242,9 +252,9 @@ int ClientSide::ProccessReceive(Stream* pStream)
 			}
 			pRemoteSide->SetCanRead(FALSE);
 			pRemoteSide->SetCanWrite(TRUE);
-			if(pRemoteSide->IsConnected())
+			/*if(pRemoteSide->IsConnected())
 				pRemoteSide->GetEvent()->ModEvent(EPOLLOUT|EPOLLET|EPOLLONESHOT);
-			else
+			else*/
 				GetMasterThread()->InsertTask(pRemoteSide->GetSendTask());
 			/*if(pRemoteSide->IsConnected())
 			  {
@@ -255,7 +265,7 @@ int ClientSide::ProccessReceive(Stream* pStream)
 		}
 		else
 		{
-			GetEvent()->ModEvent(EPOLLIN|EPOLLET|EPOLLONESHOT);
+			GetEvent()->ModEvent(EPOLLIN|/*EPOLLET|*/EPOLLONESHOT);
 			SetCanRead(TRUE);
 			return FALSE;
 		}
@@ -290,11 +300,11 @@ int ClientSide::ProccessReceive(Stream* pStream)
 		return FALSE;
 	}
 
-	if(IsClosed())
+	/*if(IsClosed())
 	{
 		ProccessConnectionReset();
 		return FALSE;
-	}
+	}*/
 
 	return FALSE;
 }
@@ -350,7 +360,7 @@ RemoteSide* ClientSide::GetRemoteSide(InetSocketAddress* pAddr)
 		pRemoteSide->SetClientSide(this);
 		pRemoteSide->SetClientState(STATE_RUNNING);
 		m_iRemoteState = STATE_RUNNING;
-		pRemoteSide->GetEvent()->AddToEngine(EPOLLIN|EPOLLET);
+		pRemoteSide->GetEvent()->AddToEngine(EPOLLIN|/*EPOLLET|*/EPOLLONESHOT);
 		g_pGlobalRemoteSidePool->Append(pRemoteSide);
 	}
 
@@ -384,7 +394,7 @@ int ClientSide::ProccessSend()
 		if(GetEvent()->GetEventInt() & EPOLLIN)
 			SetCanWrite(FALSE);
 		SetCanRead(TRUE);
-		GetEvent()->ModEvent(EPOLLIN|EPOLLET);
+		GetEvent()->ModEvent(EPOLLIN|/*EPOLLET|*/EPOLLONESHOT);
 	}
 	else
 	{
@@ -407,7 +417,7 @@ int ClientSide::ProccessSend()
 			flag = FALSE;
 			if(errno == EAGAIN)
 			{
-				if(GetEvent()->IsOutReady())
+				if(0)//GetEvent()->IsOutReady())
 				{
 					GetEvent()->CancelOutReady();
 					//printf("Multi Thread RecvTask %s %d\n", __FILE__, __LINE__);
@@ -420,7 +430,7 @@ int ClientSide::ProccessSend()
 					//printf("EPOLLOUT TRIGGER\n");
 					SetCanRead(FALSE);
 					SetCanWrite(TRUE);
-					GetEvent()->ModEvent(EPOLLOUT|EPOLLET|EPOLLONESHOT);
+					GetEvent()->ModEvent(EPOLLOUT|/*EPOLLET|*/EPOLLONESHOT);
 					return TRUE;
 				}
 			}
@@ -459,7 +469,7 @@ int ClientSide::ProccessSend()
 						ProccessConnectionReset();
 						return TRUE;
 					}
-					ClearHttpEnd();
+					//ClearHttpEnd();
 					SetCanRead(TRUE);
 					SetCanWrite(FALSE);
 					m_iTransState = CLIENT_STATE_IDLE;
@@ -470,7 +480,7 @@ int ClientSide::ProccessSend()
 				}
 				else
 				{
-					m_pRemoteSide->GetEvent()->ModEvent(EPOLLIN|EPOLLET|EPOLLONESHOT);
+					m_pRemoteSide->GetEvent()->ModEvent(EPOLLIN|/*EPOLLET|*/EPOLLONESHOT);
 					return 0;
 					//请求正在传输中,engine此时屏蔽了remote的数据到达处理函数，但会设置是否有数据到达,如果有数据到达则投递处理任务，没有则开启处理函数
 					if(GetEvent()->IsInReady())
@@ -610,4 +620,9 @@ void ClientSide::SetCloseAsLength(int bCloseAsLength)
 void ClientSide::SetRemoteSide(RemoteSide* pRemoteSide)
 {
 	m_pRemoteSide = pRemoteSide;
+}
+
+Stream* ClientSide::GetStream()
+{
+	return m_pStream;
 }
