@@ -221,6 +221,7 @@ int RemoteSide::ProccessSend()
 			if(m_pSendStream->GetLength() == 0)
 			{
 				m_pClientSide->GetEvent()->ModEvent(EPOLLIN|/*EPOLLET|*/EPOLLONESHOT);
+				return 0;
 				if(m_iClientState != STATE_ABORT)
 				{
 					if(!m_bSSL)
@@ -232,7 +233,7 @@ int RemoteSide::ProccessSend()
 							if(GetEvent()->IsInReady())
 							{
 								//printf("Close Errot Multi Thread RecvTask %s %d\n", __FILE__, __LINE__);
-								GetMasterThread()->InsertTask(GetRecvTask());
+								//GetMasterThread()->InsertTask(GetRecvTask());
 							}
 							else
 								SetCanRead(TRUE);
@@ -246,7 +247,7 @@ int RemoteSide::ProccessSend()
 							  m_pClientSide->SetCanRead(FALSE);
 							  m_pClientSide->GetEvent()->CancelInReady();
 							  //printf("Multi Thread RecvTask %s %d\n", __FILE__, __LINE__);
-							  GetMasterThread()->InsertTask(m_pClientSide->GetRecvTask());
+							  //GetMasterThread()->InsertTask(m_pClientSide->GetRecvTask());
 							  }
 							  else
 							  {
@@ -264,7 +265,7 @@ int RemoteSide::ProccessSend()
 						{
 							GetEvent()->CancelInReady();
 							//printf("Add Recv Task %d %s %d\n", errno,  __FILE__, __LINE__);
-							GetMasterThread()->InsertTask(GetRecvTask());
+							//GetMasterThread()->InsertTask(GetRecvTask());
 						}
 						else
 							SetCanRead(TRUE);
@@ -282,7 +283,7 @@ int RemoteSide::ProccessSend()
 							m_pClientSide->SetCanRead(FALSE);
 							m_pClientSide->GetEvent()->CancelInReady();
 							//printf("Multi Thread RecvTask %s %d\n", __FILE__, __LINE__);
-							GetMasterThread()->InsertTask(m_pClientSide->GetRecvTask());
+							//GetMasterThread()->InsertTask(m_pClientSide->GetRecvTask());
 						}
 						else
 						{
@@ -514,7 +515,7 @@ int RemoteSide::ProccessConnectionReset()
 				m_iClientState = STATE_NORMAL;
 				ClearHttpEnd();
 				//printf("Multi Thread RecvTask %s %d\n", __FILE__, __LINE__);
-				//m_pClientSide->ProccessConnectionReset();
+				m_pClientSide->ProccessConnectionReset();
 				//GetMasterThread()->InsertTask(m_pClientSide->GetRecvTask());
 				m_pClientSide = NULL;
 			}

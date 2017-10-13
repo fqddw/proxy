@@ -469,7 +469,7 @@ int ClientSide::ProccessSend()
 						ProccessConnectionReset();
 						return TRUE;
 					}
-					//ClearHttpEnd();
+					ClearHttpEnd();
 					SetCanRead(TRUE);
 					SetCanWrite(FALSE);
 					m_iTransState = CLIENT_STATE_IDLE;
@@ -492,7 +492,7 @@ int ClientSide::ProccessSend()
 						SetCanWrite(FALSE);
 						m_pRemoteSide->SetCanRead(FALSE);
 						m_pRemoteSide->GetEvent()->CancelInReady();
-						GetMasterThread()->InsertTask(m_pRemoteSide->GetRecvTask());
+						//GetMasterThread()->InsertTask(m_pRemoteSide->GetRecvTask());
 					}
 					else
 					{
@@ -551,7 +551,7 @@ int ClientSide::ProccessConnectionReset()
 				{
 					m_pRemoteSide->SetClientState(STATE_ABORT);
 					m_pRemoteSide->SetClientSide(NULL);
-					//m_pRemoteSide->ProccessConnectionReset();
+					m_pRemoteSide->ProccessConnectionReset();
 					//printf("Multi Thread RecvTask %s %d\n", __FILE__, __LINE__);
 					//GetMasterThread()->InsertTask(m_pRemoteSide->GetRecvTask());
 					m_pRemoteSide = NULL;
