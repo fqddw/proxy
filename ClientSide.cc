@@ -201,6 +201,7 @@ int ClientSide::ProccessReceive(Stream* pStream)
 				ClearHttpEnd();
 				m_iState = HEADER_NOTFOUND;
 				m_iTransState = CLIENT_STATE_IDLE;
+				GetEvent()->ModEvent(EPOLLIN|EPOLLONESHOT);
 				return FALSE;
 			}
 			m_iState = HEADER_FOUND;
