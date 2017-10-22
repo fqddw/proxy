@@ -7,7 +7,8 @@
 HttpRequestLine::HttpRequestLine():
 								m_pString(0),
 								m_iStringLength(0),
-								m_pUrl(NULL)
+								m_pUrl(NULL),
+								m_pMethodStream(new Stream())
 {
 }
 HttpUrl* HttpRequestLine::GetUrl()
@@ -30,6 +31,10 @@ char* HttpRequestLine::ToString()
 	sprintf(ver,"%d.%d",m_iMajorVer,m_iSeniorVer);
 	memcpy(pRequestString+strlen(pMethod)+1+strlen(pUrl)+1+5,ver,strlen(ver));
 	return pRequestString;
+}
+Stream* HttpRequestLine::GetMethodStream()
+{
+	return m_pMethodStream;
 }
 
 char* HttpRequestLine::GetMethodString()
@@ -78,6 +83,8 @@ int HttpRequestLine::Parse()
 	memset(pMethod,'\0',len+1);
 	memcpy(pMethod,pString,len);
 	m_iMethod = GetMethodId(pMethod);
+	m_pMethodStream->Append(pMethod, len);
+	delete pMethod;
 	for(;index<m_iStringLength;index++){
 		if(*(pString+index) != ' '){
 			break;
@@ -95,6 +102,7 @@ int HttpRequestLine::Parse()
 	memset(pUrl,'\0',len+1);
 	memcpy(pUrl,pString+urlstart,len);
 	m_pUrl = new HttpUrl(pUrl);
+	delete pUrl;
 	for(;index<m_iStringLength;index++){
 		if(*(pString+index) != ' '){
 			break;
@@ -161,4 +169,5 @@ HttpRequestLine::~HttpRequestLine()
 								delete m_pString;
 				m_pUrl = NULL;
 				m_pString = NULL;
+				delete m_pMethodStream;
 }

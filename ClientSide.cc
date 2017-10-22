@@ -9,6 +9,7 @@
 #include "InetSocketAddress.h"
 #include "NetUtils.h"
 #include "arpa/inet.h"
+#include "mysql/mysql.h"
 extern MemList<void*>* pGlobalList;
 #define SEND_BUFFER_LENGTH 256*1024
 ClientSide::ClientSide():
@@ -172,30 +173,36 @@ int ClientSide::ProccessReceive(Stream* pStream)
 		if(m_pHttpRequest->IsHeaderEnd())
 		{
 			m_pHttpRequest->LoadHttpHeader();
-			/*char* pAuthString = m_pHttpRequest->GetHeader()->GetField(HTTP_PROXY_AUTHENTICATION);
+			
+			char* pAuthString = m_pHttpRequest->GetHeader()->GetField(HTTP_PROXY_AUTHENTICATION);
 			if(pAuthString)
 			{
+				printf("%s\n", pAuthString);
 				Stream* pAuthStream = new Stream();
 				pAuthStream->Append(pAuthString, strlen(pAuthString));
 				Digest* pDigest = new Digest(pAuthStream);
 				pDigest->Parse();
-				char* pData = pDigest->CalcH1()->GetData();
-				int i;
-				for (i=0;i<16;i++) 
-					printf ("%02x",(unsigned char)pData[i]);
-				printf("\n");
+				pDigest->SetMethod(m_pHttpRequest->GetHeader()->GetRequestLine()->GetMethodStream());
+				char* pData = pDigest->CalcResponse()->GetData();
+				if(strncmp(pData, pDigest->GetResponse()->GetData(), 32))
+				{
+					ProccessConnectionReset();
+					return 0;
+				}
+
 				//printf("%s\n", pDigest->CalcH1()->GetData());
 			}
-			int authResult = m_pHttpRequest->GetAuthStatus();
-			if(authResult)
+			//int authResult = m_pHttpRequest->GetAuthStatus();
+			//if(authResult)
+			else
 			{
-				const char* pUnAuth = "HTTP/1.1 407 Proxy Authentication Required\r\nProxy-Authenticate: Digest realm=\"testrealm@host.com\",nonce=\"dcd98b7102dd2f0e8b11d0f600bfb0c093\",opaque=\"5ccc069c403ebaf9f0171e9517f40e41\"\r\nContent-Length: 0\r\n\r\n";
+				const char* pUnAuth = "HTTP/1.1 407 Proxy Authentication Required\r\nProxy-Authenticate: Digest realm=\"testrealm@host.com\",nonce=\"dcd98b7102dd2f0e8b11d0f600bfb0c093\",opaque=\"5ccc069c403ebaf9f0171e9517f40e41\",qop=\"auth\"\r\nContent-Length: 0\r\n\r\n";
 				send(GetEvent()->GetFD(), pUnAuth, strlen(pUnAuth),0);
 				ClearHttpEnd();
 				m_iState = HEADER_NOTFOUND;
 				m_iTransState = CLIENT_STATE_IDLE;
 				return FALSE;
-			}*/
+			}
 			m_iState = HEADER_FOUND;
 			InetSocketAddress* pAddr = NULL;
 			//if(strstr(m_pHttpRequest->GetHeader()->GetRequestLine()->GetUrl()->GetHost(), "p.l.youku.com"))
@@ -551,7 +558,7 @@ int ClientSide::ProccessConnectionReset()
 				{
 					m_pRemoteSide->SetClientState(STATE_ABORT);
 					m_pRemoteSide->SetClientSide(NULL);
-					m_pRemoteSide->ProccessConnectionReset();
+					//m_pRemoteSide->ProccessConnectionReset();
 					//printf("Multi Thread RecvTask %s %d\n", __FILE__, __LINE__);
 					//GetMasterThread()->InsertTask(m_pRemoteSide->GetRecvTask());
 					m_pRemoteSide = NULL;

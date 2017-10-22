@@ -133,7 +133,7 @@ int RemoteSide::ProccessSend()
 		SetCanRead(TRUE);
 		SetCanWrite(FALSE);
 		GetEvent()->ModEvent(EPOLLIN|/*EPOLLET|*/EPOLLONESHOT);
-		m_pClientSide->GetEvent()->ModEvent(EPOLLIN|/*EPOLLET|*/EPOLLONESHOT);
+		//m_pClientSide->GetEvent()->ModEvent(EPOLLIN|/*EPOLLET|*/EPOLLONESHOT);
 		if(m_bSSL)
 		{
 			if(!m_pClientSide)
@@ -145,7 +145,7 @@ int RemoteSide::ProccessSend()
 			if(m_iClientState != STATE_RUNNING)
 			{
 			}
-			//m_pClientSide->GetEvent()->ModEvent(EPOLLIN|/*EPOLLET|*/EPOLLONESHOT);
+			m_pClientSide->GetEvent()->ModEvent(EPOLLIN|/*EPOLLET|*/EPOLLONESHOT);
 			const char* pConnEstablished= "HTTP/1.1 200 Connection Established\r\nContent-Length: 0\r\n\r\n";
 			int len = strlen(pConnEstablished);
 			m_pClientSide->GetSendStream()->Append((char*)pConnEstablished, len);

@@ -13,6 +13,8 @@ class Digest
 		Stream* CalcH1();
 		Stream* CalcH2();
 		Stream* CalcResponse();
+		Stream* GetResponse();
+		int SetMethod(Stream*);
 		int Parse();
 		int Load();
 	private:
@@ -20,7 +22,7 @@ class Digest
 		Stream* m_pUserName;
 		Stream* m_pRealm;
 		Stream* m_pNonce;
-		Stream* m_pUrl;
+		Stream* m_pUri;
 		Stream* m_pMethod;
 		Stream* m_pQop;
 		Stream* m_pResponse;
