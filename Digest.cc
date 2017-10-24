@@ -20,6 +20,10 @@ class UserCenter
 
 Stream* UserCenter::getPassword(Stream* pUserName)
 {
+	Stream* pTmp;
+	pTmp = new Stream();
+	pTmp->Append((char*)"111222", 6);
+	return pTmp;
 	MYSQL* conn;
 	conn = mysql_init(NULL);
 	mysql_real_connect(conn, "localhost", "root","123456", "ts", 0, NULL, 0);
@@ -29,6 +33,8 @@ Stream* UserCenter::getPassword(Stream* pUserName)
 	mysql_query(conn, sql.c_str());
 	MYSQL_RES* res = mysql_use_result(conn);
 	MYSQL_ROW row = mysql_fetch_row(res);
+	if(!row)
+		return NULL;
 
 	Stream* pPassword = new Stream();
 	pPassword->Append(row[2], strlen(row[2]));
@@ -54,6 +60,45 @@ Digest::Digest(Stream* pStream):
 	m_pKeyValueList(NULL)
 {
 	m_pStream = pStream;
+}
+Digest::~Digest()
+{
+	if(m_pStream)
+		delete m_pStream;
+	m_pStream = NULL;
+	if(m_pUserName)
+		delete m_pUserName;
+	m_pUserName = NULL;
+	if(m_pNonce)
+		delete m_pNonce;
+	m_pNonce = NULL;
+	if(m_pUri)
+		delete m_pUri;
+	m_pUri = NULL;
+	if(m_pMethod)
+		delete m_pMethod;
+	m_pMethod = NULL;
+	if(m_pResponse)
+		delete m_pResponse;
+	m_pResponse = NULL;
+	if(m_pRealm)
+		delete m_pRealm;
+	m_pRealm = NULL;
+	if(m_pOpaque)
+		delete m_pOpaque;
+	m_pOpaque = NULL;
+	if(m_pQop)
+		delete m_pQop;
+	m_pQop = NULL;
+	if(m_pNC)
+		delete m_pNC;
+	m_pNC = NULL;
+	if(m_pCnonce)
+		delete m_pCnonce;
+	m_pCnonce = NULL;
+	if(m_pKeyValueList)
+		delete m_pKeyValueList;
+	m_pKeyValueList = NULL;
 }
 
 int Digest::Parse()
@@ -257,7 +302,9 @@ Stream* Digest::CalcH1()
 	pData->Append((char*)":", 1);
 	pData->Append(m_pRealm);
 	pData->Append((char*)":", 1);
-	pData->Append(UserCenter::getPassword(m_pUserName));
+	Stream* pPassword = UserCenter::getPassword(m_pUserName);
+	pData->Append(pPassword);
+	delete pPassword;
 	Stream* pH1 = MD5::calc(pData);
 	delete pData;
 	return pH1;
@@ -269,7 +316,6 @@ Stream* Digest::CalcH2()
 	pData->Append(m_pMethod);
 	pData->Append((char*)":", 1);
 	pData->Append(m_pUri);
-	printf("H2: %s\n", pData->GetData());
 	Stream* pH2 = MD5::calc(pData);
 	delete pData;
 	return pH2;
@@ -289,7 +335,7 @@ Stream* Digest::CalcResponse()
 	}
 	else
 	{
-		if(m_pQop->Equal("auth"))
+		if(m_pQop->Equal((char*)"auth"))
 		{
 			pData->Append((char*)":", 1);
 			pData->Append(m_pNonce);
@@ -306,13 +352,17 @@ Stream* Digest::CalcResponse()
 	delete pH2;
 	Stream* pResponse = MD5::calc(pData);
 	delete pData;
-	printf("Response Hex: %s\n", pResponse->GetData());
 	return pResponse;
 }
 
 Stream* Digest::GetResponse()
 {
 	return m_pResponse;
+}
+
+Stream* Digest::GetRealm()
+{
+	return m_pRealm;
 }
 
 int Digest::SetMethod(Stream* pMethod)

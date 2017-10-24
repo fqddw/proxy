@@ -10,10 +10,12 @@ class Digest
 	public:
 		Digest();
 		Digest(Stream*);
+		~Digest();
 		Stream* CalcH1();
 		Stream* CalcH2();
 		Stream* CalcResponse();
 		Stream* GetResponse();
+		Stream* GetRealm();
 		int SetMethod(Stream*);
 		int Parse();
 		int Load();

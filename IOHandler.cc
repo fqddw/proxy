@@ -2,16 +2,16 @@
 #include "MemList.h"
 extern MemList<void*>* pGlobalList;
 IOHandler::IOHandler():
-								m_pEvent(new IOEvent),
-								m_bCanRead(TRUE),
-								m_bCanWrite(TRUE),
-								cs_(new CriticalSection()),
-								m_bClosed(FALSE),
-								m_iRefCount(1),
-								m_iSendRefCount(0),
-								m_iRecvRefCount(0),
-								m_bRealClosed(0),
-								m_bDeleted(FALSE)
+	m_pEvent(new IOEvent),
+	m_bCanRead(TRUE),
+	m_bCanWrite(TRUE),
+	cs_(new CriticalSection()),
+	m_bClosed(FALSE),
+	m_iRefCount(1),
+	m_iSendRefCount(0),
+	m_iRecvRefCount(0),
+	m_bRealClosed(0),
+	m_bDeleted(FALSE)
 {
 	pGlobalList->Append(this);
 }
@@ -63,8 +63,8 @@ int IOHandler::Dispatch(int events)
 	{
 		if(m_bCanWrite)
 		{
-						if(!IsServer())
-										SetCanWrite(FALSE);
+			if(!IsServer())
+				SetCanWrite(FALSE);
 
 			GetMasterThread()->InsertTask(GetSendTask());
 		}
@@ -100,7 +100,7 @@ int IOHandler::ProccessReceive(Stream* pStream)
 
 int IOHandler::IsServer()
 {
-		return FALSE;
+	return FALSE;
 }
 
 void IOHandler::SetCanWrite(int flag)
@@ -138,10 +138,10 @@ int IOHandler::UnlockSendBuffer()
 
 Task* IOHandler::GetRecvTask()
 {
-								//if(m_iRefCount > 1 && !IsServer())
-										//						return NULL;
-								AddRef();
-								AddRecvRefCount();
+	//if(m_iRefCount > 1 && !IsServer())
+	//						return NULL;
+	AddRef();
+	AddRecvRefCount();
 	ReceiveProccessor* task = new ReceiveProccessor(this);
 	task->CancelRepeatable();
 	return task;
@@ -149,10 +149,10 @@ Task* IOHandler::GetRecvTask()
 
 Task* IOHandler::GetSendTask()
 {
-								//if(m_iRefCount > 1 && !IsServer())
-										//						return NULL;
-								AddRef();
-								AddSendRefCount();
+	//if(m_iRefCount > 1 && !IsServer())
+	//						return NULL;
+	AddRef();
+	AddSendRefCount();
 	SendProccessor* task = new SendProccessor(this);
 	task->CancelRepeatable();
 	return task;
@@ -165,46 +165,46 @@ int IOHandler::GetSide()
 
 Stream* IOHandler::GetSendStream()
 {
-				return NULL;
+	return NULL;
 }
 
 int IOHandler::IsClosed()
 {
-				return m_bClosed;
+	return m_bClosed;
 }
 
 void IOHandler::SetClosed(int bClosed)
 {
-				m_bClosed = bClosed;
+	m_bClosed = bClosed;
 }
 
 void IOHandler::AddRef()
 {
-								m_iRefCount++;
+	m_iRefCount++;
 }
 
 void IOHandler::Release()
 {
 	Lock();
-								m_iRefCount--;
-								if(m_iRefCount < 0)
-									printf("Ref %d %d\n", m_iRefCount, m_iSide);
-								Unlock();
-								if(m_iRefCount == 0)
-								{
-									//pGlobalList->Delete(this);
-									if(!m_bDeleted)
-									{
-										m_bDeleted = TRUE;
-										delete this;
-									}
+	m_iRefCount--;
+	if(m_iRefCount < 0)
+		printf("Ref %d %d\n", m_iRefCount, m_iSide);
+	Unlock();
+	if(m_iRefCount == 0)
+	{
+		//pGlobalList->Delete(this);
+		if(!m_bDeleted)
+		{
+			m_bDeleted = TRUE;
+			delete this;
+		}
 
-								}
+	}
 }
 
 int IOHandler::GetRefCount()
 {
-								return m_iRefCount;
+	return m_iRefCount;
 }
 
 void IOHandler::AddRecvRefCount()
@@ -229,12 +229,12 @@ void IOHandler::AddSendRefCount()
 
 void IOHandler::ReleaseSendRefCount()
 {
-								m_iSendRefCount--;
+	m_iSendRefCount--;
 }
 
 void IOHandler::ReleaseRecvRefCount()
 {
-								m_iRecvRefCount--;
+	m_iRecvRefCount--;
 }
 
 int IOHandler::IsRealClosed()
@@ -255,4 +255,9 @@ void IOHandler::Lock()
 void IOHandler::Unlock()
 {
 	cs_->Leave();
+}
+
+void IOHandler::SetMainTask(QueuedNetTask* pTask)
+{
+	m_pMainTask = pTask;
 }

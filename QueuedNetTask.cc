@@ -7,6 +7,30 @@ int QueuedNetTask::Run()
 int QueuedNetTask::GetNextTask()
 {
 	cs_->Enter();
+	if(m_pClientSide)
+	{
+		if(m_bClientRecving)
+		{
+			if(!IsServer())
+			{
+				Stream* pStream = NULL; 
+				GetDataStream(&pStream);
+				m_pClientSide->ProccessReceive(pStream);
+			}
+		}
+		if(m_bClientSending)
+		{
+		}
+	}
+	if(m_pRemoteSide)
+	{
+		if(m_bRemoteRecving)
+		{
+		}
+		if(m_bRemoteSending)
+		{
+		}
+	}
 	cs_->Leave();
 }
 

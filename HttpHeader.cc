@@ -99,11 +99,17 @@ Stream* HttpRequestHeader::ToHeader()
 					char* pKey = (char*)pNode->GetData()->first.c_str();
 					if(strstr(pKey, "Proxy-Connection"))
 									pKey = (char*)"Connection";
+					if(strstr(pKey, "Proxy-Authorization"))
+					{
+					}
+					else
+					{
 					pStream->Append(pKey ,strlen(pKey));
 
 		pStream->Append((char*)": ",2);
 		pStream->Append((char*)pNode->GetData()->second.c_str(),pNode->GetData()->second.size());
 		pStream->Append((char*)"\r\n",2);
+					}
 		pNode = pNode->GetNext();
 	}
 	pStream->Append((char*)"\r\n",2);

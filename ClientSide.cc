@@ -132,6 +132,7 @@ int ClientSide::SSLTransferCreate()
 	return TRUE;
 }
 #include "Digest.h"
+#define REALM_STRING (char*)"testrealm@host.com"
 int ClientSide::ProccessReceive(Stream* pStream)
 {
 	if(IsClosed() && m_bSSL)
@@ -177,18 +178,33 @@ int ClientSide::ProccessReceive(Stream* pStream)
 			char* pAuthString = m_pHttpRequest->GetHeader()->GetField(HTTP_PROXY_AUTHENTICATION);
 			if(pAuthString)
 			{
-				printf("%s\n", pAuthString);
 				Stream* pAuthStream = new Stream();
 				pAuthStream->Append(pAuthString, strlen(pAuthString));
 				Digest* pDigest = new Digest(pAuthStream);
 				pDigest->Parse();
+				if(pDigest->GetRealm())
+				{
+				if(!pDigest->GetRealm()->Equal(REALM_STRING))
+				{
+					printf("error realm\n");
+				}
+				}
+				else
+				{
+					printf("Not Realm\n");
+				}
 				pDigest->SetMethod(m_pHttpRequest->GetHeader()->GetRequestLine()->GetMethodStream());
-				char* pData = pDigest->CalcResponse()->GetData();
+				Stream* pRespStream = pDigest->CalcResponse();
+				char* pData = pRespStream->GetData();
 				if(strncmp(pData, pDigest->GetResponse()->GetData(), 32))
 				{
+					delete pRespStream;
+					delete pDigest;
 					ProccessConnectionReset();
 					return 0;
 				}
+				delete pRespStream;
+				delete pDigest;
 
 				//printf("%s\n", pDigest->CalcH1()->GetData());
 			}

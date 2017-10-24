@@ -1,7 +1,9 @@
 #ifndef __QUEUEDNETTASK_H__
+#define __QUEUEDNETTASK_H__
 #include "CommonType.h"
 
 #include "Task.h"
+#include "IOHandler.h"
 #include "ClientSide.h"
 #include "RemoteSide.h"
 #define CLIENT_RECVING 1

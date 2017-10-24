@@ -18,6 +18,7 @@
 class SendProccessor;
 class ReceiveProccessor;
 class ConnectionResetProccessor;
+class QueuedNetTask;
 class IOHandler
 {
 	public:
@@ -59,11 +60,13 @@ class IOHandler
 		void ReleaseRecvRefCount();
 		void Lock();
 		void Unlock();
+		void SetMainTask(QueuedNetTask*);
 	public:
 		int m_iSide;
 	private:
 		IOEvent* m_pEvent;
 		MasterThread* m_pMasterThread;
+		QueuedNetTask* m_pMainTask;
 		int m_bCanRead;
 		int m_bCanWrite;
 		CriticalSection* cs_;
