@@ -6,6 +6,7 @@
 #include "NetUtils.h"
 #include "unistd.h"
 #include "string.h"
+#include "QueuedNetTask.h"
 
 extern MemList<RemoteSide*>* g_pGlobalRemoteSidePool;
 extern MemList<void*>* pGlobalList;
@@ -34,6 +35,7 @@ int RemoteSide::SetStatusIdle()
 	m_pHttpResponse = new HttpResponse(m_pStream);
 	m_pClientSide = NULL;
 
+	SetMainTask(NULL);
 	m_iState = STATUS_IDLE; 
 	SetCanRead(TRUE);
 	SetCanWrite(FALSE);
@@ -151,7 +153,12 @@ int RemoteSide::ProccessSend()
 			m_pClientSide->GetSendStream()->Append((char*)pConnEstablished, len);
 			m_pClientSide->SetCanRead(TRUE);
 			m_pClientSide->SetCanWrite(FALSE);
-			GetMasterThread()->InsertTask(m_pClientSide->GetSendTask());
+			m_pClientSide->SetSendFlag();
+			LockTask();
+			if(!GetMainTask()->IsRunning())
+				GetMasterThread()->InsertTask(GetMainTask());
+			UnlockTask();
+			//GetMasterThread()->InsertTask(m_pClientSide->GetSendTask());
 			//printf("URL %d %d %s\n", CanRead(), GetEvent()->IsInReady(), m_pClientSide->GetRequest()->GetHeader()->GetRequestLine()->GetUrl()->GetHost());
 			return 0;
 		}
@@ -321,17 +328,23 @@ int RemoteSide::ClearHttpEnd()
 }
 int RemoteSide::ProccessReceive(Stream* pStream)
 {
+	if(!GetMainTask())
+	{
+		ProccessConnectionClose();
+		return 0;
+	}
 	//Client Send Buffer 可用但是远端速度较慢
 	//GetEvent()->CancelInReady();
 	if(!pStream)
 	{
-		if(IsClosed())
+		/*if(IsClosed())
 		{
 			//printf("Remote Close\n");
 			ProccessConnectionClose();
 		}
 		else
-			SetCanRead(TRUE);
+			SetCanRead(TRUE);*/
+		ProccessConnectionClose();
 		return TRUE;
 	}
 	if(!m_pClientSide)
@@ -351,14 +364,19 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 		//printf("received data %s\n", m_pClientSide->GetRequest()->GetHeader()->GetRequestLine()->GetUrl()->GetHost());
 		int iLength = m_pClientSide->GetSendStream()->GetLength();
 		m_pClientSide->GetSendStream()->Append(pStream->GetData(), pStream->GetLength());
-		if(m_pClientSide && iLength == 0/*GetSendRefCount() == 0*/ && !m_pClientSide->IsRealClosed())
+		/*if(m_pClientSide && iLength == 0GetSendRefCount() == 0 && !m_pClientSide->IsRealClosed())
 		{
 			GetMasterThread()->InsertTask(m_pClientSide->GetSendTask());
 		}
 		else
 		{
 			printf("Have Length\n");
-		}
+		}*/
+		m_pClientSide->SetSendFlag();
+		LockTask();
+		if(!GetMainTask()->IsRunning())
+			GetMasterThread()->InsertTask(GetMainTask());
+		UnlockTask();
 		delete pStream;
 		//SetCanRead(TRUE);
 		if(IsClosed())
@@ -426,6 +444,7 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 		delete pUserStream;
 		m_pClientSide->UnlockSendBuffer();
 		ClientSide* pClientSide = m_pClientSide;
+		QueuedNetTask* pMainTask = GetMainTask();
 		if(isEnd)
 		{
 			//如果拉取信息结束,则解耦
@@ -446,6 +465,7 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 			SetCanRead(TRUE);
 		}
 
+		/*
 		if(nLengthSend == 0)
 		{
 			//printf("Multi Thread RecvTask %s %d\n", __FILE__, __LINE__);
@@ -454,7 +474,12 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 		}
 		else
 		{
-		}
+		}*/
+		pClientSide->SetSendFlag();
+		pMainTask->Lock();
+		if(!pMainTask->IsRunning())
+			GetMasterThread()->InsertTask(pMainTask);
+		pMainTask->Unlock();
 		if(IsClosed())
 		{
 			ProccessConnectionClose();
@@ -494,8 +519,6 @@ int RemoteSide::IsConnected()
 
 int RemoteSide::ProccessConnectionReset()
 {
-	if(GetRefCount() > 2)
-		return 0;
 	if(IsRealClosed())
 	{
 		return 0;
@@ -525,14 +548,13 @@ int RemoteSide::ProccessConnectionReset()
 	GetEvent()->RemoveFromEngine();
 	g_pGlobalRemoteSidePool->Delete(this);
 	close(sockfd);
+	GetMainTask()->SetRemote(NULL);
 
 	Release();
 	return 0;
 }
 int RemoteSide::ProccessConnectionClose()
 {
-	if(GetRefCount() > 2)
-		return 0;
 	if(IsRealClosed())
 	{
 		return 0;
@@ -566,6 +588,9 @@ int RemoteSide::ProccessConnectionClose()
 	GetEvent()->RemoveFromEngine();
 	g_pGlobalRemoteSidePool->Delete(this);
 	close(sockfd);
+	if(GetMainTask())
+		GetMainTask()->SetRemote(NULL);
+
 	Release();
 
 	return 0;
@@ -598,4 +623,23 @@ void RemoteSide::EnableSSL()
 {
 	m_bSSL = TRUE;
 	m_bCloseClient = TRUE;
+}
+
+void RemoteSide::SetRecvFlag()
+{
+	GetMainTask()->SetRemoteRecving();
+}
+
+
+void RemoteSide::SetSendFlag()
+{
+	GetMainTask()->SetRemoteSending();
+}
+
+
+void RemoteSide::SetMainTask(QueuedNetTask* pTask)
+{
+	IOHandler::SetMainTask(pTask);
+	if(pTask)
+		pTask->SetRemote(this);
 }

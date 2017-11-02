@@ -22,6 +22,7 @@ class ClientSide : public IOHandler
 		RemoteSide* GetRemoteSide(int);
 		int ProccessReceive(Stream*);
 		int ProccessConnectionReset();
+		int ProccessConnectionClose();
 		int ProccessSend();
 		Stream* GetSendStream();
 		int WriteData();
@@ -38,6 +39,9 @@ class ClientSide : public IOHandler
 		int SSLTransferCreate();
 		void SetRemoteSide(RemoteSide*);
 		Stream* GetStream();
+		void SetRecvFlag();
+		void SetSendFlag();
+		void SetMainTask(QueuedNetTask*);
 	private:
 		int m_iState;
 		int m_iTransState;

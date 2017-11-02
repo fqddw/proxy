@@ -33,6 +33,7 @@ class IOHandler
 		virtual int ProccessReceive(Stream*);
 		virtual int ProccessSend();
 		virtual int ProccessConnectionReset();
+		virtual int ProccessConnectionClose();
 		virtual int IsServer();
 		void SetCanWrite(int);
 		void SetCanRead(int);
@@ -60,7 +61,12 @@ class IOHandler
 		void ReleaseRecvRefCount();
 		void Lock();
 		void Unlock();
-		void SetMainTask(QueuedNetTask*);
+		void LockTask();
+		void UnlockTask();
+		virtual void SetRecvFlag();
+		virtual void SetSendFlag();
+		virtual void SetMainTask(QueuedNetTask*);
+		QueuedNetTask* GetMainTask();
 	public:
 		int m_iSide;
 	private:

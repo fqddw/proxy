@@ -27,6 +27,7 @@ template<typename T> class MemList
 		int Delete(T);
 		int Show();
 		MemNode<T>* GetHead();
+		MemNode<T>* GetEnd();
 	private:
 		MemNode<T>* m_pHead;
 		MemNode<T>* m_pEnd;
@@ -173,6 +174,12 @@ MemNode<T>* MemList<T>::GetHead()
 {
 	return m_pHead;
 }
+template<typename T>
+MemNode<T>* MemList<T>::GetEnd()
+{
+	return m_pEnd;
+}
+
 template<typename T>
 MemList<T>::~MemList<T>()
 {

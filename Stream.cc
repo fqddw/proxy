@@ -33,6 +33,14 @@ int Stream::Append(Stream* pStream)
 {
 	return Append(pStream->GetData(), pStream->GetLength());
 }
+int Stream::Append(char* pString)
+{
+	return Append(pString, strlen(pString));
+}
+int Stream::Append(const char* pString)
+{
+	return Append((char*)pString, strlen(pString));
+}
 
 Stream::Stream():m_pData(NULL),m_iLength(0),cs_(new CriticalSection())
 {

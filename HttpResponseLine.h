@@ -1,5 +1,6 @@
 #ifndef __HTTPRESPONSE_LINE_H__
 #define __HTTPRESPONSE_LINE_H__
+#include "Stream.h"
 class HttpResponseLine
 {
 	public:
@@ -14,6 +15,7 @@ class HttpResponseLine
 		int GetSeniorVersion();
 		int SetMajorVersion(int);
 		int SetSeniorVersion(int);
+		char* ToString();
 	private:
 		int m_iCode;
 		char* m_pStatusText;

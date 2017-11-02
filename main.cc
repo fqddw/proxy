@@ -10,6 +10,7 @@
 #include "DNSCache.h"
 #include<sys/types.h>
 #include<sys/wait.h>
+#include "AuthManager.h"
 void* threadProc(void* ptr)
 {
 	Task* pTaskWrapper = (Task*)ptr;
@@ -66,6 +67,7 @@ int Thread::SetTask(Task* pTask)
 
 MemList<void*>* pGlobalList = NULL;
 DNSCache* g_pDNSCache = NULL;
+AuthManager* AuthManager::m_pInstance = NULL;
 #include "RemoteSide.h"
 class ServerStartTask : public Task
 {

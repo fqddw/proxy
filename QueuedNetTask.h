@@ -20,9 +20,21 @@ class QueuedNetTask : public Task
 		int m_bRemoteRecving;
 		int m_bRemoteSending;
 		CriticalSection* cs_;
+		int m_bRunning;
 	public:
 		QueuedNetTask();
 		int Run();
+		void Lock();
+		void Unlock();
 		int GetNextTask();
+		int IsRunning();
+		void SetClient(ClientSide*);
+		void SetRemote(RemoteSide*);
+		void SetClientRecving();
+		void SetClientSending();
+		void SetRemoteRecving();
+		void SetRemoteSending();
+		int GetDataStream(IOHandler*, Stream**);
+		void SetRunning();
 };
 #endif

@@ -84,7 +84,7 @@ int HttpRequestLine::Parse()
 	memcpy(pMethod,pString,len);
 	m_iMethod = GetMethodId(pMethod);
 	m_pMethodStream->Append(pMethod, len);
-	delete pMethod;
+	delete []pMethod;
 	for(;index<m_iStringLength;index++){
 		if(*(pString+index) != ' '){
 			break;
@@ -102,7 +102,7 @@ int HttpRequestLine::Parse()
 	memset(pUrl,'\0',len+1);
 	memcpy(pUrl,pString+urlstart,len);
 	m_pUrl = new HttpUrl(pUrl);
-	delete pUrl;
+	delete []pUrl;
 	for(;index<m_iStringLength;index++){
 		if(*(pString+index) != ' '){
 			break;
@@ -166,7 +166,7 @@ HttpRequestLine::~HttpRequestLine()
 				if(m_pUrl)
 								delete m_pUrl;
 				if(m_pString)
-								delete m_pString;
+								delete []m_pString;
 				m_pUrl = NULL;
 				m_pString = NULL;
 				delete m_pMethodStream;

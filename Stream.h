@@ -10,6 +10,8 @@ class Stream
 		int GetLength();
 		char* GetData();
 		int Append(char*,int);
+		int Append(char*);
+		int Append(const char*);
 		int Append(Stream*);
 		int Sub(int);
 		char* GetPartDataToString(int,int);

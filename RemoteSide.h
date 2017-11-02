@@ -40,6 +40,9 @@ class RemoteSide:public IOHandler
 		void SetClientState(int);
 		int ProccessConnectionClose();
 		void EnableSSL();
+		void SetRecvFlag();
+		void SetSendFlag();
+		void SetMainTask(QueuedNetTask*);
 	private:
 		int m_isConnected;
 		int m_iSocket;

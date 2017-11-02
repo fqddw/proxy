@@ -10,10 +10,12 @@ class AuthManager
 	public:
 		AuthManager();
 		~AuthManager();
+		static AuthManager* getInstance();
 		Auth* GenerateAuthToken();
 		int ExistsNonce(Stream*);
 		int ExistsOpaque(Stream*);
 	private:
 		MemList<Auth*>* m_pAuthList;
+		static AuthManager* m_pInstance;
 };
 #endif

@@ -11,10 +11,15 @@ class Auth
 		void SetOpaque(Stream*);
 		Stream* GetNonce();
 		Stream* GetOpaque();
+		Stream* ToStream();
+		void SetRealm(char*);
+		void SetNonceAuthed(int);
+		void SetOpaqueAuthed(int);
 	private:
 		Stream* m_pNonce;
 		int m_bNonceAuthed;
 		Stream* m_pOpaque;
-		int m_bOpaque;
+		int m_bOpaqueAuthed;
+		Stream* m_pRealm;
 };
 #endif

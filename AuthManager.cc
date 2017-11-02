@@ -7,31 +7,32 @@ extern AuthManager* g_pAuthManager;
 
 Auth* AuthManager::GenerateAuthToken()
 {
-	Stream* pNonce = new Stream(NONCE_LENGTH);
-	char* pNonceData = pNonce->GetData();
+	Stream* pNonce = new Stream();
+	char pNonceData[NONCE_LENGTH+1] = {0};
 	int i = 0;
 	do
 	{
-		for(i=0; i<pNonce->GetLength();i++)
+		for(i=0; i<NONCE_LENGTH;i++)
 		{
 			sprintf(pNonceData+i, "%x",rand()%16);
 		}
 	}while(ExistsNonce(pNonce));
-	Stream* pOpaque = new Stream(OPAQUE_LENGTH);
-	char* pOpaqueData = pOpaque->GetData();
+	pNonce->Append(pNonceData, NONCE_LENGTH);
+	Stream* pOpaque = new Stream();
+	char pOpaqueData[OPAQUE_LENGTH+1] = {0};
 	do
 	{
-		for(i=0; i<pOpaque->GetLength();i++)
+		for(i=0; i<OPAQUE_LENGTH;i++)
 		{
 			sprintf(pOpaqueData+i, "%x",rand()%16);
 		}
 	}while(ExistsOpaque(pOpaque));
+	pOpaque->Append(pOpaqueData, OPAQUE_LENGTH);
 	Auth* pAuth = new Auth();
 	pAuth->SetNonce(pNonce);
 	pAuth->SetOpaque(pOpaque);
 	return pAuth;
 }
-
 
 int AuthManager::ExistsNonce(Stream* pNonce)
 {
@@ -61,3 +62,17 @@ int AuthManager::ExistsOpaque(Stream* pOpaque)
 	return FALSE;
 
 }
+
+AuthManager* AuthManager::getInstance()
+{
+	if(!m_pInstance)
+	{
+		m_pInstance = new AuthManager();
+	}
+	return m_pInstance;
+}
+
+AuthManager::AuthManager():m_pAuthList(new MemList<Auth*>())
+{
+}
+

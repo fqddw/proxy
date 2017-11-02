@@ -7,6 +7,7 @@
 #include "string.h"
 #include "fcntl.h"
 #include "ClientSide.h"
+#include "QueuedNetTask.h"
 void Server::SetPort(int port){
 	m_iPort = port;
 }

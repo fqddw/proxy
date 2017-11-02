@@ -24,6 +24,7 @@ class HttpHeader
 		virtual Stream* ToHeader() = 0;
 		int SetKeyValueList(HttpKeyValueList*);
 		HttpKeyValueList* GetKeyValueList();
+		int AppendHeader(char*, int, char*, int);
 		char* GetField(int);
 		int SetRawLength(int);
 		int GetRawLength();

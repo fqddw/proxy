@@ -26,10 +26,6 @@ int HttpHeader::SetKeyValueList(HttpKeyValueList* pKeyValueList)
 	m_pKeyValueList = pKeyValueList;
 	return TRUE;
 }
-Stream* HttpResponseHeader::ToHeader()
-{
-		return NULL;
-}
 
 HttpResponseLine* HttpResponseHeader::GetResponseLine()
 {
@@ -115,6 +111,29 @@ Stream* HttpRequestHeader::ToHeader()
 	pStream->Append((char*)"\r\n",2);
 	return pStream;
 }
+Stream* HttpResponseHeader::ToHeader()
+{
+	char* pCandString = m_pHttpResponseLine->ToString();
+	Stream* pStream = new Stream();
+	pStream->Append(pCandString,strlen(pCandString));
+	pStream->Append((char*)"\r\n",2);
+	delete []pCandString;
+	MemNode<pair<string,string>*>* pNode = GetKeyValueList()->GetHead();
+	while(pNode != NULL)
+	{
+		char* pKey = (char*)pNode->GetData()->first.c_str();
+		{
+			pStream->Append(pKey ,strlen(pKey));
+
+		pStream->Append((char*)": ",2);
+		pStream->Append((char*)pNode->GetData()->second.c_str(),pNode->GetData()->second.size());
+		pStream->Append((char*)"\r\n",2);
+					}
+		pNode = pNode->GetNext();
+	}
+	pStream->Append((char*)"\r\n",2);
+	return pStream;
+}
 
 int HttpHeader::SetRawLength(int iRawLength)
 {
@@ -159,4 +178,13 @@ HttpResponseHeader::~HttpResponseHeader()
 		delete m_pHttpResponseLine;
 		m_pHttpResponseLine = NULL;
 	}
+}
+
+int HttpHeader::AppendHeader(char* pKey, int keyLen, char* pValue, int valueLen)
+{
+	string key = string(pKey, keyLen);
+	string value = string(pValue, valueLen);
+	
+	m_pKeyValueList->Append(new pair<string,string>(key, value));
+	return TRUE;
 }

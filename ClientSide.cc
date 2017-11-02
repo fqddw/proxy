@@ -10,6 +10,8 @@
 #include "NetUtils.h"
 #include "arpa/inet.h"
 #include "mysql/mysql.h"
+#include "AuthManager.h"
+#include "QueuedNetTask.h"
 extern MemList<void*>* pGlobalList;
 #define SEND_BUFFER_LENGTH 256*1024
 ClientSide::ClientSide():
@@ -55,6 +57,7 @@ ClientSide::ClientSide(int sockfd):
 	GetEvent()->SetFD(sockfd);
 	GetEvent()->SetIOHandler(this);
 	m_pHttpRequest = new HttpRequest(m_pStream);
+	SetMainTask(new QueuedNetTask());
 }
 
 int ClientSide::Proccess()
@@ -88,14 +91,19 @@ int ClientSide::SSLTransferRecv(Stream* pStream)
 	}
 	int iLength = m_pRemoteSide->GetSendStream()->GetLength();
 	m_pRemoteSide->GetSendStream()->Append(pStream->GetData(), pStream->GetLength());
-	if(iLength == 0/*GetSendRefCount() == 0*/)
-	{
-		GetMasterThread()->InsertTask(m_pRemoteSide->GetSendTask());
-	}
-	else
-	{
-		printf("Remote Sending In Proccess\n");
-	}
+	//if(iLength == 0/*GetSendRefCount() == 0*/)
+	//{
+		//GetMasterThread()->InsertTask(m_pRemoteSide->GetSendTask());
+	//}
+	//else
+	//{
+	//	printf("Remote Sending In Proccess\n");
+	//}
+	m_pRemoteSide->SetSendFlag();
+	LockTask();
+	if(!GetMainTask()->IsRunning())
+		GetMasterThread()->InsertTask(GetMainTask());
+	UnlockTask();
 	delete pStream;
 	//SetCanRead(TRUE);
 	/*if(IsClosed())
@@ -125,26 +133,31 @@ int ClientSide::SSLTransferCreate()
 
 	pRemoteSide->SetClientSide(this);
 	pRemoteSide->SetClientState(STATE_RUNNING);
+	pRemoteSide->SetMainTask(GetMainTask());
 	m_iRemoteState = STATE_RUNNING;
 	//printf("Create Connection SSL %s %d\n", GetRequest()->GetHeader()->GetRequestLine()->GetUrl()->GetHost(), GetEvent()->GetFD());
 	pRemoteSide->GetEvent()->AddToEngine(EPOLLIN|/*EPOLLET|*/EPOLLONESHOT);
-	GetMasterThread()->InsertTask(pRemoteSide->GetSendTask());
+	pRemoteSide->SetSendFlag();
+	LockTask();
+	if(!GetMainTask()->IsRunning())
+		GetMasterThread()->InsertTask(GetMainTask());
+	UnlockTask();
 	return TRUE;
 }
 #include "Digest.h"
 #define REALM_STRING (char*)"testrealm@host.com"
 int ClientSide::ProccessReceive(Stream* pStream)
 {
-	if(IsClosed() && m_bSSL)
+	/*if(IsClosed() && m_bSSL)
 	{
 		if(pStream)
 			delete pStream;
 		ProccessConnectionReset();
 		return FALSE;
-	}
+	}*/
 	if(!pStream)
 	{
-		if(IsClosed())
+	/*	if(IsClosed())
 		{
 			//printf("Client Close %s %d\n", GetRequest()->GetHeader()->GetRequestLine()->GetUrl()->GetHost(), m_pSendStream->GetLength());
 			if(m_iRemoteState==STATE_RUNNING)
@@ -157,6 +170,8 @@ int ClientSide::ProccessReceive(Stream* pStream)
 		}
 		GetEvent()->CancelInReady();
 		SetCanRead(TRUE);
+		*/
+		ProccessConnectionReset();
 		return 0;
 	}
 	if(m_bSSL)
@@ -212,8 +227,30 @@ int ClientSide::ProccessReceive(Stream* pStream)
 			//if(authResult)
 			else
 			{
-				const char* pUnAuth = "HTTP/1.1 407 Proxy Authentication Required\r\nProxy-Authenticate: Digest realm=\"testrealm@host.com\",nonce=\"dcd98b7102dd2f0e8b11d0f600bfb0c093\",opaque=\"5ccc069c403ebaf9f0171e9517f40e41\",qop=\"auth\"\r\nContent-Length: 0\r\n\r\n";
-				send(GetEvent()->GetFD(), pUnAuth, strlen(pUnAuth),0);
+				Auth* pAuth = AuthManager::getInstance()->GenerateAuthToken();
+
+				pAuth->SetRealm(REALM_STRING);
+				HttpResponseHeader* pAuthResp = new HttpResponseHeader();
+				pAuthResp->GetResponseLine()->SetCode(407);
+				pAuthResp->GetResponseLine()->SetMajorVersion(1);
+				pAuthResp->GetResponseLine()->SetSeniorVersion(1);
+				const char* chText = "Proxy Authentication Required";
+				int statusTextLen = strlen(chText);
+				char* pStatusText = new char[statusTextLen+1];
+				pStatusText[statusTextLen] = '\0';
+				memcpy(pStatusText, chText, statusTextLen);
+				pAuthResp->GetResponseLine()->SetStatusText(pStatusText);
+				pAuthResp->SetKeyValueList(new HttpKeyValueList());
+				Stream* pAuthStream = pAuth->ToStream();
+				pAuthResp->AppendHeader((char*)"Proxy-Authenticate", 18, pAuthStream->GetData(), pAuthStream->GetLength());
+				pAuthResp->AppendHeader((char*)"Content-Length", 14, (char*)"0", 1);
+				Stream* pAuthRespStream = pAuthResp->ToHeader();
+				//printf("%s", pAuthRespStream->GetData());
+				send(GetEvent()->GetFD(), pAuthRespStream->GetData() , pAuthRespStream->GetLength(), 0);
+				delete pAuthRespStream;
+				delete pAuthResp;
+				delete pAuth;
+				delete pAuthString;
 				ClearHttpEnd();
 				m_iState = HEADER_NOTFOUND;
 				m_iTransState = CLIENT_STATE_IDLE;
@@ -279,7 +316,19 @@ int ClientSide::ProccessReceive(Stream* pStream)
 			/*if(pRemoteSide->IsConnected())
 				pRemoteSide->GetEvent()->ModEvent(EPOLLOUT|EPOLLET|EPOLLONESHOT);
 			else*/
-				GetMasterThread()->InsertTask(pRemoteSide->GetSendTask());
+				//GetMasterThread()->InsertTask(pRemoteSide->GetSendTask());
+			{
+				pRemoteSide->SetSendFlag();
+				LockTask();
+				if(GetMainTask()->IsRunning())
+				{
+				}
+				else
+				{
+					GetMasterThread()->InsertTask(GetMainTask());
+				}
+				UnlockTask();
+			}
 			/*if(pRemoteSide->IsConnected())
 			  {
 			  pRemoteSide->ProccessSend();
@@ -307,12 +356,17 @@ int ClientSide::ProccessReceive(Stream* pStream)
 			}
 		int nLength = m_pRemoteSide->GetSendStream()->GetLength();
 		m_pRemoteSide->GetSendStream()->Append(pStream->GetData(),pStream->GetLength());
-		if(nLength == 0)
+		/*if(nLength == 0)
 		{
 
 			//printf("Multi Thread RecvTask %s %d\n", __FILE__, __LINE__);
 			GetMasterThread()->InsertTask(m_pRemoteSide->GetSendTask());
-		}
+		}*/
+		m_pRemoteSide->SetSendFlag();
+		LockTask();
+		if(!GetMainTask()->IsRunning())
+			GetMasterThread()->InsertTask(GetMainTask());
+		UnlockTask();
 		//m_pRemoteSide->ProccessSend();
 		m_pStream->Sub(m_pStream->GetLength());
 		SetCanRead(TRUE);
@@ -366,6 +420,7 @@ RemoteSide* ClientSide::GetRemoteSide(InetSocketAddress* pAddr)
 			pRemoteSide->SetCanRead(TRUE);
 			pRemoteSide->SetClientSide(this);
 			pRemoteSide->SetClientState(STATE_RUNNING);
+			pRemoteSide->SetMainTask(GetMainTask());
 
 			m_iRemoteState = STATE_RUNNING;
 			break;
@@ -382,6 +437,7 @@ RemoteSide* ClientSide::GetRemoteSide(InetSocketAddress* pAddr)
 		pRemoteSide->SetCanRead(TRUE);
 
 		pRemoteSide->SetClientSide(this);
+		pRemoteSide->SetMainTask(GetMainTask());
 		pRemoteSide->SetClientState(STATE_RUNNING);
 		m_iRemoteState = STATE_RUNNING;
 		pRemoteSide->GetEvent()->AddToEngine(EPOLLIN|/*EPOLLET|*/EPOLLONESHOT);
@@ -542,14 +598,18 @@ void ClientSide::SetTransIdleState()
 {
 	m_iTransState = CLIENT_STATE_IDLE;
 }
+int ClientSide::ProccessConnectionClose()
+{
+	return ProccessConnectionReset();
+}
 int ClientSide::ProccessConnectionReset()
 {
 	//printf("%d %d\n", GetEvent()->GetFD(), GetRefCount());
 	//printf("%d %d %d %d\n", GetEvent()->GetFD(), GetRefCount(), GetRecvRefCount(), GetSendRefCount());
-	if(GetRefCount() > 2)
+	/*if(GetRefCount() > 2)
 	{
 		return 0;
-	}
+	}*/
 	if(IsRealClosed())
 	{
 		return 0;
@@ -597,6 +657,7 @@ int ClientSide::ProccessConnectionReset()
 	//pGlobalList->Delete(this);
 	close(sockfd);
 	m_pRemoteSide = NULL;
+	GetMainTask()->SetClient(NULL);
 	Release();
 	return 0;
 }
@@ -649,4 +710,23 @@ void ClientSide::SetRemoteSide(RemoteSide* pRemoteSide)
 Stream* ClientSide::GetStream()
 {
 	return m_pStream;
+}
+
+
+void ClientSide::SetRecvFlag()
+{
+	GetMainTask()->SetClientRecving();
+}
+
+
+void ClientSide::SetSendFlag()
+{
+	GetMainTask()->SetClientSending();
+}
+
+void ClientSide::SetMainTask(QueuedNetTask* pTask)
+{
+	IOHandler::SetMainTask(pTask);
+	if(pTask)
+		pTask->SetClient(this);
 }

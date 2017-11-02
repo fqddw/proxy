@@ -20,10 +20,6 @@ class UserCenter
 
 Stream* UserCenter::getPassword(Stream* pUserName)
 {
-	Stream* pTmp;
-	pTmp = new Stream();
-	pTmp->Append((char*)"111222", 6);
-	return pTmp;
 	MYSQL* conn;
 	conn = mysql_init(NULL);
 	mysql_real_connect(conn, "localhost", "root","123456", "ts", 0, NULL, 0);

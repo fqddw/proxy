@@ -1,5 +1,6 @@
 #include "IOHandler.h"
 #include "MemList.h"
+#include "QueuedNetTask.h"
 extern MemList<void*>* pGlobalList;
 IOHandler::IOHandler():
 	m_pEvent(new IOEvent),
@@ -45,6 +46,40 @@ IOHandler::~IOHandler()
 #include "stdio.h"
 int IOHandler::Dispatch(int events)
 {
+	if(IsServer())
+	{
+		GetMasterThread()->InsertTask(GetRecvTask());
+		return 0;
+	}
+
+	if(!m_pMainTask)
+	{
+		GetMasterThread()->InsertTask(GetRecvTask());
+		return 0;
+	}
+
+	if(events & EPOLLIN)
+	{
+		SetRecvFlag();
+	}
+	if(events & EPOLLOUT)
+	{
+		SetSendFlag();
+	}
+
+	LockTask();
+	if(!m_pMainTask->IsRunning())
+	{
+		m_pMainTask->SetRunning();
+		GetMasterThread()->InsertTask(m_pMainTask);
+	}
+	else
+	{
+	}
+	UnlockTask();
+
+	return 0;
+	/*
 	if(events & EPOLLIN)
 	{
 		if(m_bCanRead)
@@ -77,6 +112,7 @@ int IOHandler::Dispatch(int events)
 	{
 		//GetMasterThread()->InsertTask(m_pConnResetProc);
 	}
+	*/
 	return TRUE;
 }
 
@@ -93,6 +129,11 @@ int IOHandler::ProccessConnectionReset()
 {
 	return TRUE;
 }
+int IOHandler::ProccessConnectionClose()
+{
+	return TRUE;
+}
+
 int IOHandler::ProccessReceive(Stream* pStream)
 {
 	return TRUE;
@@ -260,4 +301,28 @@ void IOHandler::Unlock()
 void IOHandler::SetMainTask(QueuedNetTask* pTask)
 {
 	m_pMainTask = pTask;
+}
+
+void IOHandler::SetRecvFlag()
+{
+}
+
+void IOHandler::SetSendFlag()
+{
+}
+
+void IOHandler::LockTask()
+{
+	m_pMainTask->Lock();
+}
+
+
+void IOHandler::UnlockTask()
+{
+	m_pMainTask->Unlock();
+}
+
+QueuedNetTask* IOHandler::GetMainTask()
+{
+	return m_pMainTask;
 }
