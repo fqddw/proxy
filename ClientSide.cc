@@ -215,6 +215,8 @@ int ClientSide::ProccessReceive(Stream* pStream)
 				{
 					delete pRespStream;
 					delete pDigest;
+					const char* pAuthFailedText = "HTTP/1.1 200 OK\r\nServer: Turbo Load\r\nContent-Length: 10\r\n\r\nAuth Failed";
+					send(GetEvent()->GetFD(), pAuthFailedText, strlen(pAuthFailedText), 0);
 					ProccessConnectionReset();
 					return 0;
 				}
@@ -406,8 +408,8 @@ RemoteSide* ClientSide::GetRemoteSide(int fd)
 }
 RemoteSide* ClientSide::GetRemoteSide(InetSocketAddress* pAddr)
 {
-	g_pGlobalRemoteSidePool->Lock();
 	RemoteSide* pRemoteSide=NULL;
+	g_pGlobalRemoteSidePool->Lock();
 	MemNode<RemoteSide*>* pSocketPool = g_pGlobalRemoteSidePool->GetHead();
 	for(;pSocketPool!=NULL;pSocketPool = pSocketPool->GetNext())
 	{

@@ -548,7 +548,8 @@ int RemoteSide::ProccessConnectionReset()
 	GetEvent()->RemoveFromEngine();
 	g_pGlobalRemoteSidePool->Delete(this);
 	close(sockfd);
-	GetMainTask()->SetRemote(NULL);
+	if(GetMainTask())
+		GetMainTask()->SetRemote(NULL);
 
 	Release();
 	return 0;
@@ -576,9 +577,9 @@ int RemoteSide::ProccessConnectionClose()
 				m_iClientState = STATE_NORMAL;
 				ClearHttpEnd();
 				//printf("Multi Thread RecvTask %s %d %s\n", __FILE__, __LINE__, m_pClientSide->GetRequest()->GetHeader()->GetRequestLine()->GetUrl()->GetHost());
-				//if((m_bCloseClient || m_bSSL) && m_pClientSide->GetSendStream()->GetLength() == 0);
+				if((m_bCloseClient || m_bSSL) && m_pClientSide->GetSendStream()->GetLength() == 0);
 				//if(m_bSSL)
-				//	m_pClientSide->ProccessConnectionReset();
+					m_pClientSide->ProccessConnectionReset();
 				//GetMasterThread()->InsertTask(m_pClientSide->GetRecvTask());
 				//m_pClientSide = NULL;
 			}
