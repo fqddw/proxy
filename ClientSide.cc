@@ -145,7 +145,7 @@ int ClientSide::SSLTransferCreate()
 	return TRUE;
 }
 #include "Digest.h"
-#define REALM_STRING (char*)"testrealm@host.com"
+#define REALM_STRING (char*)"www.transit-server.com"
 int ClientSide::ProccessReceive(Stream* pStream)
 {
 	/*if(IsClosed() && m_bSSL)

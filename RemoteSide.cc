@@ -502,10 +502,10 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 		if(!pMainTask->IsRunning())
 			GetMasterThread()->InsertTask(pMainTask);
 		pMainTask->Unlock();
-		if(IsClosed())
+		/*if(IsClosed())
 		{
 			ProccessConnectionClose();
-		}
+		}*/
 
 
 	}

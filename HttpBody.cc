@@ -108,9 +108,12 @@ int HttpBody::Parse(Stream* pStream)
 				if(pData[offset] == '\r')
 				{
 					Stream* pPartData = pStream->GetPartStream(begin,offset);
-					m_pLengthStream->Append(pPartData->GetData(),pPartData->GetLength());
+					if(pPartData)
+					{
+						m_pLengthStream->Append(pPartData->GetData(),pPartData->GetLength());
+						delete pPartData;
+					}
 					m_pLengthStream->Append((char*)"\0",1);
-					delete pPartData;
 					char* pLength = m_pLengthStream->GetPartDataToString(0,m_pLengthStream->GetLength());
 					int chunkLength = 0;
 					sscanf(pLength,"%x",&chunkLength);
