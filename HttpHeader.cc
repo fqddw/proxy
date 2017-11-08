@@ -188,3 +188,19 @@ int HttpHeader::AppendHeader(char* pKey, int keyLen, char* pValue, int valueLen)
 	m_pKeyValueList->Append(new pair<string,string>(key, value));
 	return TRUE;
 }
+int HttpHeader::DeleteField(char* pKey)
+{
+	MemNode<pair<string,string>*>* pNode = m_pKeyValueList->GetHead();
+	while(pNode)
+	{
+		if(pNode->GetData()->first == pKey)
+		{
+			MemNode<pair<string,string>*>* pTmpNode = pNode->GetNext();
+			m_pKeyValueList->Delete(pNode->GetData());
+			pNode = pTmpNode;
+		}
+		else
+			pNode = pNode->GetNext();
+	}
+	return FALSE;
+}

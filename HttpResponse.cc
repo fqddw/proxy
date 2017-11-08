@@ -111,7 +111,7 @@ int HttpResponse::LoadHttpHeader()
 				char pSeniorVer[4] = "\0";
 				memcpy(pSeniorVer,pData+nStart,len);
 				int nSeniorVer = atoi(pSeniorVer);
-				m_pHeader->GetResponseLine()->SetMajorVersion(nSeniorVer);
+				m_pHeader->GetResponseLine()->SetSeniorVersion(nSeniorVer);
 				state = PS_SPACE_BEFORE_CODE;
 			}
 		}

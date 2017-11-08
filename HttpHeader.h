@@ -28,6 +28,7 @@ class HttpHeader
 		char* GetField(int);
 		int SetRawLength(int);
 		int GetRawLength();
+		int DeleteField(char*);
 	private:
 		int m_iRawLength;
 		HttpKeyValueList* m_pKeyValueList;

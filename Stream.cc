@@ -101,6 +101,8 @@ char* Stream::GetPartDataToString(int begin,int end)
 Stream* Stream::GetPartStream(int begin,int end)
 {
 	int length = end-begin;
+	if(length == 0)
+		return NULL;
 	char* pReturnString = new char[length];
 	memcpy(pReturnString,m_pData+begin,length);
 	Stream* pStream = new Stream();

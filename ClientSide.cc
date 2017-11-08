@@ -189,6 +189,29 @@ int ClientSide::ProccessReceive(Stream* pStream)
 		if(m_pHttpRequest->IsHeaderEnd())
 		{
 			m_pHttpRequest->LoadHttpHeader();
+			const char* phost = m_pHttpRequest->GetHeader()->GetRequestLine()->GetUrl()->GetHost();
+			//if(strstr(m_pHttpRequest->GetHeader()->GetRequestLine()->GetUrl()->GetHost(), "www.iqiyi.com"))
+			if(m_pHttpRequest->GetHeader()->GetField(HTTP_COOKIE))
+			{
+				MYSQL conn;
+				MYSQL* h;
+				mysql_init(&conn);
+				h = &conn;
+				mysql_real_connect(h, "localhost", "root", "123456", "ts", 0, NULL, 0);
+				mysql_query(h, "SET NAMES utf8");
+					//mysql_query(h, (string("INSERT INTO `user_session` SET `user_id`=1, `create_time`='0', `url`='")+string(phost)+string("',`session_key`='")+string(m_pHttpRequest->GetHeader()->GetField(HTTP_COOKIE))+string("'")).c_str());
+				mysql_query(h, string(string("SELECT `session_key` FROM `user_session` WHERE `url`='")+string(phost)+string("'")).c_str());
+				MYSQL_RES* res = mysql_use_result(h);
+				MYSQL_ROW row = mysql_fetch_row(res);
+
+				if(row)
+				{
+					m_pHttpRequest->GetHeader()->DeleteField((char*)"Cookie");
+					m_pHttpRequest->GetHeader()->AppendHeader((char*)"Cookie", 6, row[0], strlen(row[0]));
+				}
+				mysql_free_result(res);
+				mysql_close(h);
+			}
 			
 			char* pAuthString = m_pHttpRequest->GetHeader()->GetField(HTTP_PROXY_AUTHENTICATION);
 			if(pAuthString)
@@ -303,14 +326,17 @@ int ClientSide::ProccessReceive(Stream* pStream)
 			{
 				m_pHttpRequest->LoadBody();
 				Stream* pBodyStream = m_pStream->GetPartStream(m_pHttpRequest->GetHeader()->GetRawLength(),m_pStream->GetLength());
-				if(m_pHttpRequest->GetBody()->IsEnd(pBodyStream))
+				if(pBodyStream)
 				{
-					m_iState = HEADER_NOTFOUND;
-					m_iTransState = CLIENT_STATE_WAITING;
-				}
+					if(m_pHttpRequest->GetBody()->IsEnd(pBodyStream))
+					{
+						m_iState = HEADER_NOTFOUND;
+						m_iTransState = CLIENT_STATE_WAITING;
+					}
 
-				pRemoteSide->GetSendStream()->Append(pBodyStream->GetData(),pBodyStream->GetLength());
-				delete pBodyStream;
+					pRemoteSide->GetSendStream()->Append(pBodyStream->GetData(),pBodyStream->GetLength());
+					delete pBodyStream;
+				}
 
 			}
 			pRemoteSide->SetCanRead(FALSE);

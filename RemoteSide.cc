@@ -328,6 +328,7 @@ int RemoteSide::ClearHttpEnd()
 }
 int RemoteSide::ProccessReceive(Stream* pStream)
 {
+	Stream* pSendStream = NULL;
 	if(!GetMainTask())
 	{
 		ProccessConnectionClose();
@@ -395,6 +396,8 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 		{
 			m_pHttpResponse->SetState(HEADER_FOUND);
 			m_pHttpResponse->LoadHttpHeader();
+			m_pHttpResponse->GetHeader()->DeleteField((char*)"Set-Cookie");
+			pSendStream = m_pHttpResponse->GetHeader()->ToHeader();
 			char* pConnection = m_pHttpResponse->GetHeader()->GetField(HTTP_CONNECTION);
 			if(pConnection)
 			{
@@ -410,16 +413,25 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 			}
 			if(m_pHttpResponse->HasBody())
 			{
+				isEnd = FALSE;
 				m_pHttpResponse->LoadBody();
 				Stream* pBodyStream = m_pStream->GetPartStream(iHeaderSize,m_pStream->GetLength());
-				isEnd = m_pHttpResponse->GetBody()->IsEnd(pBodyStream);
-				delete pBodyStream;
+				if(pBodyStream)
+				{
+					isEnd = m_pHttpResponse->GetBody()->IsEnd(pBodyStream);
+					pSendStream->Append(pBodyStream);
+					delete pBodyStream;
+				}
 			}
 			m_pStream->Sub(m_pStream->GetLength());
 		}
 		else
 		{
+			delete pUserStream;
+			GetEvent()->ModEvent(EPOLLIN|EPOLLONESHOT);
+
 			isEnd = FALSE;
+			return FALSE;
 		}
 	}
 	else
@@ -434,13 +446,23 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 		{
 			ClearHttpEnd();
 			ProccessConnectionReset();
+			if(pSendStream)
+				delete pSendStream;
 			delete pUserStream;
 			return 0;
 		}
 
 		int nLengthSend = m_pClientSide->GetSendStream()->GetLength();
 		m_pClientSide->LockSendBuffer();
-		m_pClientSide->GetSendStream()->Append(pUserStream->GetData(),pUserStream->GetLength());
+		if(pSendStream)
+		{
+			m_pClientSide->GetSendStream()->Append(pSendStream->GetData(),pSendStream->GetLength());
+			delete pSendStream;
+		}
+		else
+		{
+			m_pClientSide->GetSendStream()->Append(pUserStream->GetData(),pUserStream->GetLength());
+		}
 		delete pUserStream;
 		m_pClientSide->UnlockSendBuffer();
 		ClientSide* pClientSide = m_pClientSide;

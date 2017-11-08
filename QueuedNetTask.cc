@@ -68,8 +68,6 @@ int QueuedNetTask::GetDataStream(IOHandler* pIOHandler, Stream** ppStream)
 	int sockfd = pIOHandler->GetEvent()->GetFD();
 	char buffer[4096] = {'\0'};
 	int n = recv(sockfd, buffer, 4096, 0);
-	if(n == 0)
-		printf("%d\n", n);
 	if(n > 0)
 	{
 		*ppStream = new Stream();
