@@ -535,7 +535,6 @@ int ClientSide::ProccessSend()
 				}
 				else
 				{
-					//printf("EPOLLOUT TRIGGER\n");
 					SetCanRead(FALSE);
 					SetCanWrite(TRUE);
 					GetEvent()->ModEvent(EPOLLOUT|/*EPOLLET|*/EPOLLONESHOT);
@@ -588,7 +587,8 @@ int ClientSide::ProccessSend()
 				}
 				else
 				{
-					m_pRemoteSide->GetEvent()->ModEvent(EPOLLIN|/*EPOLLET|*/EPOLLONESHOT);
+					if(!(m_pRemoteSide->GetEvent()->GetEventInt() & EPOLLOUT))
+						m_pRemoteSide->GetEvent()->ModEvent(EPOLLIN|/*EPOLLET|*/EPOLLONESHOT);
 					return 0;
 					//请求正在传输中,engine此时屏蔽了remote的数据到达处理函数，但会设置是否有数据到达,如果有数据到达则投递处理任务，没有则开启处理函数
 					if(GetEvent()->IsInReady())

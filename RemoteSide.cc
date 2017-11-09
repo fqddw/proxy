@@ -227,7 +227,8 @@ int RemoteSide::ProccessSend()
 			m_pSendStream->Sub(nSent);
 			if(m_pSendStream->GetLength() == 0)
 			{
-				m_pClientSide->GetEvent()->ModEvent(EPOLLIN|/*EPOLLET|*/EPOLLONESHOT);
+				if(!(m_pClientSide->GetEvent()->GetEventInt() & EPOLLOUT))
+					m_pClientSide->GetEvent()->ModEvent(EPOLLIN|/*EPOLLET|*/EPOLLONESHOT);
 				return 0;
 				if(m_iClientState != STATE_ABORT)
 				{
