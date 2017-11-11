@@ -5,6 +5,8 @@ class Stream
 {
 	public:
 		Stream();
+		Stream(char*);
+		Stream(const char*);
 		Stream(int);
 		~Stream();
 		int GetLength();
@@ -18,6 +20,7 @@ class Stream
 		Stream* GetPartStream(int,int);
 		int Equal(Stream*);
 		int Equal(char*);
+		void Clear();
 	private:
 		char* m_pData;
 		int m_iLength;

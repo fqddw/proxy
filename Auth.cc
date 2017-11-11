@@ -1,7 +1,7 @@
 #include "Auth.h"
 #include "Stream.h"
 
-Auth::Auth():m_pNonce(NULL),m_pOpaque(NULL),m_pRealm(NULL)
+Auth::Auth():m_pNonce(NULL),m_pOpaque(NULL),m_pRealm(NULL),m_pUser(NULL)
 {
 }
 
@@ -73,3 +73,14 @@ void Auth::SetOpaqueAuthed(int bFlag)
 }
 
 
+
+void Auth::SetUser(User* pUser)
+{
+	m_pUser = pUser;
+}
+
+
+User* Auth::GetUser()
+{
+	return m_pUser;
+}

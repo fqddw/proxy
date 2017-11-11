@@ -144,3 +144,27 @@ int Stream::Equal(char* pDest)
 	}
 	return TRUE;
 }
+
+void Stream::Clear()
+{
+	if(m_pData)
+		delete m_pData;
+	m_pData = NULL;
+	m_iLength = 0;
+}
+
+Stream::Stream(char* pData):cs_(new CriticalSection())
+{
+	int len = strlen(pData);
+	m_iLength = len;
+	m_pData = new char[len];
+	memcpy(m_pData, pData, len);
+}
+
+Stream::Stream(const char* pData):cs_(new CriticalSection())
+{
+	int len = strlen(pData);
+	m_iLength = len;
+	m_pData = new char[len];
+	memcpy(m_pData, pData, len);
+}

@@ -13,5 +13,10 @@ class User
 		static User* LoadByName(Stream*);
 		void SetUserName(Stream*);
 		void SetPassword(Stream*);
+		Stream* GetPassword();
+		Stream* GetUserName();
+		int GetId();
+		int IsCapturing(Stream*);
+		int IsCapturing(char*);
 };
 #endif

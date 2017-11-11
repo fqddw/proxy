@@ -1,1 +1,4 @@
-worker_size 1
+host: localhost
+username: root
+password: 123456
+dbname: ts

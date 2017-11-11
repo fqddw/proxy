@@ -53,7 +53,8 @@ Digest::Digest(Stream* pStream):
 	m_pQop(NULL),
 	m_pNC(NULL),
 	m_pCnonce(NULL),
-	m_pKeyValueList(NULL)
+	m_pKeyValueList(NULL),
+	m_pPassword(NULL)
 {
 	m_pStream = pStream;
 }
@@ -92,6 +93,9 @@ Digest::~Digest()
 	if(m_pCnonce)
 		delete m_pCnonce;
 	m_pCnonce = NULL;
+	if(m_pPassword)
+		delete m_pPassword;
+	m_pPassword = NULL;
 	if(m_pKeyValueList)
 		delete m_pKeyValueList;
 	m_pKeyValueList = NULL;
@@ -298,9 +302,8 @@ Stream* Digest::CalcH1()
 	pData->Append((char*)":", 1);
 	pData->Append(m_pRealm);
 	pData->Append((char*)":", 1);
-	Stream* pPassword = UserCenter::getPassword(m_pUserName);
+	Stream* pPassword = m_pPassword;
 	pData->Append(pPassword);
-	delete pPassword;
 	Stream* pH1 = MD5::calc(pData);
 	delete pData;
 	return pH1;
@@ -368,4 +371,20 @@ int Digest::SetMethod(Stream* pMethod)
 	m_pMethod = new Stream();
 	m_pMethod->Append(pMethod);
 	return 0;
+}
+
+Stream* Digest::GetNonce()
+{
+	return m_pNonce;
+}
+
+int Digest::SetPassword(Stream* pPassword)
+{
+	m_pPassword = pPassword;
+	return TRUE;
+}
+
+Stream* Digest::GetUserName()
+{
+	return m_pUserName;
 }

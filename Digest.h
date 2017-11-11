@@ -16,7 +16,10 @@ class Digest
 		Stream* CalcResponse();
 		Stream* GetResponse();
 		Stream* GetRealm();
+		Stream* GetNonce();
+		Stream* GetUserName();
 		int SetMethod(Stream*);
+		int SetPassword(Stream*);
 		int Parse();
 		int Load();
 	private:
@@ -31,5 +34,6 @@ class Digest
 		Stream* m_pCnonce;
 		Stream* m_pNC;
 		Stream* m_pOpaque;
+		Stream* m_pPassword;
 		KeyValueList* m_pKeyValueList;
 };

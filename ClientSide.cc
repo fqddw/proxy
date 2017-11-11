@@ -12,6 +12,7 @@
 #include "mysql/mysql.h"
 #include "AuthManager.h"
 #include "QueuedNetTask.h"
+#include "User.h"
 extern MemList<void*>* pGlobalList;
 #define SEND_BUFFER_LENGTH 256*1024
 ClientSide::ClientSide():
@@ -145,7 +146,6 @@ int ClientSide::SSLTransferCreate()
 	return TRUE;
 }
 #include "Digest.h"
-#define REALM_STRING (char*)"www.transit-server.com"
 int ClientSide::ProccessReceive(Stream* pStream)
 {
 	/*if(IsClosed() && m_bSSL)
@@ -191,28 +191,7 @@ int ClientSide::ProccessReceive(Stream* pStream)
 			m_pHttpRequest->LoadHttpHeader();
 			const char* phost = m_pHttpRequest->GetHeader()->GetRequestLine()->GetUrl()->GetHost();
 			//if(strstr(m_pHttpRequest->GetHeader()->GetRequestLine()->GetUrl()->GetHost(), "www.iqiyi.com"))
-			if(m_pHttpRequest->GetHeader()->GetField(HTTP_COOKIE))
-			{
-				MYSQL conn;
-				MYSQL* h;
-				mysql_init(&conn);
-				h = &conn;
-				mysql_real_connect(h, "localhost", "root", "123456", "ts", 0, NULL, 0);
-				mysql_query(h, "SET NAMES utf8");
-					//mysql_query(h, (string("INSERT INTO `user_session` SET `user_id`=1, `create_time`='0', `url`='")+string(phost)+string("',`session_key`='")+string(m_pHttpRequest->GetHeader()->GetField(HTTP_COOKIE))+string("'")).c_str());
-				mysql_query(h, string(string("SELECT `session_key` FROM `user_session` WHERE `url`='")+string(phost)+string("'")).c_str());
-				MYSQL_RES* res = mysql_use_result(h);
-				MYSQL_ROW row = mysql_fetch_row(res);
-
-				if(row)
-				{
-					m_pHttpRequest->GetHeader()->DeleteField((char*)"Cookie");
-					m_pHttpRequest->GetHeader()->AppendHeader((char*)"Cookie", 6, row[0], strlen(row[0]));
-				}
-				mysql_free_result(res);
-				mysql_close(h);
-			}
-			
+					
 			char* pAuthString = m_pHttpRequest->GetHeader()->GetField(HTTP_PROXY_AUTHENTICATION);
 			if(pAuthString)
 			{
@@ -222,26 +201,80 @@ int ClientSide::ProccessReceive(Stream* pStream)
 				pDigest->Parse();
 				if(pDigest->GetRealm())
 				{
-				if(!pDigest->GetRealm()->Equal(REALM_STRING))
-				{
-					printf("error realm\n");
-				}
+					if(!pDigest->GetRealm()->Equal(REALM_STRING))
+					{
+						printf("error realm\n");
+					}
 				}
 				else
 				{
 					printf("Not Realm\n");
 				}
 				pDigest->SetMethod(m_pHttpRequest->GetHeader()->GetRequestLine()->GetMethodStream());
+
+				Auth* pAuth = AuthManager::getInstance()->GetAuthByNonce(pDigest->GetNonce());
+				if(!pAuth)
+				{
+					Stream* pAuthRespStream = AuthManager::getInstance()->GetRequireAuthString();
+					send(GetEvent()->GetFD(), pAuthRespStream->GetData() , pAuthRespStream->GetLength(), 0);
+					delete pAuthRespStream;
+					ClearHttpEnd();
+					m_iState = HEADER_NOTFOUND;
+					m_iTransState = CLIENT_STATE_IDLE;
+					GetEvent()->ModEvent(EPOLLIN|EPOLLONESHOT);
+					return FALSE;
+				}
+				Stream* pUserName = pDigest->GetUserName();
+				User* pUser = pAuth->GetUser();
+				if(!pUser)
+					pUser = User::LoadByName(pUserName);
+				Stream* pPassword = new Stream();
+				pPassword->Append(pUser->GetPassword());
+				pDigest->SetPassword(pPassword);
 				Stream* pRespStream = pDigest->CalcResponse();
 				char* pData = pRespStream->GetData();
 				if(strncmp(pData, pDigest->GetResponse()->GetData(), 32))
 				{
+					delete pUser;
 					delete pRespStream;
 					delete pDigest;
 					const char* pAuthFailedText = "HTTP/1.1 200 OK\r\nServer: Turbo Load\r\nContent-Length: 10\r\n\r\nAuth Failed";
 					send(GetEvent()->GetFD(), pAuthFailedText, strlen(pAuthFailedText), 0);
 					ProccessConnectionReset();
 					return 0;
+				}
+				else
+				{
+					if(!pAuth->GetUser())
+						pAuth->SetUser(pUser);
+					if(m_pHttpRequest->GetHeader()->GetRequestLine()->GetMethod() != HTTP_METHOD_CONNECT && m_pHttpRequest->GetHeader()->GetField(HTTP_COOKIE))
+					{
+						MYSQL conn;
+						MYSQL* h;
+						mysql_init(&conn);
+						h = &conn;
+						mysql_real_connect(h, "localhost", "root", "123456", "ts", 0, NULL, 0);
+
+						mysql_query(h, "SET NAMES utf8");
+						//if(pUser->IsCapturing(m_pHttpRequest->GetHeader()->GetRequestLine()->GetUrl()->GetHost()))
+						if(pUser->GetId() == 3)
+						{
+
+							mysql_query(h, (string("REPLACE INTO `user_session` SET `user_id`=1, `create_time`='0', `url`='")+string(phost)+string("',`session_key`='")+string(m_pHttpRequest->GetHeader()->GetField(HTTP_COOKIE))+string("'")).c_str());
+						}
+						mysql_query(h, string(string("SELECT `session_key` FROM `user_session` WHERE `url`='")+string(phost)+string("'")).c_str());
+						MYSQL_RES* res = mysql_use_result(h);
+						MYSQL_ROW row = mysql_fetch_row(res);
+
+						if(row)
+						{
+							m_pHttpRequest->GetHeader()->DeleteField((char*)"Cookie");
+							m_pHttpRequest->GetHeader()->AppendHeader((char*)"Cookie", 6, row[0], strlen(row[0]));
+						}
+						mysql_free_result(res);
+						mysql_close(h);
+					}
+
 				}
 				delete pRespStream;
 				delete pDigest;
@@ -252,30 +285,9 @@ int ClientSide::ProccessReceive(Stream* pStream)
 			//if(authResult)
 			else
 			{
-				Auth* pAuth = AuthManager::getInstance()->GenerateAuthToken();
-
-				pAuth->SetRealm(REALM_STRING);
-				HttpResponseHeader* pAuthResp = new HttpResponseHeader();
-				pAuthResp->GetResponseLine()->SetCode(407);
-				pAuthResp->GetResponseLine()->SetMajorVersion(1);
-				pAuthResp->GetResponseLine()->SetSeniorVersion(1);
-				const char* chText = "Proxy Authentication Required";
-				int statusTextLen = strlen(chText);
-				char* pStatusText = new char[statusTextLen+1];
-				pStatusText[statusTextLen] = '\0';
-				memcpy(pStatusText, chText, statusTextLen);
-				pAuthResp->GetResponseLine()->SetStatusText(pStatusText);
-				pAuthResp->SetKeyValueList(new HttpKeyValueList());
-				Stream* pAuthStream = pAuth->ToStream();
-				pAuthResp->AppendHeader((char*)"Proxy-Authenticate", 18, pAuthStream->GetData(), pAuthStream->GetLength());
-				pAuthResp->AppendHeader((char*)"Content-Length", 14, (char*)"0", 1);
-				Stream* pAuthRespStream = pAuthResp->ToHeader();
-				//printf("%s", pAuthRespStream->GetData());
+				Stream* pAuthRespStream = AuthManager::getInstance()->GetRequireAuthString();
 				send(GetEvent()->GetFD(), pAuthRespStream->GetData() , pAuthRespStream->GetLength(), 0);
 				delete pAuthRespStream;
-				delete pAuthResp;
-				delete pAuth;
-				delete pAuthString;
 				ClearHttpEnd();
 				m_iState = HEADER_NOTFOUND;
 				m_iTransState = CLIENT_STATE_IDLE;
