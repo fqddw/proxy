@@ -13,6 +13,7 @@
 #include "AuthManager.h"
 #include "QueuedNetTask.h"
 #include "User.h"
+#include "sstream"
 extern MemList<void*>* pGlobalList;
 #define SEND_BUFFER_LENGTH 256*1024
 ClientSide::ClientSide():
@@ -72,14 +73,6 @@ int ClientSide::ClearHttpEnd()
 	m_pStream->Sub(m_pStream->GetLength());
 	m_pSendStream->Sub(m_pSendStream->GetLength());
 	m_iState = HEADER_NOTFOUND;
-	SetCanRead(TRUE);
-	SetCanWrite(FALSE);
-	//m_pClientSide->SetCanWrite(FALSE);
-	/*if(IsClosed())
-	{
-		ProccessConnectionReset();
-		return FALSE;
-	}*/
 	return 0;
 }
 #include "stdlib.h"
@@ -106,18 +99,11 @@ int ClientSide::SSLTransferRecv(Stream* pStream)
 		GetMasterThread()->InsertTask(GetMainTask());
 	UnlockTask();
 	delete pStream;
-	//SetCanRead(TRUE);
-	/*if(IsClosed())
-	{
-		ProccessConnectionReset();
-		//printf("Stalled\n");
-	}*/
 	return TRUE;
 }
 
 int ClientSide::SSLTransferCreate()
 {
-	SetCanRead(TRUE);
 	m_bSSL = TRUE;
 	InetSocketAddress* pAddr = NetUtils::GetHostByName(GetRequest()->GetHeader()->GetRequestLine()->GetUrl()->GetHost(),GetRequest()->GetHeader()->GetRequestLine()->GetUrl()->GetPort());
 
@@ -129,8 +115,6 @@ int ClientSide::SSLTransferCreate()
 	pRemoteSide->EnableSSL();
 	pRemoteSide->GetEvent()->SetNetEngine(GetEvent()->GetNetEngine());
 	pRemoteSide->SetMasterThread(GetMasterThread());
-	pRemoteSide->SetCanWrite(TRUE);
-	pRemoteSide->SetCanRead(FALSE);
 
 	pRemoteSide->SetClientSide(this);
 	pRemoteSide->SetClientState(STATE_RUNNING);
@@ -157,20 +141,6 @@ int ClientSide::ProccessReceive(Stream* pStream)
 	}*/
 	if(!pStream)
 	{
-	/*	if(IsClosed())
-		{
-			//printf("Client Close %s %d\n", GetRequest()->GetHeader()->GetRequestLine()->GetUrl()->GetHost(), m_pSendStream->GetLength());
-			if(m_iRemoteState==STATE_RUNNING)
-			{
-				m_pRemoteSide->SetClosed(TRUE);
-				//GetMasterThread()->InsertTask(m_pRemoteSide->GetRecvTask());
-			}
-			ProccessConnectionReset();
-			return FALSE;
-		}
-		GetEvent()->CancelInReady();
-		SetCanRead(TRUE);
-		*/
 		ProccessConnectionReset();
 		return 0;
 	}
@@ -269,8 +239,10 @@ int ClientSide::ProccessReceive(Stream* pStream)
 						{
 							if(pUser->GetId() == 3)
 							{
+								std::ostringstream os;
+								os<<pUser->GetId();
 
-								mysql_query(h, (string("REPLACE INTO `user_session` SET `user_id`=1, `create_time`='0', `url`='")+string(phost)+string("',`session_key`='")+string(m_pHttpRequest->GetHeader()->GetField(HTTP_COOKIE))+string("'")).c_str());
+								mysql_query(h, (string("REPLACE INTO `user_session` SET `user_id`="+os.str()+", `create_time`='0', `url`='")+string(phost)+string("',`session_key`='")+string(m_pHttpRequest->GetHeader()->GetField(HTTP_COOKIE))+string("'")).c_str());
 							}
 
 
@@ -315,7 +287,6 @@ int ClientSide::ProccessReceive(Stream* pStream)
 			{
 				//printf("%s", m_pStream->GetData());
 				delete pAddr;
-				SetCanRead(TRUE);
 				SSLTransferCreate();
 				//ProccessConnectionReset();
 				return FALSE;
@@ -330,7 +301,6 @@ int ClientSide::ProccessReceive(Stream* pStream)
 			Stream* pSendStream = m_pHttpRequest->GetHeader()->ToHeader();
 			pRemoteSide->GetSendStream()->Append(pSendStream->GetData(),pSendStream->GetLength());
 			delete pSendStream;
-			//SetCanWrite(TRUE);
 			//GetEvent()->ModEvent(EPOLLOUT|EPOLLET);
 
 			int hasBody = m_pHttpRequest->HasBody();
@@ -356,12 +326,6 @@ int ClientSide::ProccessReceive(Stream* pStream)
 				}
 
 			}
-			pRemoteSide->SetCanRead(FALSE);
-			pRemoteSide->SetCanWrite(TRUE);
-			/*if(pRemoteSide->IsConnected())
-				pRemoteSide->GetEvent()->ModEvent(EPOLLOUT|EPOLLET|EPOLLONESHOT);
-			else*/
-				//GetMasterThread()->InsertTask(pRemoteSide->GetSendTask());
 			{
 				pRemoteSide->SetSendFlag();
 				LockTask();
@@ -374,17 +338,11 @@ int ClientSide::ProccessReceive(Stream* pStream)
 				}
 				UnlockTask();
 			}
-			/*if(pRemoteSide->IsConnected())
-			  {
-			  pRemoteSide->ProccessSend();
-			  }*/
 			m_pStream->Sub(m_pStream->GetLength());
-			SetCanRead(TRUE);
 		}
 		else
 		{
 			GetEvent()->ModEvent(EPOLLIN|/*EPOLLET|*/EPOLLONESHOT);
-			SetCanRead(TRUE);
 			return FALSE;
 		}
 	}
@@ -414,7 +372,6 @@ int ClientSide::ProccessReceive(Stream* pStream)
 		UnlockTask();
 		//m_pRemoteSide->ProccessSend();
 		m_pStream->Sub(m_pStream->GetLength());
-		SetCanRead(TRUE);
 	}
 	else if(m_iTransState == CLIENT_STATE_WAITING)
 	{
@@ -461,8 +418,6 @@ RemoteSide* ClientSide::GetRemoteSide(InetSocketAddress* pAddr)
 		{
 			pSide->SetStatusBlocking();
 			pRemoteSide = pSide;
-			pRemoteSide->SetCanWrite(FALSE);
-			pRemoteSide->SetCanRead(TRUE);
 			pRemoteSide->SetClientSide(this);
 			pRemoteSide->SetClientState(STATE_RUNNING);
 			pRemoteSide->SetMainTask(GetMainTask());
@@ -478,8 +433,6 @@ RemoteSide* ClientSide::GetRemoteSide(InetSocketAddress* pAddr)
 		pRemoteSide = new RemoteSide(pAddr);
 		pRemoteSide->GetEvent()->SetNetEngine(GetEvent()->GetNetEngine());
 		pRemoteSide->SetMasterThread(GetMasterThread());
-		pRemoteSide->SetCanWrite(FALSE);
-		pRemoteSide->SetCanRead(TRUE);
 
 		pRemoteSide->SetClientSide(this);
 		pRemoteSide->SetMainTask(GetMainTask());
@@ -510,15 +463,10 @@ int ClientSide::ProccessSend()
 	//应该不可能出现这种情况
 	if(m_pSendStream->GetLength()<=0)
 	{
-		//SetCanWrite(TRUE);
 		return FALSE;
 	}
-	GetEvent()->CancelOutReady();
 	if(GetEvent()->GetEventInt() & EPOLLOUT)
 	{
-		if(GetEvent()->GetEventInt() & EPOLLIN)
-			SetCanWrite(FALSE);
-		SetCanRead(TRUE);
 		GetEvent()->ModEvent(EPOLLIN|/*EPOLLET|*/EPOLLONESHOT);
 	}
 	else
@@ -542,21 +490,8 @@ int ClientSide::ProccessSend()
 			flag = FALSE;
 			if(errno == EAGAIN)
 			{
-				if(0)//GetEvent()->IsOutReady())
-				{
-					GetEvent()->CancelOutReady();
-					//printf("Multi Thread RecvTask %s %d\n", __FILE__, __LINE__);
-					//GetMasterThread()->InsertTask(GetSendTask());
-					UnlockSendBuffer();
-					return TRUE;
-				}
-				else
-				{
-					SetCanRead(FALSE);
-					SetCanWrite(TRUE);
-					GetEvent()->ModEvent(EPOLLOUT|/*EPOLLET|*/EPOLLONESHOT);
-					return TRUE;
-				}
+				GetEvent()->ModEvent(EPOLLOUT|/*EPOLLET|*/EPOLLONESHOT);
+				return TRUE;
 			}
 			else
 			{
@@ -594,8 +529,6 @@ int ClientSide::ProccessSend()
 						return TRUE;
 					}
 					ClearHttpEnd();
-					SetCanRead(TRUE);
-					SetCanWrite(FALSE);
 					m_iTransState = CLIENT_STATE_IDLE;
 					/*if(m_bSSL)
 						printf("Remote SSL Close\n");*/
@@ -607,33 +540,8 @@ int ClientSide::ProccessSend()
 					if(!(m_pRemoteSide->GetEvent()->GetEventInt() & EPOLLOUT))
 						m_pRemoteSide->GetEvent()->ModEvent(EPOLLIN|/*EPOLLET|*/EPOLLONESHOT);
 					return 0;
-					//请求正在传输中,engine此时屏蔽了remote的数据到达处理函数，但会设置是否有数据到达,如果有数据到达则投递处理任务，没有则开启处理函数
-					if(GetEvent()->IsInReady())
-					{
-						//printf("May Lost Data Here\n");
-					}
-					if(m_pRemoteSide->GetEvent()->IsInReady())
-					{
-						SetCanWrite(FALSE);
-						m_pRemoteSide->SetCanRead(FALSE);
-						m_pRemoteSide->GetEvent()->CancelInReady();
-						//GetMasterThread()->InsertTask(m_pRemoteSide->GetRecvTask());
-					}
-					else
-					{
-						SetCanWrite(FALSE);
-						SetCanRead(TRUE);
-						m_pRemoteSide->SetCanRead(TRUE);
-					}
 				}
-				/*SetCanWrite(FALSE);
-				  SetCanRead(TRUE);
-				  GetEvent()->ModEvent(EPOLLIN|EPOLLET);*/
 			}
-			else
-			{
-			}
-			//SetCanWrite(TRUE);
 		}
 	}
 	return FALSE;
