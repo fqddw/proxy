@@ -176,6 +176,7 @@ int RemoteSide::ProccessSend()
 			if(errno == EAGAIN)
 			{
 				GetEvent()->ModEvent(EPOLLOUT|/*EPOLLET|*/EPOLLONESHOT);
+				return 0;
 			}
 			else
 			{
