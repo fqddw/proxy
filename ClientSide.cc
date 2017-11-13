@@ -511,11 +511,9 @@ int ClientSide::ProccessSend()
 		//printf("Client Send %s\n", m_pSendStream->GetData());
 		if(nSent < 0)
 		{
-			printf("EPOLL == -1\n");
 			flag = FALSE;
 			if(errno == EAGAIN)
 			{
-				printf("Client EPOLLOUT\n");
 				GetEvent()->ModEvent(EPOLLOUT|/*EPOLLET|*/EPOLLONESHOT);
 				return TRUE;
 			}

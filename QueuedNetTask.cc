@@ -75,8 +75,6 @@ int QueuedNetTask::GetDataStream(IOHandler* pIOHandler, Stream** ppStream)
 	}
 	else
 	{
-		if(n == -1)
-			printf("errorno %d %d %d %d\n",errno ,n, pIOHandler->GetSide(), pIOHandler->GetEvent()->GetEventInt() - EPOLLONESHOT);
 	}
 }
 int QueuedNetTask::GetNextTask()
