@@ -190,9 +190,6 @@ int RemoteSide::ProccessSend()
 		else
 		{
 			totalSend += nSent;
-			char* pOutShow = m_pSendStream->GetPartDataToString(0, nSent);
-			printf("Remote Side %d %d %s\n", GetEvent()->GetFD(), nSent, pOutShow);
-			delete pOutShow;
 			m_pSendStream->Sub(nSent);
 			if(m_pSendStream->GetLength() == 0)
 			{

@@ -153,7 +153,6 @@ int ClientSide::ProccessReceive(Stream* pStream)
 		return TRUE;
 	}
 
-	printf("Client Recv %d %d %s\n", GetEvent()->GetFD(), pStream->GetLength(), pStream->GetPartDataToString(0, pStream->GetLength()));
 
 	if(m_iState == HEADER_NOTFOUND && m_iTransState != CLIENT_STATE_WAITING)
 	{
