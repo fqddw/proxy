@@ -93,11 +93,14 @@ int ClientSide::SSLTransferRecv(Stream* pStream)
 	//{
 	//	printf("Remote Sending In Proccess\n");
 	//}
-	m_pRemoteSide->SetSendFlag();
-	LockTask();
-	if(!GetMainTask()->IsRunning())
-		GetMasterThread()->InsertTask(GetMainTask());
-	UnlockTask();
+	if(!(m_pRemoteSide->GetEvent()->GetEventInt() & EPOLLOUT))
+	{
+		m_pRemoteSide->SetSendFlag();
+		LockTask();
+		if(!GetMainTask()->IsRunning())
+			GetMasterThread()->InsertTask(GetMainTask());
+		UnlockTask();
+	}
 	delete pStream;
 	return TRUE;
 }
@@ -150,6 +153,7 @@ int ClientSide::ProccessReceive(Stream* pStream)
 		return TRUE;
 	}
 
+	printf("Client Recv %d %d %s\n", GetEvent()->GetFD(), pStream->GetLength(), pStream->GetPartDataToString(0, pStream->GetLength()));
 
 	if(m_iState == HEADER_NOTFOUND && m_iTransState != CLIENT_STATE_WAITING)
 	{
@@ -188,6 +192,7 @@ int ClientSide::ProccessReceive(Stream* pStream)
 					Stream* pAuthRespStream = AuthManager::getInstance()->GetRequireAuthString();
 					send(GetEvent()->GetFD(), pAuthRespStream->GetData() , pAuthRespStream->GetLength(), 0);
 					delete pAuthRespStream;
+					delete pDigest;
 					ClearHttpEnd();
 					m_iState = HEADER_NOTFOUND;
 					m_iTransState = CLIENT_STATE_IDLE;
@@ -197,7 +202,19 @@ int ClientSide::ProccessReceive(Stream* pStream)
 				Stream* pUserName = pDigest->GetUserName();
 				User* pUser = pAuth->GetUser();
 				if(!pUser)
+				{
 					pUser = User::LoadByName(pUserName);
+					if(!pUser)
+					{
+						Stream* pAuthRespStream = AuthManager::getInstance()->GetRequireAuthString();
+						send(GetEvent()->GetFD(), pAuthRespStream->GetData() , pAuthRespStream->GetLength(), 0);
+						delete pAuthRespStream;
+
+						delete pDigest;
+						ProccessConnectionReset();
+						return 0;
+					}
+				}
 				Stream* pPassword = new Stream();
 				pPassword->Append(pUser->GetPassword());
 				pDigest->SetPassword(pPassword);
@@ -327,16 +344,20 @@ int ClientSide::ProccessReceive(Stream* pStream)
 
 			}
 			{
-				pRemoteSide->SetSendFlag();
-				LockTask();
-				if(GetMainTask()->IsRunning())
+
+				if(!(m_pRemoteSide->GetEvent()->GetEventInt() & EPOLLOUT))
 				{
+					pRemoteSide->SetSendFlag();
+					LockTask();
+					if(GetMainTask()->IsRunning())
+					{
+					}
+					else
+					{
+						GetMasterThread()->InsertTask(GetMainTask());
+					}
+					UnlockTask();
 				}
-				else
-				{
-					GetMasterThread()->InsertTask(GetMainTask());
-				}
-				UnlockTask();
 			}
 			m_pStream->Sub(m_pStream->GetLength());
 		}
@@ -365,11 +386,15 @@ int ClientSide::ProccessReceive(Stream* pStream)
 			//printf("Multi Thread RecvTask %s %d\n", __FILE__, __LINE__);
 			GetMasterThread()->InsertTask(m_pRemoteSide->GetSendTask());
 		}*/
-		m_pRemoteSide->SetSendFlag();
-		LockTask();
-		if(!GetMainTask()->IsRunning())
-			GetMasterThread()->InsertTask(GetMainTask());
-		UnlockTask();
+
+		if(!(m_pRemoteSide->GetEvent()->GetEventInt() & EPOLLOUT))
+		{
+			m_pRemoteSide->SetSendFlag();
+			LockTask();
+			if(!GetMainTask()->IsRunning())
+				GetMasterThread()->InsertTask(GetMainTask());
+			UnlockTask();
+		}
 		//m_pRemoteSide->ProccessSend();
 		m_pStream->Sub(m_pStream->GetLength());
 	}
@@ -487,9 +512,11 @@ int ClientSide::ProccessSend()
 		//printf("Client Send %s\n", m_pSendStream->GetData());
 		if(nSent < 0)
 		{
+			printf("EPOLL == -1\n");
 			flag = FALSE;
 			if(errno == EAGAIN)
 			{
+				printf("Client EPOLLOUT\n");
 				GetEvent()->ModEvent(EPOLLOUT|/*EPOLLET|*/EPOLLONESHOT);
 				return TRUE;
 			}

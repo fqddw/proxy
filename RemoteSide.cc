@@ -88,6 +88,10 @@ int RemoteSide::Connect()
 }
 int RemoteSide::ProccessSend()
 {
+	if(!m_pClientSide)
+	{
+		return 0;
+	}
 	if(m_pSendStream->GetLength() == 0)
 	{
 	/*
@@ -139,11 +143,14 @@ int RemoteSide::ProccessSend()
 			const char* pConnEstablished= "HTTP/1.1 200 Connection Established\r\nContent-Length: 0\r\n\r\n";
 			int len = strlen(pConnEstablished);
 			m_pClientSide->GetSendStream()->Append((char*)pConnEstablished, len);
-			m_pClientSide->SetSendFlag();
-			LockTask();
-			if(!GetMainTask()->IsRunning())
-				GetMasterThread()->InsertTask(GetMainTask());
-			UnlockTask();
+			if(!(m_pClientSide->GetEvent()->GetEventInt() & EPOLLOUT))
+			{
+				m_pClientSide->SetSendFlag();
+				LockTask();
+				if(!GetMainTask()->IsRunning())
+					GetMasterThread()->InsertTask(GetMainTask());
+				UnlockTask();
+			}
 			//GetMasterThread()->InsertTask(m_pClientSide->GetSendTask());
 			return 0;
 		}
@@ -175,9 +182,16 @@ int RemoteSide::ProccessSend()
 				return 0;
 			}
 		}
+		if(nSent == 0)
+		{
+			printf("Remote Send 0\n");
+		}
 		else
 		{
 			totalSend += nSent;
+			char* pOutShow = m_pSendStream->GetPartDataToString(0, nSent);
+			printf("Remote Side %d %d %s\n", GetEvent()->GetFD(), nSent, pOutShow);
+			delete pOutShow;
 			m_pSendStream->Sub(nSent);
 			if(m_pSendStream->GetLength() == 0)
 			{
@@ -237,11 +251,14 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 		{
 			printf("Have Length\n");
 		}*/
-		m_pClientSide->SetSendFlag();
-		LockTask();
-		if(!GetMainTask()->IsRunning())
-			GetMasterThread()->InsertTask(GetMainTask());
-		UnlockTask();
+		if(!(m_pClientSide->GetEvent()->GetEventInt() & EPOLLOUT))
+		{
+			m_pClientSide->SetSendFlag();
+			LockTask();
+			if(!GetMainTask()->IsRunning())
+				GetMasterThread()->InsertTask(GetMainTask());
+			UnlockTask();
+		}
 		delete pStream;
 		if(IsClosed())
 		{
@@ -359,11 +376,14 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 		else
 		{
 		}*/
-		pClientSide->SetSendFlag();
-		pMainTask->Lock();
-		if(!pMainTask->IsRunning())
-			GetMasterThread()->InsertTask(pMainTask);
-		pMainTask->Unlock();
+		if(!(pClientSide->GetEvent()->GetEventInt() & EPOLLOUT))
+		{
+			pClientSide->SetSendFlag();
+			pMainTask->Lock();
+			if(!pMainTask->IsRunning())
+				GetMasterThread()->InsertTask(pMainTask);
+			pMainTask->Unlock();
+		}
 		/*if(IsClosed())
 		{
 			ProccessConnectionClose();
