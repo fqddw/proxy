@@ -491,6 +491,7 @@ int ClientSide::ProccessSend()
 	}
 	if(GetEvent()->GetEventInt() & EPOLLOUT)
 	{
+		printf("Client Set EPOLLIN %d\n", GetEvent()->GetFD());
 		GetEvent()->ModEvent(EPOLLIN|/*EPOLLET|*/EPOLLONESHOT);
 	}
 	else
@@ -504,7 +505,7 @@ int ClientSide::ProccessSend()
 		LockSendBuffer();
 		if(IsClosed())
 		{
-			//printf("Send Close\n");
+			printf("Send Close %d\n", GetEvent()->GetFD());
 			return 0;
 		}
 		int nSent = send(GetEvent()->GetFD(),m_pSendStream->GetData(),m_pSendStream->GetLength(),0);
@@ -514,11 +515,13 @@ int ClientSide::ProccessSend()
 			flag = FALSE;
 			if(errno == EAGAIN)
 			{
+				printf("Client Send EPOLLOUT %d\n", GetEvent()->GetFD());
 				GetEvent()->ModEvent(EPOLLOUT|/*EPOLLET|*/EPOLLONESHOT);
 				return TRUE;
 			}
 			else
 			{
+				printf("Client Send Error %d %d\n", GetEvent()->GetFD(), errno);
 				m_pRemoteSide->SetClientState(STATE_ABORT);
 				SetClosed(TRUE);
 				//ProccessReceive(NULL);
@@ -541,7 +544,7 @@ int ClientSide::ProccessSend()
 			m_pSendStream->Sub(nSent);
 			if(m_pSendStream->GetLength() == 0)
 			{
-				//printf("Send Finish %d\n", GetEvent()->GetFD());
+				printf("Send Finish %d\n", GetEvent()->GetFD());
 				flag = FALSE;
 				if(m_iRemoteState == STATE_NORMAL)
 				{
@@ -562,7 +565,14 @@ int ClientSide::ProccessSend()
 				else
 				{
 					if(!(m_pRemoteSide->GetEvent()->GetEventInt() & EPOLLOUT))
+					{
 						m_pRemoteSide->GetEvent()->ModEvent(EPOLLIN|/*EPOLLET|*/EPOLLONESHOT);
+						printf("Remote Set EPOLLIN %d\n", GetEvent()->GetFD());
+					}
+					else
+					{
+						printf("Remote Not Set EPOLLIN %d\n", GetEvent()->GetFD());
+					}
 					return 0;
 				}
 			}

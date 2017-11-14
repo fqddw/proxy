@@ -5,10 +5,10 @@ int QueuedNetTask::Run()
 	int flag = TRUE;
 	while(flag)
 	{
+		cs_->Enter();
 		int task = GetNextTask();
 		if(!task)
 		{
-			cs_->Enter();
 			m_bRunning = FALSE;
 			if(m_pClientSide == NULL && m_pRemoteSide == NULL)
 			{
@@ -17,6 +17,7 @@ int QueuedNetTask::Run()
 			cs_->Leave();
 			return 0;
 		}
+		cs_->Leave();
 		switch(task)
 		{
 			case CLIENT_RECVING:
@@ -66,48 +67,55 @@ int QueuedNetTask::Run()
 int QueuedNetTask::GetDataStream(IOHandler* pIOHandler, Stream** ppStream)
 {
 	int sockfd = pIOHandler->GetEvent()->GetFD();
-	char buffer[4096] = {'\0'};
-	int n = recv(sockfd, buffer, 4096, 0);
-	if(n > 0)
+	char* buffer = new char[1024*256];
+	int flag = TRUE;
+	int total = 0;
+	while(flag)
 	{
-		*ppStream = new Stream();
-		(*ppStream)->Append(buffer, n);
+		int n = recv(sockfd, buffer, 256*1024, 0);
+		if(n > 0)
+		{
+			total+=n;
+			if(!*ppStream)
+				*ppStream = new Stream();
+			(*ppStream)->Append(buffer, n);
+		}
+		else
+		{
+			flag = FALSE;
+			if(n == -1)
+			{
+				printf("%d %d %d %d\n", errno, pIOHandler->GetSide(), pIOHandler->GetEvent()->GetFD(), pIOHandler->GetEvent()->GetEventInt());
+			}
+		}
 	}
-	else
-	{
-	}
+	delete buffer;
 }
 int QueuedNetTask::GetNextTask()
 {
-	cs_->Enter();
 	if(m_bClientRecving)
 	{
 		m_bClientRecving = FALSE;
-		cs_->Leave();
 		return CLIENT_RECVING;
 	}
 
 	if(m_bClientSending)
 	{
 		m_bClientSending = FALSE;
-		cs_->Leave();
 		return CLIENT_SENDING;
 	}
 
 	if(m_bRemoteRecving)
 	{
 		m_bRemoteRecving = FALSE;
-		cs_->Leave();
 		return REMOTE_RECVING;
 	}
 
 	if(m_bRemoteSending)
 	{
 		m_bRemoteSending = FALSE;
-		cs_->Leave();
 		return REMOTE_SENDING;
 	}
-	cs_->Leave();
 	return FALSE;
 }
 

@@ -95,6 +95,8 @@ int NetEngine::ModFileDescriptor(IOHandler* pHandler,int event)
 	EPOLLEVENT ee = {0};
 	ee = pHandler->GetEvent()->ToEpollEvent(event);
 	int ret = epoll_ctl(m_iFD,EPOLL_CTL_MOD,pHandler->GetEvent()->GetFD(),&ee);
+	if(ret == -1)
+		printf("epoll_ctl error %d\n", event);
 	return ret;
 }
 
