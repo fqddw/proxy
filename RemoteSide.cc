@@ -347,6 +347,7 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 		QueuedNetTask* pMainTask = GetMainTask();
 		if(isEnd)
 		{
+			SetMainTask(NULL);
 			//如果拉取信息结束,则解耦
 			if(m_iClientState == STATE_RUNNING)
 			{
@@ -357,11 +358,11 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 				if(!m_bShouldClose)
 				{
 					SetStatusIdle();
-					GetEvent()->ModEvent(EPOLLIN|/*EPOLLET|*/EPOLLONESHOT);
 				}
 				else
 					SetClosed(TRUE);
 			}
+			GetEvent()->ModEvent(EPOLLIN|/*EPOLLET|*/EPOLLONESHOT);
 		}
 
 		/*
@@ -439,8 +440,9 @@ int RemoteSide::ProccessConnectionReset()
 				m_pClientSide->SetRemoteState(STATE_ABORT);
 				m_iClientState = STATE_NORMAL;
 				ClearHttpEnd();
+				m_pClientSide->GetEvent()->ModEvent(EPOLLIN|EPOLLONESHOT);
 				//printf("Multi Thread RecvTask %s %d\n", __FILE__, __LINE__);
-				m_pClientSide->ProccessConnectionReset();
+				//m_pClientSide->ProccessConnectionReset();
 				//GetMasterThread()->InsertTask(m_pClientSide->GetRecvTask());
 				m_pClientSide = NULL;
 			}
@@ -478,6 +480,7 @@ int RemoteSide::ProccessConnectionClose()
 				m_pClientSide->SetCloseAsLength(TRUE);
 				m_iClientState = STATE_NORMAL;
 				ClearHttpEnd();
+				m_pClientSide->GetEvent()->ModEvent(EPOLLIN|EPOLLONESHOT);
 				//printf("Multi Thread RecvTask %s %d %s\n", __FILE__, __LINE__, m_pClientSide->GetRequest()->GetHeader()->GetRequestLine()->GetUrl()->GetHost());
 				//if((m_bCloseClient || m_bSSL) && m_pClientSide->GetSendStream()->GetLength() == 0);
 				//if(m_bSSL)

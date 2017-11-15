@@ -80,6 +80,7 @@ int ClientSide::SSLTransferRecv(Stream* pStream)
 {
 	if(m_iRemoteState != STATE_RUNNING)
 	{
+		delete pStream;
 		ProccessConnectionReset();
 		return 0;
 	}
@@ -287,6 +288,7 @@ int ClientSide::ProccessReceive(Stream* pStream)
 				GetEvent()->ModEvent(EPOLLIN|EPOLLONESHOT);
 				return FALSE;
 			}
+			GetEvent()->ModEvent(EPOLLIN|EPOLLONESHOT);
 			m_iState = HEADER_FOUND;
 			InetSocketAddress* pAddr = NULL;
 			//if(strstr(m_pHttpRequest->GetHeader()->GetRequestLine()->GetUrl()->GetHost(), "p.l.youku.com"))
@@ -343,6 +345,12 @@ int ClientSide::ProccessReceive(Stream* pStream)
 
 			}
 			{
+				if(!m_pRemoteSide)
+				{
+					delete pStream;
+					ProccessConnectionClose();
+					return 0;
+				}
 
 				if(!(m_pRemoteSide->GetEvent()->GetEventInt() & EPOLLOUT))
 				{
@@ -370,6 +378,9 @@ int ClientSide::ProccessReceive(Stream* pStream)
 	{
 		if(!m_pRemoteSide)
 		{
+			delete pStream;
+			ProccessConnectionClose();
+			return 0;
 		}
 		if(m_pHttpRequest->GetBody())
 			if(m_pHttpRequest->GetBody()->IsEnd(pStream))
@@ -396,6 +407,7 @@ int ClientSide::ProccessReceive(Stream* pStream)
 		}
 		//m_pRemoteSide->ProccessSend();
 		m_pStream->Sub(m_pStream->GetLength());
+		delete pStream;
 	}
 	else if(m_iTransState == CLIENT_STATE_WAITING)
 	{
@@ -491,7 +503,6 @@ int ClientSide::ProccessSend()
 	}
 	if(GetEvent()->GetEventInt() & EPOLLOUT)
 	{
-		printf("Client Set EPOLLIN %d\n", GetEvent()->GetFD());
 		GetEvent()->ModEvent(EPOLLIN|/*EPOLLET|*/EPOLLONESHOT);
 	}
 	else
@@ -515,13 +526,11 @@ int ClientSide::ProccessSend()
 			flag = FALSE;
 			if(errno == EAGAIN)
 			{
-				printf("Client Send EPOLLOUT %d\n", GetEvent()->GetFD());
 				GetEvent()->ModEvent(EPOLLOUT|/*EPOLLET|*/EPOLLONESHOT);
 				return TRUE;
 			}
 			else
 			{
-				printf("Client Send Error %d %d\n", GetEvent()->GetFD(), errno);
 				m_pRemoteSide->SetClientState(STATE_ABORT);
 				SetClosed(TRUE);
 				//ProccessReceive(NULL);
@@ -544,7 +553,6 @@ int ClientSide::ProccessSend()
 			m_pSendStream->Sub(nSent);
 			if(m_pSendStream->GetLength() == 0)
 			{
-				printf("Send Finish %d\n", GetEvent()->GetFD());
 				flag = FALSE;
 				if(m_iRemoteState == STATE_NORMAL)
 				{
@@ -567,11 +575,9 @@ int ClientSide::ProccessSend()
 					if(!(m_pRemoteSide->GetEvent()->GetEventInt() & EPOLLOUT))
 					{
 						m_pRemoteSide->GetEvent()->ModEvent(EPOLLIN|/*EPOLLET|*/EPOLLONESHOT);
-						printf("Remote Set EPOLLIN %d\n", GetEvent()->GetFD());
 					}
 					else
 					{
-						printf("Remote Not Set EPOLLIN %d\n", GetEvent()->GetFD());
 					}
 					return 0;
 				}

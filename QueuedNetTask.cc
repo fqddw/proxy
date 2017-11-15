@@ -67,12 +67,12 @@ int QueuedNetTask::Run()
 int QueuedNetTask::GetDataStream(IOHandler* pIOHandler, Stream** ppStream)
 {
 	int sockfd = pIOHandler->GetEvent()->GetFD();
-	char* buffer = new char[1024*256];
+	char* buffer = new char[1024*4];
 	int flag = TRUE;
 	int total = 0;
-	while(flag)
+	//while(flag)
 	{
-		int n = recv(sockfd, buffer, 256*1024, 0);
+		int n = recv(sockfd, buffer, 4*1024, 0);
 		if(n > 0)
 		{
 			total+=n;
@@ -89,7 +89,7 @@ int QueuedNetTask::GetDataStream(IOHandler* pIOHandler, Stream** ppStream)
 			}
 		}
 	}
-	delete buffer;
+	delete []buffer;
 }
 int QueuedNetTask::GetNextTask()
 {
