@@ -66,6 +66,9 @@ int IOHandler::Dispatch(int events)
 	{
 		SetSendFlag();
 	}
+	if(events & EPOLLERR)
+	{
+	}
 
 	LockTask();
 	if(!m_pMainTask->IsRunning())
