@@ -180,6 +180,7 @@ int RemoteSide::ProccessSend()
 			}
 			else
 			{
+				SetClosed(TRUE);
 				GetEvent()->ModEvent(EPOLLOUT|/*EPOLLET|*/EPOLLONESHOT);
 				if(m_iClientState != STATE_NORMAL)
 				{
@@ -225,6 +226,13 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 		return 0;
 	}
 
+	if(m_iClientState == STATE_ABORT)
+	{
+		if(pStream)
+			delete pStream;
+		ProccessConnectionClose();
+		return 0;
+	}
 	Stream* pSendStream = NULL;
 	if(!GetMainTask())
 	{
