@@ -201,6 +201,7 @@ int ClientSide::ProccessReceive(Stream* pStream)
 				}
 				Stream* pUserName = pDigest->GetUserName();
 				User* pUser = pAuth->GetUser();
+				int bFromAuth = TRUE;
 				if(!pUser)
 				{
 					pUser = User::LoadByName(pUserName);
@@ -214,6 +215,10 @@ int ClientSide::ProccessReceive(Stream* pStream)
 						ProccessConnectionReset();
 						return 0;
 					}
+					else
+					{
+						bFromAuth = FALSE;
+					}
 				}
 				Stream* pPassword = new Stream();
 				pPassword->Append(pUser->GetPassword());
@@ -222,7 +227,8 @@ int ClientSide::ProccessReceive(Stream* pStream)
 				char* pData = pRespStream->GetData();
 				if(strncmp(pData, pDigest->GetResponse()->GetData(), 32))
 				{
-					delete pUser;
+					if(!bFromAuth)
+						delete pUser;
 					delete pRespStream;
 					delete pDigest;
 					const char* pAuthFailedText = "HTTP/1.1 200 OK\r\nServer: Turbo Load\r\nContent-Length: 10\r\n\r\nAuth Failed";

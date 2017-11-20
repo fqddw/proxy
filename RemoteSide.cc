@@ -181,7 +181,7 @@ int RemoteSide::ProccessSend()
 			else
 			{
 				SetClosed(TRUE);
-				GetEvent()->ModEvent(EPOLLOUT|/*EPOLLET|*/EPOLLONESHOT);
+				//GetEvent()->ModEvent(EPOLLOUT|/*EPOLLET|*/EPOLLONESHOT);
 				if(m_iClientState != STATE_NORMAL)
 				{
 					m_pClientSide->SetRemoteState(STATE_ABORT);
