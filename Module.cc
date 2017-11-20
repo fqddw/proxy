@@ -20,3 +20,4 @@ int Module::GetName(char* pName, int len)
 	pName[nameLen] = '\0';
 	return TRUE;
 }
+

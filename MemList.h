@@ -191,5 +191,7 @@ MemList<T>::~MemList<T>()
 		pNode = pNode->GetNext();
 		delete pTmpNode;
 	}
+	delete cs_;
+	cs_ = NULL;
 }
 #endif

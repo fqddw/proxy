@@ -83,7 +83,7 @@ int RemoteSide::Connect()
 	struct sockaddr sa = m_pAddr->ToSockAddr();
 	m_isConnected = SOCKET_STATUS_CONNECTING;
 	int ret = connect(m_iSocket,&sa,sizeof(sa));
-	GetEvent()->ModEvent(EPOLLOUT|/*EPOLLET|*/EPOLLONESHOT);
+	GetEvent()->ModEvent(EPOLLOUT|EPOLLIN|EPOLLONESHOT);
 	return ret;
 }
 int RemoteSide::ProccessSend()
@@ -180,6 +180,12 @@ int RemoteSide::ProccessSend()
 			}
 			else
 			{
+				GetEvent()->ModEvent(EPOLLOUT|/*EPOLLET|*/EPOLLONESHOT);
+				if(m_iClientState != STATE_NORMAL)
+				{
+					m_pClientSide->SetRemoteState(STATE_ABORT);
+					m_pClientSide->GetEvent()->ModEvent(EPOLLIN|EPOLLONESHOT);
+				}
 				return 0;
 			}
 		}
@@ -213,6 +219,12 @@ int RemoteSide::ClearHttpEnd()
 }
 int RemoteSide::ProccessReceive(Stream* pStream)
 {
+	if(m_isConnected == SOCKET_STATUS_CONNECTING)
+	{
+		ProccessConnectionClose();
+		return 0;
+	}
+
 	Stream* pSendStream = NULL;
 	if(!GetMainTask())
 	{
@@ -440,7 +452,7 @@ int RemoteSide::ProccessConnectionReset()
 				m_pClientSide->SetRemoteState(STATE_ABORT);
 				m_iClientState = STATE_NORMAL;
 				ClearHttpEnd();
-				m_pClientSide->GetEvent()->ModEvent(EPOLLIN|EPOLLONESHOT);
+				//m_pClientSide->GetEvent()->ModEvent(EPOLLIN|EPOLLONESHOT);
 				//printf("Multi Thread RecvTask %s %d\n", __FILE__, __LINE__);
 				//m_pClientSide->ProccessConnectionReset();
 				//GetMasterThread()->InsertTask(m_pClientSide->GetRecvTask());
@@ -480,7 +492,7 @@ int RemoteSide::ProccessConnectionClose()
 				m_pClientSide->SetCloseAsLength(TRUE);
 				m_iClientState = STATE_NORMAL;
 				ClearHttpEnd();
-				m_pClientSide->GetEvent()->ModEvent(EPOLLIN|EPOLLONESHOT);
+				//m_pClientSide->GetEvent()->ModEvent(EPOLLIN|EPOLLONESHOT);
 				//printf("Multi Thread RecvTask %s %d %s\n", __FILE__, __LINE__, m_pClientSide->GetRequest()->GetHeader()->GetRequestLine()->GetUrl()->GetHost());
 				//if((m_bCloseClient || m_bSSL) && m_pClientSide->GetSendStream()->GetLength() == 0);
 				//if(m_bSSL)

@@ -533,6 +533,8 @@ int ClientSide::ProccessSend()
 			{
 				m_pRemoteSide->SetClientState(STATE_ABORT);
 				SetClosed(TRUE);
+				if(m_iRemoteState != STATE_NORMAL)
+					m_pRemoteSide->GetEvent()->ModEvent(EPOLLIN|EPOLLONESHOT);
 				//ProccessReceive(NULL);
 				//ProccessConnectionReset();
 				return 0;
@@ -628,7 +630,7 @@ int ClientSide::ProccessConnectionReset()
 				{
 					m_pRemoteSide->SetClientState(STATE_ABORT);
 					m_pRemoteSide->SetClientSide(NULL);
-					m_pRemoteSide->GetEvent()->ModEvent(EPOLLIN|EPOLLONESHOT);
+					//m_pRemoteSide->GetEvent()->ModEvent(EPOLLIN|EPOLLONESHOT);
 					//m_pRemoteSide->ProccessConnectionReset();
 					//printf("Multi Thread RecvTask %s %d\n", __FILE__, __LINE__);
 					//GetMasterThread()->InsertTask(m_pRemoteSide->GetRecvTask());
