@@ -148,7 +148,7 @@ int Stream::Equal(char* pDest)
 void Stream::Clear()
 {
 	if(m_pData)
-		delete m_pData;
+		delete []m_pData;
 	m_pData = NULL;
 	m_iLength = 0;
 }

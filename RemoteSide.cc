@@ -35,6 +35,10 @@ int RemoteSide::SetStatusIdle()
 	m_pHttpResponse = new HttpResponse(m_pStream);
 	m_pClientSide = NULL;
 
+	m_iSentTotal = 0;
+	m_iRecvTotal = 0;
+	m_pSendStream->Clear();
+	SetEndTime(Time::GetNow());
 	SetMainTask(NULL);
 	m_iState = STATUS_IDLE; 
 	return TRUE;
@@ -52,7 +56,10 @@ RemoteSide::RemoteSide():
 	m_isConnected(FALSE),
 	m_iClientState(STATE_NORMAL),
 	m_bCloseClient(FALSE),
-	m_bSSL(FALSE)
+	m_bSSL(FALSE),
+	m_iSentTotal(0),
+	m_iRecvTotal(0),
+	m_iUseCount(0)
 {
 	m_iSide = REMOTE_SIDE;
 	GetEvent()->SetIOHandler(this);
@@ -66,7 +73,10 @@ RemoteSide::RemoteSide(InetSocketAddress* pAddr):
 	m_iClientState(STATE_NORMAL),
 	m_bCloseClient(FALSE),
 	m_bShouldClose(FALSE),
-	m_bSSL(FALSE)
+	m_bSSL(FALSE),
+	m_iSentTotal(0),
+	m_iRecvTotal(0),
+	m_iUseCount(0)
 {
 	m_iSide = REMOTE_SIDE;
 	GetEvent()->SetIOHandler(this);
@@ -88,10 +98,6 @@ int RemoteSide::Connect()
 }
 int RemoteSide::ProccessSend()
 {
-	if(!m_pClientSide)
-	{
-		return 0;
-	}
 	if(m_pSendStream->GetLength() == 0)
 	{
 	/*
@@ -165,11 +171,16 @@ int RemoteSide::ProccessSend()
 		GetEvent()->ModEvent(EPOLLIN|/*EPOLLET|*/EPOLLONESHOT);
 	}
 
+	if(!m_pClientSide)
+	{
+		return 0;
+	}
+
 	int totalSend = 0;
 	int flag = TRUE;
 	while(flag)
 	{
-		int nSent = send(GetEvent()->GetFD(),m_pSendStream->GetData(),m_pSendStream->GetLength(),0);
+		int nSent = send(GetEvent()->GetFD(),m_pSendStream->GetData()+m_iSentTotal,m_pSendStream->GetLength()-m_iSentTotal,0);
 		if(nSent == -1)
 		{
 			flag = FALSE;
@@ -197,8 +208,9 @@ int RemoteSide::ProccessSend()
 		else
 		{
 			totalSend += nSent;
-			m_pSendStream->Sub(nSent);
-			if(m_pSendStream->GetLength() == 0)
+			m_iSentTotal += nSent;
+			//m_pSendStream->Sub(nSent);
+			if(m_pSendStream->GetLength()-m_iSentTotal == 0)
 			{
 				if(!(m_pClientSide->GetEvent()->GetEventInt() & EPOLLOUT))
 					m_pClientSide->GetEvent()->ModEvent(EPOLLIN|/*EPOLLET|*/EPOLLONESHOT);
@@ -241,8 +253,35 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 	}
 	if(!pStream)
 	{
+		struct timespec sec = Time::Sub(Time::GetNow(), start_time);
+		//printf("%d %ld %ld %d %d %d %d %d %d %s\n", errno, sec.tv_sec, sec.tv_nsec,  m_bSSL, m_iState, m_iUseCount, m_iSentTotal, m_iRecvTotal, m_pSendStream->GetLength(), m_pSendStream->GetData());
+		if(m_iUseCount == 1)
+		{
+		char buf[] = "HTTP/1.1 502 Bad Gateway\r\nContent-Length: 0\r\n\r\n";
+		m_pClientSide->GetSendStream()->Append(buf);
+		m_pClientSide->SetSendFlag();
+		//m_pClientSide->ProccessConnectionReset();
+		}
+		else
+		{
+			if(m_iRecvTotal == 0)
+			{
+				m_iSentTotal = 0;
+				RemoteSide* pRemoteSide = m_pClientSide->GetRemoteSide(m_pAddr);
+				m_pClientSide->SetRemoteSide(pRemoteSide);
+				GetMainTask()->SetRemote(pRemoteSide);
+				pRemoteSide->GetSendStream()->Append(m_pSendStream);
+				pRemoteSide->SetSendFlag();
+				SetMainTask(NULL);
+				m_pAddr = NULL;
+			}
+		}
 		ProccessConnectionClose();
 		return TRUE;
+	}
+	else
+	{
+		m_iRecvTotal += pStream->GetLength();
 	}
 	if(!m_pClientSide)
 	{
@@ -375,12 +414,12 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 				m_pClientSide->SetRemoteState(STATE_NORMAL);
 
 				ClearHttpEnd();
-				if(!m_bShouldClose)
+				//if(!m_bShouldClose)
 				{
 					SetStatusIdle();
 				}
-				else
-					SetClosed(TRUE);
+				//else
+					//SetClosed(TRUE);
 			}
 			GetEvent()->ModEvent(EPOLLIN|/*EPOLLET|*/EPOLLONESHOT);
 		}
@@ -537,7 +576,9 @@ RemoteSide::~RemoteSide()
 		delete m_pHttpResponse;
 		m_pHttpResponse = NULL;
 	}
-	delete m_pAddr;
+	if(m_pAddr)
+		delete m_pAddr;
+	m_pAddr = NULL;
 }
 
 void RemoteSide::SetClientState(int iState)
@@ -568,4 +609,19 @@ void RemoteSide::SetMainTask(QueuedNetTask* pTask)
 	IOHandler::SetMainTask(pTask);
 	if(pTask)
 		pTask->SetRemote(this);
+}
+
+void RemoteSide::IncUseCount()
+{
+	m_iUseCount++;
+}
+
+void RemoteSide::SetStartTime(struct timespec tCurTime)
+{
+	start_time = tCurTime;
+}
+
+void RemoteSide::SetEndTime(struct timespec tCurTime)
+{
+	end_time = tCurTime;
 }

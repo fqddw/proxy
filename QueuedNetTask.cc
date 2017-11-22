@@ -85,7 +85,7 @@ int QueuedNetTask::GetDataStream(IOHandler* pIOHandler, Stream** ppStream)
 			flag = FALSE;
 			if(n == -1)
 			{
-				printf("%d %d %d %d\n", errno, pIOHandler->GetSide(), pIOHandler->GetEvent()->GetFD(), pIOHandler->GetEvent()->GetEventInt());
+				//printf("%d %d %d %d\n", errno, pIOHandler->GetSide(), pIOHandler->GetEvent()->GetFD(), pIOHandler->GetEvent()->GetEventInt());
 			}
 		}
 	}

@@ -463,6 +463,8 @@ RemoteSide* ClientSide::GetRemoteSide(InetSocketAddress* pAddr)
 			pRemoteSide->SetClientSide(this);
 			pRemoteSide->SetClientState(STATE_RUNNING);
 			pRemoteSide->SetMainTask(GetMainTask());
+			pRemoteSide->IncUseCount();
+			pRemoteSide->SetStartTime(Time::GetNow());
 
 			m_iRemoteState = STATE_RUNNING;
 			break;
@@ -479,6 +481,8 @@ RemoteSide* ClientSide::GetRemoteSide(InetSocketAddress* pAddr)
 		pRemoteSide->SetClientSide(this);
 		pRemoteSide->SetMainTask(GetMainTask());
 		pRemoteSide->SetClientState(STATE_RUNNING);
+		pRemoteSide->IncUseCount();
+		pRemoteSide->SetStartTime(Time::GetNow());
 		m_iRemoteState = STATE_RUNNING;
 		pRemoteSide->GetEvent()->AddToEngine(EPOLLIN|/*EPOLLET|*/EPOLLONESHOT);
 		g_pGlobalRemoteSidePool->Append(pRemoteSide);
@@ -495,13 +499,6 @@ Stream* ClientSide::GetSendStream(){
 int ClientSide::ProccessSend()
 {
 	//远端退出
-	if(m_iRemoteState == STATE_ABORT)
-	{
-		SetClosed(TRUE);
-		//ProccessReceive(NULL);
-		//ProccessConnectionReset();
-		return TRUE;
-	}
 	//应该不可能出现这种情况
 	if(m_pSendStream->GetLength()<=0)
 	{
@@ -514,6 +511,14 @@ int ClientSide::ProccessSend()
 	else
 	{
 	}
+	if(m_iRemoteState == STATE_ABORT)
+	{
+		SetClosed(TRUE);
+		//ProccessReceive(NULL);
+		//ProccessConnectionReset();
+		return TRUE;
+	}
+
 	int totalSend = 0;
 	int flag = TRUE;
 	//printf("Client Send Data %s %d\n", GetRequest()->GetHeader()->GetRequestLine()->GetUrl()->GetHost(), m_pSendStream->GetLength());

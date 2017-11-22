@@ -2,6 +2,7 @@
 #define __REMOTESIDE_H__
 
 #include "CommonType.h"
+#include "TimeLib.h"
 #include "IOHandler.h"
 #include "ClientSide.h"
 #include "InetSocketAddress.h"
@@ -43,6 +44,9 @@ class RemoteSide:public IOHandler
 		void SetRecvFlag();
 		void SetSendFlag();
 		void SetMainTask(QueuedNetTask*);
+		void IncUseCount();
+		void SetStartTime(struct timespec tCurTime);
+		void SetEndTime(struct timespec tCurTime);
 	private:
 		int m_isConnected;
 		int m_iSocket;
@@ -56,5 +60,10 @@ class RemoteSide:public IOHandler
 		int m_bShouldClose;
 		int m_bCloseClient;
 		int m_bSSL;
+		int m_iSentTotal;
+		int m_iRecvTotal;
+		int m_iUseCount;
+		struct timespec start_time;
+		struct timespec end_time;
 };
 #endif
