@@ -14,7 +14,7 @@ IOHandler::IOHandler():
 	m_bRealClosed(0),
 	m_bDeleted(FALSE)
 {
-	pGlobalList->Append(this);
+	//pGlobalList->Append(this);
 }
 IOEvent* IOHandler::GetEvent()
 {
