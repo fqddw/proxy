@@ -273,6 +273,7 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 				pRemoteSide->GetSendStream()->Append(m_pSendStream);
 				pRemoteSide->SetSendFlag();
 				SetMainTask(NULL);
+				m_pClientSide = NULL;
 				m_pAddr = NULL;
 			}
 		}
