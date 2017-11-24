@@ -124,6 +124,11 @@ QueuedNetTask::QueuedNetTask():Task(),m_pClientSide(NULL),m_pRemoteSide(NULL),m_
 {
 }
 
+QueuedNetTask::~QueuedNetTask()
+{
+	delete cs_;
+	cs_ = NULL;
+}
 void QueuedNetTask::Lock()
 {
 	cs_->Enter();

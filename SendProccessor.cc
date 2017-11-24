@@ -12,3 +12,7 @@ int SendProccessor::Run()
 	m_pIOHandler->Release();
 	return 0;
 }
+
+SendProccessor::~SendProccessor()
+{
+}

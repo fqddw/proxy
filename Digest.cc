@@ -97,7 +97,17 @@ Digest::~Digest()
 		delete m_pPassword;
 	m_pPassword = NULL;
 	if(m_pKeyValueList)
+	{
+
+		MemNode<pair<Stream*, Stream*>*>* pNode = m_pKeyValueList->GetHead();
+		while(pNode)
+		{
+			delete pNode->GetData()->first;
+			delete pNode->GetData()->second;
+			pNode = pNode->GetNext();
+		}
 		delete m_pKeyValueList;
+	}
 	m_pKeyValueList = NULL;
 }
 

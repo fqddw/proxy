@@ -376,6 +376,7 @@ int ClientSide::ProccessReceive(Stream* pStream)
 		}
 		else
 		{
+			delete pStream;
 			GetEvent()->ModEvent(EPOLLIN|/*EPOLLET|*/EPOLLONESHOT);
 			return FALSE;
 		}
@@ -418,6 +419,7 @@ int ClientSide::ProccessReceive(Stream* pStream)
 	else if(m_iTransState == CLIENT_STATE_WAITING)
 	{
 		//printf("logic error!\n");
+		delete pStream;
 		ProccessConnectionReset();
 		return FALSE;
 	}

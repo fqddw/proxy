@@ -23,6 +23,7 @@ class QueuedNetTask : public Task
 		int m_bRunning;
 	public:
 		QueuedNetTask();
+		virtual ~QueuedNetTask();
 		int Run();
 		void Lock();
 		void Unlock();

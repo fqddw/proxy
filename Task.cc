@@ -38,3 +38,6 @@ void Task::CancelRepeatable()
 {
 	m_iRepeatable = FALSE;
 }
+Task::~Task()
+{
+}

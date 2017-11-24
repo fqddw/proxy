@@ -8,7 +8,7 @@ class ReceiveProccessor : public Task
 	public:
 		ReceiveProccessor();
 		ReceiveProccessor(IOHandler*);
-		~ReceiveProccessor();
+		virtual ~ReceiveProccessor();
 	public:
 		int Run();
 	private:

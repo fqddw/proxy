@@ -98,8 +98,9 @@ int RemoteSide::Connect()
 }
 int RemoteSide::ProccessSend()
 {
-	if(m_pSendStream->GetLength() == 0)
+	if(m_pSendStream->GetLength() == m_iSentTotal)
 	{
+		printf("May Cut Here\n");
 	/*
 		return FALSE;
 	*/
@@ -248,6 +249,8 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 	Stream* pSendStream = NULL;
 	if(!GetMainTask())
 	{
+		if(pStream)
+			delete pStream;
 		ProccessConnectionClose();
 		return 0;
 	}
@@ -275,6 +278,11 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 				SetMainTask(NULL);
 				m_pClientSide = NULL;
 				m_pAddr = NULL;
+			}
+			else if(errno == EAGAIN)
+			{
+				GetEvent()->ModEvent(EPOLLIN|EPOLLONESHOT);
+				return 0;
 			}
 		}
 		ProccessConnectionClose();

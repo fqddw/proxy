@@ -21,6 +21,8 @@ class Stream
 		int Equal(Stream*);
 		int Equal(char*);
 		void Clear();
+		void Lock();
+		void Unlock();
 	private:
 		char* m_pData;
 		int m_iLength;

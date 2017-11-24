@@ -89,14 +89,14 @@ int HttpBody::Parse(Stream* pStream)
 		}
 		if(m_iChunkState == CS_IN_BEGIN_CRLF)
 		{
-			if(offset + 2 > pStream->GetLength())
+			if(offset + m_iOffset -2 > pStream->GetLength())
 			{
-				m_iOffset = pStream->GetLength()-offset;
+				m_iOffset = 2-pStream->GetLength()+offset;
 				break;
 			}
 			else
 			{
-				offset += 2;
+				offset += (2-m_iOffset);
 				m_iChunkState = CS_IN_LENGTH;
 				begin = offset;
 			}

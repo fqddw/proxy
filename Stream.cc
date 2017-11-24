@@ -91,31 +91,42 @@ int Stream::Sub(int offset)
 
 char* Stream::GetPartDataToString(int begin,int end)
 {
+	cs_->Enter();
 	int length = end-begin;
 	char* pReturnString = new char[length+1];
 	pReturnString[length] = '\0';
 	memcpy(pReturnString,m_pData+begin,length);
+	cs_->Leave();
 	return pReturnString;
 }
 
 Stream* Stream::GetPartStream(int begin,int end)
 {
+	cs_->Enter();
 	int length = end-begin;
 	if(length == 0)
+	{
+		cs_->Leave();
 		return NULL;
+	}
 	char* pReturnString = new char[length];
 	memcpy(pReturnString,m_pData+begin,length);
 	Stream* pStream = new Stream();
 	pStream->Append(pReturnString,length);
 	delete []  pReturnString;
+	cs_->Leave();
 	return pStream;
 
 }
 
 int Stream::Equal(Stream* pDest)
 {
+	Lock();
+	pDest->Lock();
 	if(pDest->m_iLength != m_iLength)
 	{
+		pDest->Unlock();
+		Unlock();
 		return FALSE;
 	}
 
@@ -123,16 +134,25 @@ int Stream::Equal(Stream* pDest)
 	for(;i<m_iLength;i++)
 	{
 		if(m_pData[i] != pDest->m_pData[i])
+		{
+			pDest->Unlock();
+			Unlock();
 			return FALSE;
+		}
 	}
+	pDest->Unlock();
+	Unlock();
+
 	return TRUE;
 }
 
 int Stream::Equal(char* pDest)
 {
+	cs_->Enter();
 	int len = strlen(pDest);
 	if(len != m_iLength)
 	{
+		cs_->Leave();
 		return FALSE;
 	}
 
@@ -140,17 +160,23 @@ int Stream::Equal(char* pDest)
 	for(;i<m_iLength;i++)
 	{
 		if(m_pData[i] != pDest[i])
+		{
+			cs_->Leave();
 			return FALSE;
+		}
 	}
+	cs_->Leave();
 	return TRUE;
 }
 
 void Stream::Clear()
 {
+	cs_->Enter();
 	if(m_pData)
 		delete []m_pData;
 	m_pData = NULL;
 	m_iLength = 0;
+	cs_->Leave();
 }
 
 Stream::Stream(char* pData):cs_(new CriticalSection())
@@ -167,4 +193,14 @@ Stream::Stream(const char* pData):cs_(new CriticalSection())
 	m_iLength = len;
 	m_pData = new char[len];
 	memcpy(m_pData, pData, len);
+}
+
+void Stream::Lock()
+{
+	cs_->Enter();
+}
+
+void Stream::Unlock()
+{
+	cs_->Leave();
 }

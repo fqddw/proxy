@@ -231,6 +231,7 @@ int HttpResponse::LoadHttpHeader()
 	return 0;
 }
 #define RESPONSE_CODE_NOT_MODIFIED 304
+#define RESPONSE_CODE_INTERNAL_REDIRECT 307
 #define RESPONSE_CODE_NO_CONTENT 204
 int HttpResponse::HasBody()
 {
@@ -239,6 +240,10 @@ int HttpResponse::HasBody()
 		return FALSE;
 	}
 	if(m_pHeader->GetResponseLine()->GetCode() == RESPONSE_CODE_NO_CONTENT)
+	{
+		return FALSE;
+	}
+	if(m_pHeader->GetResponseLine()->GetCode() == RESPONSE_CODE_INTERNAL_REDIRECT)
 	{
 		return FALSE;
 	}

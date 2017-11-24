@@ -7,7 +7,7 @@ class SendProccessor : public Task
 	public:
 		SendProccessor();
 		SendProccessor(IOHandler*);
-		~SendProccessor();
+		virtual ~SendProccessor();
 	private:
 		IOHandler* m_pIOHandler;
 		int m_iState;

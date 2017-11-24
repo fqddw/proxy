@@ -15,6 +15,7 @@ class Task
 {
 public:
 	Task();
+	virtual ~Task();
 public:
 	void SetTime(struct timespec* time);
 	struct timespec GetTime();
