@@ -67,14 +67,19 @@ int QueuedNetTask::Run()
 int QueuedNetTask::GetDataStream(IOHandler* pIOHandler, Stream** ppStream)
 {
 	int sockfd = pIOHandler->GetEvent()->GetFD();
-	char* buffer = new char[1024*4];
+	char* buffer = new char[1024*256];
 	int flag = TRUE;
 	int total = 0;
 	//while(flag)
 	{
-		int n = recv(sockfd, buffer, 4*1024, 0);
+		int n = recv(sockfd, buffer, 256*1024, 0);
 		if(n > 0)
 		{
+			if(errno == EAGAIN)
+			{
+				//printf("%d %d\n", errno, n);
+			}
+			//printf("%s\n",buffer);
 			total+=n;
 			if(!*ppStream)
 				*ppStream = new Stream();
@@ -83,9 +88,9 @@ int QueuedNetTask::GetDataStream(IOHandler* pIOHandler, Stream** ppStream)
 		else
 		{
 			flag = FALSE;
-			if(n == -1)
+			//if(n == -1)
 			{
-				//printf("%d %d %d %d\n", errno, pIOHandler->GetSide(), pIOHandler->GetEvent()->GetFD(), pIOHandler->GetEvent()->GetEventInt());
+				//printf("%d %d %d %d %d\n", n, errno, pIOHandler->GetSide(), pIOHandler->GetEvent()->GetFD(), pIOHandler->GetEvent()->GetEventInt());
 			}
 		}
 	}

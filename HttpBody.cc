@@ -117,6 +117,7 @@ int HttpBody::Parse(Stream* pStream)
 					char* pLength = m_pLengthStream->GetPartDataToString(0,m_pLengthStream->GetLength());
 					int chunkLength = 0;
 					sscanf(pLength,"%x",&chunkLength);
+					//printf("%d %s %.9s\n", chunkLength, pLength,pStream->GetData()+begin);
 					m_pLengthStream = new Stream();
 
 					m_iCurChunkLength = chunkLength;

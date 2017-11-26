@@ -7,6 +7,7 @@
 #include "unistd.h"
 #include "string.h"
 #include "QueuedNetTask.h"
+#include "netinet/tcp.h"
 
 extern MemList<RemoteSide*>* g_pGlobalRemoteSidePool;
 extern MemList<void*>* pGlobalList;
@@ -33,6 +34,7 @@ int RemoteSide::SetStatusIdle()
 {
 	delete m_pHttpResponse;
 	m_pHttpResponse = new HttpResponse(m_pStream);
+	m_pClientSide->SetRemoteSide(NULL);
 	m_pClientSide = NULL;
 
 	m_iSentTotal = 0;
@@ -93,14 +95,14 @@ int RemoteSide::Connect()
 	struct sockaddr sa = m_pAddr->ToSockAddr();
 	m_isConnected = SOCKET_STATUS_CONNECTING;
 	int ret = connect(m_iSocket,&sa,sizeof(sa));
-	GetEvent()->ModEvent(EPOLLOUT|EPOLLIN|EPOLLONESHOT);
+	SetCanRead(FALSE);
+	GetEvent()->ModEvent(EPOLLOUT|/*EPOLLIN|*/EPOLLONESHOT);
 	return ret;
 }
 int RemoteSide::ProccessSend()
 {
 	if(m_pSendStream->GetLength() == m_iSentTotal)
 	{
-		printf("May Cut Here\n");
 	/*
 		return FALSE;
 	*/
@@ -130,11 +132,23 @@ int RemoteSide::ProccessSend()
 			return 0;
 		}
 		m_isConnected = TRUE;
+		int bKeepAlive = TRUE;
+		int iKeepIdle = 60;
+		int iKeepInterval = 5;
+		int iKeepCount = 3;
+		setsockopt(GetEvent()->GetFD(), SOL_SOCKET, SO_KEEPALIVE, (void*)&bKeepAlive, sizeof(int));
+		setsockopt(GetEvent()->GetFD(), SOL_TCP, TCP_KEEPIDLE, (void*)&iKeepIdle, sizeof(int));
+		setsockopt(GetEvent()->GetFD(), SOL_TCP, TCP_KEEPINTVL, (void*)&iKeepInterval, sizeof(int));
+		setsockopt(GetEvent()->GetFD(), SOL_TCP, TCP_KEEPCNT, (void*)&iKeepCount, sizeof(int));
 		if(m_pSendStream->GetLength())
 		{
 		}
 		m_isConnected = TRUE;
-		GetEvent()->ModEvent(EPOLLIN|/*EPOLLET|*/EPOLLONESHOT);
+		if(!CanRead())
+		{
+			SetCanRead(TRUE);
+			GetEvent()->ModEvent(EPOLLIN|/*EPOLLET|*/EPOLLONESHOT);
+		}
 		//m_pClientSide->GetEvent()->ModEvent(EPOLLIN|/*EPOLLET|*/EPOLLONESHOT);
 		if(m_bSSL)
 		{
@@ -146,7 +160,11 @@ int RemoteSide::ProccessSend()
 			if(m_iClientState != STATE_RUNNING)
 			{
 			}
-			m_pClientSide->GetEvent()->ModEvent(EPOLLIN|/*EPOLLET|*/EPOLLONESHOT);
+			if(!m_pClientSide->CanRead())
+			{
+				m_pClientSide->SetCanRead(TRUE);
+				m_pClientSide->GetEvent()->ModEvent(EPOLLIN|/*EPOLLET|*/EPOLLONESHOT);
+			}
 			const char* pConnEstablished= "HTTP/1.1 200 Connection Established\r\nContent-Length: 0\r\n\r\n";
 			int len = strlen(pConnEstablished);
 			m_pClientSide->GetSendStream()->Append((char*)pConnEstablished, len);
@@ -167,8 +185,9 @@ int RemoteSide::ProccessSend()
 		Connect();
 		return FALSE;
 	}
-	if(GetEvent()->GetEventInt() & EPOLLOUT)
+	if((GetEvent()->GetEventInt() & EPOLLOUT) && !CanRead())
 	{
+		SetCanRead(TRUE);
 		GetEvent()->ModEvent(EPOLLIN|/*EPOLLET|*/EPOLLONESHOT);
 	}
 
@@ -182,11 +201,13 @@ int RemoteSide::ProccessSend()
 	while(flag)
 	{
 		int nSent = send(GetEvent()->GetFD(),m_pSendStream->GetData()+m_iSentTotal,m_pSendStream->GetLength()-m_iSentTotal,0);
+		//printf("%d %d %s\n", nSent, m_pSendStream->GetLength(), m_pSendStream->GetData());
 		if(nSent == -1)
 		{
 			flag = FALSE;
 			if(errno == EAGAIN)
 			{
+				SetCanRead(FALSE);
 				GetEvent()->ModEvent(EPOLLOUT|/*EPOLLET|*/EPOLLONESHOT);
 				return 0;
 			}
@@ -194,8 +215,9 @@ int RemoteSide::ProccessSend()
 			{
 				SetClosed(TRUE);
 				//GetEvent()->ModEvent(EPOLLOUT|/*EPOLLET|*/EPOLLONESHOT);
-				if(m_iClientState != STATE_NORMAL)
+				if(m_iClientState != STATE_RUNNING && !m_pClientSide->CanRead())
 				{
+					m_pClientSide->SetCanRead(TRUE);
 					m_pClientSide->SetRemoteState(STATE_ABORT);
 					m_pClientSide->GetEvent()->ModEvent(EPOLLIN|EPOLLONESHOT);
 				}
@@ -213,8 +235,11 @@ int RemoteSide::ProccessSend()
 			//m_pSendStream->Sub(nSent);
 			if(m_pSendStream->GetLength()-m_iSentTotal == 0)
 			{
-				if(!(m_pClientSide->GetEvent()->GetEventInt() & EPOLLOUT))
+				if(!(m_pClientSide->GetEvent()->GetEventInt() & EPOLLOUT) && !m_pClientSide->CanRead())
+				{
+					m_pClientSide->SetCanRead(TRUE);
 					m_pClientSide->GetEvent()->ModEvent(EPOLLIN|/*EPOLLET|*/EPOLLONESHOT);
+				}
 				return 0;
 			}
 		}
@@ -235,6 +260,7 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 {
 	if(m_isConnected == SOCKET_STATUS_CONNECTING)
 	{
+		printf("May Close Here\n");
 		ProccessConnectionClose();
 		return 0;
 	}
@@ -254,6 +280,11 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 		ProccessConnectionClose();
 		return 0;
 	}
+	/*if(strstr(m_pClientSide->GetRequest()->GetHeader()->GetRequestLine()->GetUrl()->GetHost(),"mapping.yoyi.com.cn"))
+	{
+		printf("Error %d %s\n", m_iUseCount, pStream->GetData());
+	}*/
+
 	if(!pStream)
 	{
 		struct timespec sec = Time::Sub(Time::GetNow(), start_time);
@@ -281,8 +312,8 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 			}
 			else if(errno == EAGAIN)
 			{
-				GetEvent()->ModEvent(EPOLLIN|EPOLLONESHOT);
-				return 0;
+				//GetEvent()->ModEvent(EPOLLIN|EPOLLONESHOT);
+				//return 0;
 			}
 		}
 		ProccessConnectionClose();
@@ -374,7 +405,11 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 		else
 		{
 			delete pUserStream;
-			GetEvent()->ModEvent(EPOLLIN|EPOLLONESHOT);
+			if(!CanRead())
+			{
+				SetCanRead(TRUE);
+				GetEvent()->ModEvent(EPOLLIN|EPOLLONESHOT);
+			}
 
 			isEnd = FALSE;
 			return FALSE;
@@ -423,14 +458,19 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 				m_pClientSide->SetRemoteState(STATE_NORMAL);
 
 				ClearHttpEnd();
-				//if(!m_bShouldClose)
+				if(m_bShouldClose)
 				{
-					SetStatusIdle();
+					g_pGlobalRemoteSidePool->Delete(this);
 				}
+				SetStatusIdle();
 				//else
 					//SetClosed(TRUE);
 			}
-			GetEvent()->ModEvent(EPOLLIN|/*EPOLLET|*/EPOLLONESHOT);
+			if(!CanRead())
+			{
+				SetCanRead(TRUE);
+				GetEvent()->ModEvent(EPOLLIN|/*EPOLLET|*/EPOLLONESHOT);
+			}
 		}
 
 		/*

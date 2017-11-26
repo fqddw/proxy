@@ -60,6 +60,7 @@ int IOHandler::Dispatch(int events)
 
 	if(events & EPOLLIN)
 	{
+		SetCanRead(FALSE);
 		SetRecvFlag();
 	}
 	if(events & EPOLLOUT)
@@ -149,13 +150,11 @@ int IOHandler::IsServer()
 
 void IOHandler::SetCanWrite(int flag)
 {
-	flag = TRUE;
 	m_bCanWrite = flag;
 }
 
 void IOHandler::SetCanRead(int flag)
 {
-	flag = TRUE;
 	m_bCanRead = flag;
 }
 int IOHandler::CanRead()

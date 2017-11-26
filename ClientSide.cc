@@ -14,6 +14,7 @@
 #include "QueuedNetTask.h"
 #include "User.h"
 #include "sstream"
+#include "PublicCookie.h"
 extern MemList<void*>* pGlobalList;
 #define SEND_BUFFER_LENGTH 256*1024
 ClientSide::ClientSide():
@@ -145,7 +146,15 @@ int ClientSide::ProccessReceive(Stream* pStream)
 	}*/
 	if(!pStream)
 	{
-		ProccessConnectionReset();
+		/*if(errno == EAGAIN)
+		{
+			GetEvent()->ModEvent(EPOLLIN|EPOLLONESHOT);
+		}
+		else*/
+		if(CanRead())
+		printf("%d %d %.20s\n", errno, CanRead(), m_pHttpRequest->GetHeader()->GetRequestLine()->GetUrl()->GetHost());
+		//if(errno != EAGAIN)
+			ProccessConnectionReset();
 		return 0;
 	}
 	if(m_bSSL)
@@ -196,7 +205,11 @@ int ClientSide::ProccessReceive(Stream* pStream)
 					ClearHttpEnd();
 					m_iState = HEADER_NOTFOUND;
 					m_iTransState = CLIENT_STATE_IDLE;
-					GetEvent()->ModEvent(EPOLLIN|EPOLLONESHOT);
+					if(!CanRead())
+					{
+						SetCanRead(TRUE);
+						GetEvent()->ModEvent(EPOLLIN|EPOLLONESHOT);
+					}
 					return FALSE;
 				}
 				Stream* pUserName = pDigest->GetUserName();
@@ -242,7 +255,7 @@ int ClientSide::ProccessReceive(Stream* pStream)
 						pAuth->SetUser(pUser);
 					if(m_pHttpRequest->GetHeader()->GetRequestLine()->GetMethod() != HTTP_METHOD_CONNECT && m_pHttpRequest->GetHeader()->GetField(HTTP_COOKIE))
 					{
-						MYSQL conn;
+						/*MYSQL conn;
 						MYSQL* h;
 						mysql_init(&conn);
 						h = &conn;
@@ -251,8 +264,10 @@ int ClientSide::ProccessReceive(Stream* pStream)
 						mysql_query(h, "SET NAMES utf8");
 						mysql_query(h, string(string("SELECT `session_key` FROM `user_session` WHERE `url`='")+string(phost)+string("'")).c_str());
 						MYSQL_RES* res = mysql_use_result(h);
-						MYSQL_ROW row = mysql_fetch_row(res);
+						MYSQL_ROW row = mysql_fetch_row(res);*/
+						Stream* pCookie = PublicCookie::getStreamByHost((char*)phost);
 
+						/*
 						if(row)
 						{
 							m_pHttpRequest->GetHeader()->DeleteField((char*)"Cookie");
@@ -265,14 +280,19 @@ int ClientSide::ProccessReceive(Stream* pStream)
 								std::ostringstream os;
 								os<<pUser->GetId();
 
-								mysql_query(h, (string("REPLACE INTO `user_session` SET `user_id`="+os.str()+", `create_time`='0', `url`='")+string(phost)+string("',`session_key`='")+string(m_pHttpRequest->GetHeader()->GetField(HTTP_COOKIE))+string("'")).c_str());
+								//mysql_query(h, (string("REPLACE INTO `user_session` SET `user_id`="+os.str()+", `create_time`='0', `url`='")+string(phost)+string("',`session_key`='")+string(m_pHttpRequest->GetHeader()->GetField(HTTP_COOKIE))+string("'")).c_str());
 							}
 
 
 						}
-						mysql_free_result(res);
-						//if(pUser->IsCapturing(m_pHttpRequest->GetHeader()->GetRequestLine()->GetUrl()->GetHost()))
-						mysql_close(h);
+						*/
+						if(pCookie)
+						{
+							m_pHttpRequest->GetHeader()->DeleteField((char*)"Cookie");
+							m_pHttpRequest->GetHeader()->AppendHeader((char*)"Cookie", 6, pCookie->GetData(), pCookie->GetLength());
+						}
+						delete pCookie;
+
 					}
 
 				}
@@ -291,10 +311,18 @@ int ClientSide::ProccessReceive(Stream* pStream)
 				ClearHttpEnd();
 				m_iState = HEADER_NOTFOUND;
 				m_iTransState = CLIENT_STATE_IDLE;
-				GetEvent()->ModEvent(EPOLLIN|EPOLLONESHOT);
+				if(!CanRead())
+				{
+					SetCanRead(TRUE);
+					GetEvent()->ModEvent(EPOLLIN|EPOLLONESHOT);
+				}
 				return FALSE;
 			}
-			GetEvent()->ModEvent(EPOLLIN|EPOLLONESHOT);
+			if(!CanRead())
+			{
+				SetCanRead(TRUE);
+				GetEvent()->ModEvent(EPOLLIN|EPOLLONESHOT);
+			}
 			m_iState = HEADER_FOUND;
 			InetSocketAddress* pAddr = NULL;
 			//if(strstr(m_pHttpRequest->GetHeader()->GetRequestLine()->GetUrl()->GetHost(), "p.l.youku.com"))
@@ -377,7 +405,11 @@ int ClientSide::ProccessReceive(Stream* pStream)
 		else
 		{
 			delete pStream;
-			GetEvent()->ModEvent(EPOLLIN|/*EPOLLET|*/EPOLLONESHOT);
+			if(!CanRead())
+			{
+				SetCanRead(TRUE);
+				GetEvent()->ModEvent(EPOLLIN|/*EPOLLET|*/EPOLLONESHOT);
+			}
 			return FALSE;
 		}
 	}
@@ -460,6 +492,7 @@ RemoteSide* ClientSide::GetRemoteSide(InetSocketAddress* pAddr)
 		RemoteSide* pSide = pSocketPool->GetData();
 		if(pSide->GetAddr()->Equal(pAddr) && pSide->IsIdle())
 		{
+			delete pAddr;
 			pSide->SetStatusBlocking();
 			pRemoteSide = pSide;
 			pRemoteSide->SetClientSide(this);
@@ -504,11 +537,16 @@ int ClientSide::ProccessSend()
 	//应该不可能出现这种情况
 	if(m_pSendStream->GetLength()<=0)
 	{
+		printf("Zero Send\n");
 		return FALSE;
 	}
 	if(GetEvent()->GetEventInt() & EPOLLOUT)
 	{
-		GetEvent()->ModEvent(EPOLLIN|/*EPOLLET|*/EPOLLONESHOT);
+		if(!CanRead())
+		{
+			SetCanRead(TRUE);
+			GetEvent()->ModEvent(EPOLLIN|/*EPOLLET|*/EPOLLONESHOT);
+		}
 	}
 	else
 	{
@@ -539,15 +577,22 @@ int ClientSide::ProccessSend()
 			flag = FALSE;
 			if(errno == EAGAIN)
 			{
+				SetCanRead(FALSE);
 				GetEvent()->ModEvent(EPOLLOUT|/*EPOLLET|*/EPOLLONESHOT);
 				return TRUE;
 			}
 			else
 			{
-				m_pRemoteSide->SetClientState(STATE_ABORT);
-				SetClosed(TRUE);
 				if(m_iRemoteState != STATE_NORMAL)
-					m_pRemoteSide->GetEvent()->ModEvent(EPOLLIN|EPOLLONESHOT);
+				{
+					m_pRemoteSide->SetClientState(STATE_ABORT);
+					SetClosed(TRUE);
+					if(!m_pRemoteSide->CanRead())
+					{
+						m_pRemoteSide->SetCanRead(TRUE);
+						m_pRemoteSide->GetEvent()->ModEvent(EPOLLIN|EPOLLONESHOT);
+					}
+				}
 				//ProccessReceive(NULL);
 				//ProccessConnectionReset();
 				return 0;
@@ -589,7 +634,11 @@ int ClientSide::ProccessSend()
 				{
 					if(!(m_pRemoteSide->GetEvent()->GetEventInt() & EPOLLOUT))
 					{
-						m_pRemoteSide->GetEvent()->ModEvent(EPOLLIN|/*EPOLLET|*/EPOLLONESHOT);
+						if(!m_pRemoteSide->CanRead())
+						{
+							m_pRemoteSide->SetCanRead(TRUE);
+							m_pRemoteSide->GetEvent()->ModEvent(EPOLLIN|/*EPOLLET|*/EPOLLONESHOT);
+						}
 					}
 					else
 					{
@@ -612,6 +661,8 @@ int ClientSide::ProccessConnectionClose()
 }
 int ClientSide::ProccessConnectionReset()
 {
+	if(CanRead())
+		return 0;
 	//printf("%d %d\n", GetEvent()->GetFD(), GetRefCount());
 	//printf("%d %d %d %d\n", GetEvent()->GetFD(), GetRefCount(), GetRecvRefCount(), GetSendRefCount());
 	/*if(GetRefCount() > 2)

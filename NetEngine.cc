@@ -47,6 +47,11 @@ int NetEngine::Loop()
 			}
 			if(1)//pGlobalList->Find(pHandler))
 			{
+				int events = (ees+iterator)->events;
+				if( !(events & EPOLLIN) && !(events & EPOLLOUT))
+				{
+					continue;
+				}
 				pHandler->Dispatch((ees+iterator)->events);
 			}
 			else
