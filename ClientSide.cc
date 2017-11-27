@@ -587,7 +587,7 @@ int ClientSide::ProccessSend()
 				{
 					m_pRemoteSide->SetClientState(STATE_ABORT);
 					SetClosed(TRUE);
-					if(!m_pRemoteSide->CanRead())
+					if(!m_pRemoteSide->CanRead() && !m_pRemoteSide->IsRecvScheduled())
 					{
 						m_pRemoteSide->SetCanRead(TRUE);
 						m_pRemoteSide->GetEvent()->ModEvent(EPOLLIN|EPOLLONESHOT);
@@ -632,6 +632,7 @@ int ClientSide::ProccessSend()
 				}
 				else
 				{
+					LockTask();
 					if(!(m_pRemoteSide->GetEvent()->GetEventInt() & EPOLLOUT))
 					{
 						if(!m_pRemoteSide->CanRead())
@@ -643,6 +644,7 @@ int ClientSide::ProccessSend()
 					else
 					{
 					}
+					UnlockTask();
 					return 0;
 				}
 			}
@@ -661,8 +663,6 @@ int ClientSide::ProccessConnectionClose()
 }
 int ClientSide::ProccessConnectionReset()
 {
-	if(CanRead())
-		return 0;
 	//printf("%d %d\n", GetEvent()->GetFD(), GetRefCount());
 	//printf("%d %d %d %d\n", GetEvent()->GetFD(), GetRefCount(), GetRecvRefCount(), GetSendRefCount());
 	/*if(GetRefCount() > 2)
@@ -789,4 +789,9 @@ void ClientSide::SetMainTask(QueuedNetTask* pTask)
 	IOHandler::SetMainTask(pTask);
 	if(pTask)
 		pTask->SetClient(this);
+}
+
+int ClientSide::IsRecvScheduled()
+{
+	return GetMainTask()->IssetClientRecving();
 }

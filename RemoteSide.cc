@@ -170,8 +170,8 @@ int RemoteSide::ProccessSend()
 			m_pClientSide->GetSendStream()->Append((char*)pConnEstablished, len);
 			if(!(m_pClientSide->GetEvent()->GetEventInt() & EPOLLOUT))
 			{
-				m_pClientSide->SetSendFlag();
 				LockTask();
+				m_pClientSide->SetSendFlag();
 				if(!GetMainTask()->IsRunning())
 					GetMasterThread()->InsertTask(GetMainTask());
 				UnlockTask();
@@ -235,11 +235,13 @@ int RemoteSide::ProccessSend()
 			//m_pSendStream->Sub(nSent);
 			if(m_pSendStream->GetLength()-m_iSentTotal == 0)
 			{
-				if(!(m_pClientSide->GetEvent()->GetEventInt() & EPOLLOUT) && !m_pClientSide->CanRead())
+				LockTask();
+				if(!(m_pClientSide->GetEvent()->GetEventInt() & EPOLLOUT) && !m_pClientSide->CanRead() && !m_pClientSide->IsRecvScheduled())
 				{
 					m_pClientSide->SetCanRead(TRUE);
 					m_pClientSide->GetEvent()->ModEvent(EPOLLIN|/*EPOLLET|*/EPOLLONESHOT);
 				}
+				UnlockTask();
 				return 0;
 			}
 		}
@@ -673,4 +675,9 @@ void RemoteSide::SetStartTime(struct timespec tCurTime)
 void RemoteSide::SetEndTime(struct timespec tCurTime)
 {
 	end_time = tCurTime;
+}
+
+int RemoteSide::IsRecvScheduled()
+{
+	return GetMainTask()->IssetRemoteRecving();
 }

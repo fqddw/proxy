@@ -37,5 +37,7 @@ class QueuedNetTask : public Task
 		void SetRemoteSending();
 		int GetDataStream(IOHandler*, Stream**);
 		void SetRunning();
+		int IssetClientRecving();
+		int IssetRemoteRecving();
 };
 #endif

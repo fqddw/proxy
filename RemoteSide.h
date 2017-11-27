@@ -47,6 +47,7 @@ class RemoteSide:public IOHandler
 		void IncUseCount();
 		void SetStartTime(struct timespec tCurTime);
 		void SetEndTime(struct timespec tCurTime);
+		virtual int IsRecvScheduled();
 	private:
 		int m_isConnected;
 		int m_iSocket;

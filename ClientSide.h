@@ -42,6 +42,7 @@ class ClientSide : public IOHandler
 		void SetRecvFlag();
 		void SetSendFlag();
 		void SetMainTask(QueuedNetTask*);
+		virtual int IsRecvScheduled();
 	private:
 		int m_iState;
 		int m_iTransState;

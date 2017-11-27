@@ -163,34 +163,36 @@ void QueuedNetTask::SetRemote(RemoteSide* pSide)
 
 void QueuedNetTask::SetClientRecving()
 {
-	cs_->Enter();
 	m_bClientRecving = TRUE;
-	cs_->Leave();
 }
 
 void QueuedNetTask::SetClientSending()
 {
-	cs_->Enter();
 	m_bClientSending = TRUE;
-	cs_->Leave();
 }
 
 void QueuedNetTask::SetRemoteRecving()
 {
-	cs_->Enter();
 	m_bRemoteRecving = TRUE;
-	cs_->Leave();
 }
 
 
 void QueuedNetTask::SetRemoteSending()
 {
-	cs_->Enter();
 	m_bRemoteSending = TRUE;
-	cs_->Leave();
 }
 
 void QueuedNetTask::SetRunning()
 {
 	m_bRunning = TRUE;
+}
+
+int QueuedNetTask::IssetClientRecving()
+{
+	return m_bClientRecving;
+}
+
+int QueuedNetTask::IssetRemoteRecving()
+{
+	return m_bRemoteRecving;
 }

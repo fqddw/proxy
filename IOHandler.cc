@@ -60,8 +60,10 @@ int IOHandler::Dispatch(int events)
 
 	if(events & EPOLLIN)
 	{
+		LockTask();
 		SetCanRead(FALSE);
 		SetRecvFlag();
+		UnlockTask();
 	}
 	if(events & EPOLLOUT)
 	{
@@ -327,4 +329,9 @@ void IOHandler::UnlockTask()
 QueuedNetTask* IOHandler::GetMainTask()
 {
 	return m_pMainTask;
+}
+
+int IOHandler::IsRecvScheduled()
+{
+	return TRUE;
 }

@@ -67,6 +67,7 @@ class IOHandler
 		virtual void SetSendFlag();
 		virtual void SetMainTask(QueuedNetTask*);
 		QueuedNetTask* GetMainTask();
+		virtual int IsRecvScheduled();
 	public:
 		int m_iSide;
 	private:
