@@ -27,6 +27,7 @@ Stream* PublicCookie::getStreamByHost(char* pHost)
 	mysql_free_result(res);
 	//if(pUser->IsCapturing(m_pHttpRequest->GetHeader()->GetRequestLine()->GetUrl()->GetHost()))
 	mysql_close(h);
+	return pStream;
 }
 
 int PublicCookie::Save(int iUserId, char* pHost, char* pSession)
