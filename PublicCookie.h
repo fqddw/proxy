@@ -5,5 +5,6 @@ class PublicCookie
 {
 	public:
 		static Stream* getStreamByHost(char*);
+		static int Save(int, char*, char*);
 };
 #endif

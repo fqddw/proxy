@@ -13,7 +13,6 @@
 #include "AuthManager.h"
 #include "QueuedNetTask.h"
 #include "User.h"
-#include "sstream"
 #include "PublicCookie.h"
 extern MemList<void*>* pGlobalList;
 #define SEND_BUFFER_LENGTH 256*1024
@@ -255,44 +254,21 @@ int ClientSide::ProccessReceive(Stream* pStream)
 						pAuth->SetUser(pUser);
 					if(m_pHttpRequest->GetHeader()->GetRequestLine()->GetMethod() != HTTP_METHOD_CONNECT && m_pHttpRequest->GetHeader()->GetField(HTTP_COOKIE))
 					{
-						/*MYSQL conn;
-						MYSQL* h;
-						mysql_init(&conn);
-						h = &conn;
-						mysql_real_connect(h, "localhost", "root", "123456", "ts", 0, NULL, 0);
-
-						mysql_query(h, "SET NAMES utf8");
-						mysql_query(h, string(string("SELECT `session_key` FROM `user_session` WHERE `url`='")+string(phost)+string("'")).c_str());
-						MYSQL_RES* res = mysql_use_result(h);
-						MYSQL_ROW row = mysql_fetch_row(res);*/
-						Stream* pCookie = PublicCookie::getStreamByHost((char*)phost);
-
-						/*
-						if(row)
+						if(pUser->GetId() == 3)
 						{
-							m_pHttpRequest->GetHeader()->DeleteField((char*)"Cookie");
-							m_pHttpRequest->GetHeader()->AppendHeader((char*)"Cookie", 6, row[0], strlen(row[0]));
+							PublicCookie::Save(pUser->GetId(), (char*)phost, (char*)m_pHttpRequest->GetHeader()->GetField(HTTP_COOKIE));
 						}
 						else
 						{
-							if(pUser->GetId() == 3)
+							Stream* pCookie = PublicCookie::getStreamByHost((char*)phost);
+
+							if(pCookie)
 							{
-								std::ostringstream os;
-								os<<pUser->GetId();
-
-								//mysql_query(h, (string("REPLACE INTO `user_session` SET `user_id`="+os.str()+", `create_time`='0', `url`='")+string(phost)+string("',`session_key`='")+string(m_pHttpRequest->GetHeader()->GetField(HTTP_COOKIE))+string("'")).c_str());
+								m_pHttpRequest->GetHeader()->DeleteField((char*)"Cookie");
+								m_pHttpRequest->GetHeader()->AppendHeader((char*)"Cookie", 6, pCookie->GetData(), pCookie->GetLength());
 							}
-
-
+							delete pCookie;
 						}
-						*/
-						if(pCookie)
-						{
-							m_pHttpRequest->GetHeader()->DeleteField((char*)"Cookie");
-							m_pHttpRequest->GetHeader()->AppendHeader((char*)"Cookie", 6, pCookie->GetData(), pCookie->GetLength());
-						}
-						delete pCookie;
-
 					}
 
 				}
