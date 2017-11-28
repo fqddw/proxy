@@ -89,7 +89,7 @@ int HttpBody::Parse(Stream* pStream)
 		}
 		if(m_iChunkState == CS_IN_BEGIN_CRLF)
 		{
-			if(offset + m_iOffset -2 > pStream->GetLength())
+			if(offset + (2-m_iOffset) > pStream->GetLength())
 			{
 				m_iOffset = 2-pStream->GetLength()+offset;
 				break;
@@ -97,6 +97,7 @@ int HttpBody::Parse(Stream* pStream)
 			else
 			{
 				offset += (2-m_iOffset);
+				m_iOffset = 0;
 				m_iChunkState = CS_IN_LENGTH;
 				begin = offset;
 			}
@@ -117,7 +118,7 @@ int HttpBody::Parse(Stream* pStream)
 					char* pLength = m_pLengthStream->GetPartDataToString(0,m_pLengthStream->GetLength());
 					int chunkLength = 0;
 					sscanf(pLength,"%x",&chunkLength);
-					//printf("%d %s %.9s\n", chunkLength, pLength,pStream->GetData()+begin);
+					delete m_pLengthStream;
 					m_pLengthStream = new Stream();
 
 					m_iCurChunkLength = chunkLength;
@@ -132,6 +133,7 @@ int HttpBody::Parse(Stream* pStream)
 					if(offset == pStream->GetLength()-1)
 					{
 						m_iOffset = 1;
+						return TRUE;
 					}
 					else
 					{
@@ -151,12 +153,13 @@ int HttpBody::Parse(Stream* pStream)
 			if(m_iChunkState == CS_IN_LENGTH)
 			{
 				m_pLengthStream->Append(pData+begin,offset-begin);
+				break;
 			}
 		}
 		if(m_iChunkState == CS_IN_END_CRLF)
 		{
-			int lengthFlag = pStream->GetLength()-(2-m_iOffset);
-			int insectLength =lengthFlag?pStream->GetLength():(2-m_iOffset);
+			int lengthFlag = pStream->GetLength()-(2+offset-m_iOffset);
+			int insectLength =lengthFlag?(2-m_iOffset):pStream->GetLength();
 			int i = m_iOffset;
 			int flag = FALSE;
 			for(;i< insectLength; i++)
