@@ -1,5 +1,6 @@
 #include "QueuedNetTask.h"
 #include "errno.h"
+#include "NetEngineTask.h"
 int QueuedNetTask::Run()
 {
 	int flag = TRUE;
@@ -15,6 +16,14 @@ int QueuedNetTask::Run()
 				CancelRepeatable();
 			}
 			cs_->Leave();
+			NetEngineTask::getInstance()->GetNetEngine()->Lock();
+			NetEngineTask::getInstance()->GetNetEngine()->ReduceTaskCount();
+			int iTaskCount = NetEngineTask::getInstance()->GetNetEngine()->GetTaskCount();
+			if(iTaskCount == 0)
+			{
+				NetEngineTask::getInstance()->GetNetEngine()->GetMasterThread()->InsertTask(NetEngineTask::getInstance());
+			}
+			NetEngineTask::getInstance()->GetNetEngine()->Unlock();
 			return 0;
 		}
 		cs_->Leave();
@@ -125,12 +134,15 @@ int QueuedNetTask::GetNextTask()
 }
 
 
-QueuedNetTask::QueuedNetTask():Task(),m_pClientSide(NULL),m_pRemoteSide(NULL),m_bClientRecving(FALSE),m_bClientSending(FALSE),m_bRemoteRecving(FALSE),m_bRemoteSending(FALSE),cs_(new CriticalSection()),m_bRunning(FALSE)
+QueuedNetTask::QueuedNetTask():Task(),m_pClientSide(NULL),m_pRemoteSide(NULL),m_bClientRecving(FALSE),m_bClientSending(FALSE),m_bRemoteRecving(FALSE),m_bRemoteSending(FALSE),cs_(new CriticalSection()),m_bRunning(FALSE),m_iCount(1)
 {
 }
 
 QueuedNetTask::~QueuedNetTask()
 {
+	cs_->Enter();
+	m_iCount--;
+	cs_->Leave();
 	delete cs_;
 	cs_ = NULL;
 }

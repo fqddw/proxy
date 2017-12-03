@@ -49,7 +49,7 @@ int WorkThread::Run()
 			if(!pTask->Repeatable()){
 				//if(pGlobalList->Delete(pTask))
 				{
-					delete pTask;
+					//delete pTask;
 				}
 			}
 			task_ = NULL;

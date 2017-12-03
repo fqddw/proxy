@@ -21,9 +21,10 @@ class QueuedNetTask : public Task
 		int m_bRemoteSending;
 		CriticalSection* cs_;
 		int m_bRunning;
+		int m_iCount;
 	public:
 		QueuedNetTask();
-		virtual ~QueuedNetTask();
+		~QueuedNetTask();
 		int Run();
 		void Lock();
 		void Unlock();

@@ -2,6 +2,7 @@
 #define __NETENGINE_H__
 #include "sys/epoll.h"
 #include "IOHandler.h"
+#include "MasterThread.h"
 #define MAX_WAIT 1024
 #define INFINITE -1
 
@@ -18,11 +19,18 @@ class NetEngine
 		int RemoveFileDescriptor(IOHandler*);
 		void Lock();
 		void Unlock();
+		int Run();
+		MasterThread* GetMasterThread();
+		int SetMasterThread(MasterThread*);
+		void ReduceTaskCount();
+		int GetTaskCount();
 	private:
 		int m_iFD;
 		int m_iSize;
 		CriticalSection* cs_;
 		int m_iNFDS;
+		int m_iTaskCount;
+		MasterThread* m_pMasterThread;
 		EPOLLEVENT m_pEvents[MAX_WAIT];
 			
 };

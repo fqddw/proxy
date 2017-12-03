@@ -12,7 +12,8 @@ IOHandler::IOHandler():
 	m_iSendRefCount(0),
 	m_iRecvRefCount(0),
 	m_bRealClosed(0),
-	m_bDeleted(FALSE)
+	m_bDeleted(FALSE),
+	m_pMainTask(NULL)
 {
 	//pGlobalList->Append(this);
 }
@@ -119,6 +120,35 @@ int IOHandler::Dispatch(int events)
 		//GetMasterThread()->InsertTask(m_pConnResetProc);
 	}
 	*/
+	return TRUE;
+}
+int IOHandler::Schedule(int events)
+{
+	if(events & EPOLLIN)
+	{
+		LockTask();
+		SetCanRead(FALSE);
+		SetRecvFlag();
+		UnlockTask();
+	}
+	if(events & EPOLLOUT)
+	{
+		SetSendFlag();
+	}
+	if(events & EPOLLERR)
+	{
+	}
+
+	LockTask();
+	if(!m_pMainTask->IsRunning())
+	{
+		m_pMainTask->SetRunning();
+	}
+	else
+	{
+	}
+	UnlockTask();
+
 	return TRUE;
 }
 

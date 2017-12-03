@@ -8,6 +8,7 @@
 #include "MemList.h"
 #include "stdio.h"
 #include "RemoteSide.h"
+#include "NetEngineTask.h"
 extern MemList<void*>* pGlobalList;
 extern MemList<RemoteSide*>* g_pGlobalRemoteSidePool;
 ReceiveProccessor::ReceiveProccessor(IOHandler* pIOHandler):m_pIOHandler(pIOHandler),Task()
@@ -25,6 +26,15 @@ int ReceiveProccessor::Run()
 			m_pIOHandler->ReleaseRecvRefCount();
 			m_pIOHandler->Release();
 		}
+		NetEngineTask::getInstance()->GetNetEngine()->Lock();
+		NetEngineTask::getInstance()->GetNetEngine()->ReduceTaskCount();
+		int iTaskCount = NetEngineTask::getInstance()->GetNetEngine()->GetTaskCount();
+		if(iTaskCount == 0)
+		{
+			NetEngineTask::getInstance()->GetNetEngine()->GetMasterThread()->InsertTask(NetEngineTask::getInstance());
+		}
+		NetEngineTask::getInstance()->GetNetEngine()->Unlock();
+
 		return 0;
 }
 #include "RemoteSide.h"

@@ -1,4 +1,5 @@
 #include "NetEngine.h"
+#include "QueuedNetTask.h"
 int NetEngine::Init(){
 	m_iFD = epoll_create(m_iSize);
 	if(m_iFD)
@@ -117,4 +118,89 @@ void NetEngine::Lock()
 void NetEngine::Unlock()
 {
 	cs_->Leave();
+}
+
+typedef struct _task_detail
+{
+	Task* pTask;
+	int type;
+}TaskDetail;
+#define TASK_SERVER 1
+#define TASK_NULL 2
+int NetEngine::Run()
+{
+	EPOLLEVENT* ees=m_pEvents;
+	TaskDetail pTaskArray[MAX_WAIT] = {0};
+	int iTaskSize = 0;
+	m_iNFDS = epoll_wait(m_iFD, ees,MAX_WAIT, INFINITE);
+	int iterator = 0;
+	for(;iterator < m_iNFDS; iterator++)
+	{
+		IOHandler* pHandler = (IOHandler*)((ees+iterator)->data.ptr);
+		if(pHandler->IsServer())
+		{
+			pTaskArray[iTaskSize].pTask = pHandler->GetRecvTask();
+			pTaskArray[iTaskSize].type = TASK_SERVER;
+			iTaskSize++;
+			continue;
+		}
+		QueuedNetTask* pTask = pHandler->GetMainTask();
+		if(!pTask)
+		{
+			pTaskArray[iTaskSize].pTask = pHandler->GetRecvTask();
+			pTaskArray[iTaskSize].type = TASK_NULL;
+			iTaskSize++;
+		}
+		else
+		{
+			int flag = FALSE;
+			int i = 0;
+			for(i = 0; i < iTaskSize; i++)
+			{
+				if(pTask == pTaskArray[i].pTask)
+				{
+					flag = TRUE;
+					break;
+				}
+			}
+			if(flag == FALSE)
+			{
+				pTaskArray[iTaskSize].pTask = pTask;
+				pTaskArray[iTaskSize].type = TASK_NULL;
+				iTaskSize = iTaskSize + 1;
+			}
+			pHandler->Schedule((ees+iterator)->events);
+		}
+	}
+
+	m_iTaskCount = iTaskSize;
+
+	int taskit = 0;
+	for(;taskit<iTaskSize;taskit++)
+	{
+		GetMasterThread()->InsertTask(pTaskArray[taskit].pTask);
+	}
+
+	return TRUE;
+}
+
+MasterThread* NetEngine::GetMasterThread()
+{
+	return m_pMasterThread;
+}
+
+int NetEngine::SetMasterThread(MasterThread* pMasterThread)
+{
+	m_pMasterThread = pMasterThread;
+	return TRUE;
+}
+
+void NetEngine::ReduceTaskCount()
+{
+	m_iTaskCount = m_iTaskCount - 1;
+}
+
+int NetEngine::GetTaskCount()
+{
+	return m_iTaskCount;
 }

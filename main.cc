@@ -11,6 +11,7 @@
 #include<sys/types.h>
 #include<sys/wait.h>
 #include "AuthManager.h"
+#include "NetEngineTask.h"
 void* threadProc(void* ptr)
 {
 	Task* pTaskWrapper = (Task*)ptr;
@@ -111,6 +112,8 @@ int ServerStartTask::Run()
 
 MemList<RemoteSide*>* g_pGlobalRemoteSidePool;
 
+NetEngineTask* NetEngineTask::m_gpInstance = NULL;
+
 int main(int argc,char** argv)
 {	
 				/*while(fork() !=0)
@@ -126,21 +129,24 @@ int main(int argc,char** argv)
 	NetEngine* pEngine = new NetEngine();
 	pEngine->SetSize(1024);
 	pEngine->Init();
-	NetEngineInitTask* pNetEngineInitTask = new NetEngineInitTask();
+	NetEngineTask::getInstance()->SetEngine(pEngine);
+	/*NetEngineInitTask* pNetEngineInitTask = new NetEngineInitTask();
 	pNetEngineInitTask->CancelRepeatable();
 	pNetEngineInitTask->SetNetEngine(pEngine);
 	Thread* pThread = new Thread();
 	pThread->SetTask(pNetEngineInitTask);
-	pThread->Start();
+	pThread->Start();*/
 
 	MasterThread* pMasterThread = new MasterThread(new EventPump());
 	pMasterThread->SetWorkerCount(16);
 	pMasterThread->Create();
+	pEngine->SetMasterThread(pMasterThread);
 	ServerStartTask* pServerStartTask = new ServerStartTask();
 	pServerStartTask->CancelRepeatable();
 	pServerStartTask->SetNetEngine(pEngine);
 	pServerStartTask->SetMasterThread(pMasterThread);
 	pMasterThread->InsertTask(pServerStartTask);
+	pMasterThread->InsertTask(NetEngineTask::getInstance());
 
 	sem_t t;
 	sem_init(&t, 0, 0);
