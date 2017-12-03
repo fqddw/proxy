@@ -593,7 +593,7 @@ int RemoteSide::ProccessConnectionClose()
 				ClearHttpEnd();
 				//m_pClientSide->GetEvent()->ModEvent(EPOLLIN|EPOLLONESHOT);
 				//printf("Multi Thread RecvTask %s %d %s\n", __FILE__, __LINE__, m_pClientSide->GetRequest()->GetHeader()->GetRequestLine()->GetUrl()->GetHost());
-				if((m_bCloseClient || m_bSSL) && m_pClientSide->GetSendStream()->GetLength() == 0);
+				if((m_bCloseClient || m_bSSL) && m_pClientSide->GetSendStream()->GetLength() == 0)
 				//if(m_bSSL)
 					m_pClientSide->ProccessConnectionReset();
 				//GetMasterThread()->InsertTask(m_pClientSide->GetRecvTask());

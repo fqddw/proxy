@@ -20,7 +20,7 @@ void Task::SetTime(struct timespec* time)
 	timestamp_.tv_sec = time->tv_sec;
 	timestamp_.tv_nsec = time->tv_nsec;
 }
-Task::Task() :  m_iRepeatable(TRUE)
+Task::Task() :  m_iRepeatable(TRUE), m_bDeleted(FALSE)
 {
 timestamp_.tv_sec=0;
 timestamp_.tv_nsec=0;
@@ -40,4 +40,15 @@ void Task::CancelRepeatable()
 }
 Task::~Task()
 {
+}
+
+void Task::Release()
+{
+	if(!m_bDeleted)
+	{
+		m_bDeleted = TRUE;
+		delete this;
+	}
+	else
+	printf("double free\n");
 }

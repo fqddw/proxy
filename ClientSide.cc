@@ -559,7 +559,7 @@ int ClientSide::ProccessSend()
 			}
 			else
 			{
-				if(m_iRemoteState != STATE_NORMAL)
+				/*if(m_iRemoteState != STATE_NORMAL)
 				{
 					m_pRemoteSide->SetClientState(STATE_ABORT);
 					SetClosed(TRUE);
@@ -569,8 +569,8 @@ int ClientSide::ProccessSend()
 						m_pRemoteSide->GetEvent()->ModEvent(EPOLLIN|EPOLLONESHOT);
 					}
 				}
-				//ProccessReceive(NULL);
-				//ProccessConnectionReset();
+				//ProccessReceive(NULL);*/
+				ProccessConnectionReset();
 				return 0;
 			}
 		}

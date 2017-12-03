@@ -24,7 +24,9 @@ public:
 	int Repeatable();
 	void SetRepeatable();
 	void CancelRepeatable();
+	void Release();
 private:
+	int m_bDeleted;
 	int m_iRepeatable;
 	struct timespec timestamp_;
     int id_;

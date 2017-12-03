@@ -50,6 +50,7 @@ int WorkThread::Run()
 				//if(pGlobalList->Delete(pTask))
 				{
 					//delete pTask;
+					pTask->Release();
 				}
 			}
 			task_ = NULL;
