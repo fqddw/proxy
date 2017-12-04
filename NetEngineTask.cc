@@ -3,6 +3,7 @@
 int NetEngineTask::Run()
 {
 	m_pNetEngine->Run();
+	m_iCount--;
 	return TRUE;
 }
 
@@ -15,7 +16,7 @@ NetEngineTask* NetEngineTask::getInstance()
 	return m_gpInstance;
 }
 
-NetEngineTask::NetEngineTask()
+NetEngineTask::NetEngineTask():m_iCount(1)
 {
 }
 
@@ -31,4 +32,14 @@ void NetEngineTask::SetEngine(NetEngine* pEngine)
 NetEngine* NetEngineTask::GetNetEngine()
 {
 	return m_pNetEngine;
+}
+
+int NetEngineTask::GetCount()
+{
+	return m_iCount;
+}
+
+void NetEngineTask::IncCount()
+{
+	m_iCount = m_iCount + 1;
 }

@@ -40,5 +40,6 @@ class QueuedNetTask : public Task
 		void SetRunning();
 		int IssetClientRecving();
 		int IssetRemoteRecving();
+		void IncCount();
 };
 #endif

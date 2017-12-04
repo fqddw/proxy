@@ -127,6 +127,7 @@ typedef struct _task_detail
 }TaskDetail;
 #define TASK_SERVER 1
 #define TASK_NULL 2
+#define TASK_QUEUED 3
 int NetEngine::Run()
 {
 	EPOLLEVENT* ees=m_pEvents;
@@ -166,18 +167,29 @@ int NetEngine::Run()
 			if(flag == FALSE)
 			{
 				pTaskArray[iTaskSize].pTask = pTask;
-				pTaskArray[iTaskSize].type = TASK_NULL;
+				pTaskArray[iTaskSize].type = TASK_QUEUED;
 				iTaskSize = iTaskSize + 1;
 			}
 			pHandler->Schedule((ees+iterator)->events);
 		}
 	}
 
+	if(m_iTaskCount < 0)
+	{
+		printf("%d\n", m_iTaskCount);
+	}
 	m_iTaskCount = iTaskSize;
 
 	int taskit = 0;
 	for(;taskit<iTaskSize;taskit++)
 	{
+		if(pTaskArray[taskit].type == TASK_QUEUED)
+		{
+			QueuedNetTask* pQueuedTask = (QueuedNetTask*)pTaskArray[taskit].pTask;
+			pQueuedTask->Lock();
+			pQueuedTask->IncCount();
+			pQueuedTask->Unlock();
+		}
 		GetMasterThread()->InsertTask(pTaskArray[taskit].pTask);
 	}
 

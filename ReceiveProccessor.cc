@@ -31,6 +31,8 @@ int ReceiveProccessor::Run()
 		int iTaskCount = NetEngineTask::getInstance()->GetNetEngine()->GetTaskCount();
 		if(iTaskCount == 0)
 		{
+			NetEngineTask::getInstance()->IncCount();
+
 			NetEngineTask::getInstance()->GetNetEngine()->GetMasterThread()->InsertTask(NetEngineTask::getInstance());
 		}
 		NetEngineTask::getInstance()->GetNetEngine()->Unlock();

@@ -10,6 +10,7 @@ int QueuedNetTask::Run()
 		int task = GetNextTask();
 		if(!task)
 		{
+			m_iCount--;
 			m_bRunning = FALSE;
 			if(m_pClientSide == NULL && m_pRemoteSide == NULL)
 			{
@@ -21,6 +22,7 @@ int QueuedNetTask::Run()
 			int iTaskCount = NetEngineTask::getInstance()->GetNetEngine()->GetTaskCount();
 			if(iTaskCount == 0)
 			{
+				NetEngineTask::getInstance()->IncCount();
 				NetEngineTask::getInstance()->GetNetEngine()->GetMasterThread()->InsertTask(NetEngineTask::getInstance());
 			}
 			NetEngineTask::getInstance()->GetNetEngine()->Unlock();
@@ -207,4 +209,9 @@ int QueuedNetTask::IssetClientRecving()
 int QueuedNetTask::IssetRemoteRecving()
 {
 	return m_bRemoteRecving;
+}
+
+void QueuedNetTask::IncCount()
+{
+	m_iCount=m_iCount+1;
 }

@@ -10,9 +10,12 @@ class NetEngineTask : public Task
 		int Run();
 		void SetEngine(NetEngine*);
 		NetEngine* GetNetEngine();
+		void IncCount();
+		int GetCount();
 	private:
 		NetEngineTask();
 		~NetEngineTask();
+		int m_iCount;
 	private:
 		static NetEngineTask* m_gpInstance;
 		NetEngine* m_pNetEngine;
