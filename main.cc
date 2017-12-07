@@ -12,6 +12,7 @@
 #include<sys/wait.h>
 #include "AuthManager.h"
 #include "NetEngineTask.h"
+#include "Mysql.h"
 void* threadProc(void* ptr)
 {
 	Task* pTaskWrapper = (Task*)ptr;
@@ -125,6 +126,7 @@ int main(int argc,char** argv)
 	g_pGlobalRemoteSidePool = new MemList<RemoteSide*>();
 	pGlobalList = new MemList<void*>();
 	g_pDNSCache = new DNSCache();
+	Mysql::GlobalInit();
 	signal(SIGPIPE,SIG_IGN);
 	NetEngine* pEngine = new NetEngine();
 	pEngine->SetSize(1024);

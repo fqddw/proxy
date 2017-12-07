@@ -7,6 +7,7 @@ using namespace std;
 
 Stream* PublicCookie::getStreamByHost(char* pHost)
 {
+	mysql_thread_init();
 	MYSQL conn;
 	MYSQL* h;
 	mysql_init(&conn);
@@ -27,11 +28,13 @@ Stream* PublicCookie::getStreamByHost(char* pHost)
 	mysql_free_result(res);
 	//if(pUser->IsCapturing(m_pHttpRequest->GetHeader()->GetRequestLine()->GetUrl()->GetHost()))
 	mysql_close(h);
+	mysql_thread_end();
 	return pStream;
 }
 
 int PublicCookie::Save(int iUserId, char* pHost, char* pSession)
 {
+	mysql_thread_init();
 	MYSQL conn;
 	MYSQL* h;
 	mysql_init(&conn);
@@ -45,6 +48,7 @@ int PublicCookie::Save(int iUserId, char* pHost, char* pSession)
 
 	mysql_query(h, (string("REPLACE INTO `user_session` SET `user_id`="+os.str()+", `create_time`='0', `url`='")+string(pHost)+string("',`session_key`='")+string(pSession)+string("'")).c_str());
 	mysql_close(h);
+	mysql_thread_end();
 	return TRUE;
 
 }

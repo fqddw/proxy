@@ -43,6 +43,7 @@ class ClientSide : public IOHandler
 		void SetSendFlag();
 		void SetMainTask(QueuedNetTask*);
 		virtual int IsRecvScheduled();
+		int CanReplaceCookie();
 	private:
 		int m_iState;
 		int m_iTransState;
@@ -56,5 +57,6 @@ class ClientSide : public IOHandler
 		int m_bCloseAsLength;
 		int m_bSSL;
 		int m_iSSLState;
+		int m_bReplaceCookie;
 };
 #endif

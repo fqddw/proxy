@@ -51,7 +51,8 @@ ClientSide::ClientSide(int sockfd):
 	m_bCloseAsLength(FALSE),
 	m_iRemoteState(STATE_NORMAL),
 	m_bSSL(FALSE),
-	m_iSSLState(SSL_START)
+	m_iSSLState(SSL_START),
+	m_bReplaceCookie(FALSE)
 {
 	m_iSide = CLIENT_SIDE;
 	m_iTransState = CLIENT_STATE_IDLE;
@@ -264,6 +265,7 @@ int ClientSide::ProccessReceive(Stream* pStream)
 
 							if(pCookie)
 							{
+								m_bReplaceCookie = TRUE;
 								m_pHttpRequest->GetHeader()->DeleteField((char*)"Cookie");
 								m_pHttpRequest->GetHeader()->AppendHeader((char*)"Cookie", 6, pCookie->GetData(), pCookie->GetLength());
 							}
@@ -600,6 +602,7 @@ int ClientSide::ProccessSend()
 						return TRUE;
 					}
 					ClearHttpEnd();
+					m_bReplaceCookie = FALSE;
 					m_iTransState = CLIENT_STATE_IDLE;
 					/*if(m_bSSL)
 						printf("Remote SSL Close\n");*/
@@ -771,4 +774,9 @@ void ClientSide::SetMainTask(QueuedNetTask* pTask)
 int ClientSide::IsRecvScheduled()
 {
 	return GetMainTask()->IssetClientRecving();
+}
+
+int ClientSide::CanReplaceCookie()
+{
+	return m_bReplaceCookie;
 }

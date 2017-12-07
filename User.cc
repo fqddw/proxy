@@ -12,6 +12,7 @@ User::User():m_pUserName(NULL),m_pPassword(NULL)
 }
 User* User::LoadByName(Stream* pUserName)
 {
+	mysql_thread_init();
 	MYSQL conn;
 	mysql_init(&conn);
 	mysql_real_connect(&conn, "localhost", "root","123456", "ts", 0, NULL, 0);
@@ -25,6 +26,7 @@ User* User::LoadByName(Stream* pUserName)
 	{
 		mysql_free_result(res);
 		mysql_close(&conn);
+		mysql_thread_end();
 
 		return NULL;
 	}
@@ -37,6 +39,7 @@ User* User::LoadByName(Stream* pUserName)
 	pPassword->Append(row[2], strlen(row[2]));
 	mysql_free_result(res);
 	mysql_close(&conn);
+	mysql_thread_end();
 	pUser->SetUserName(pName);
 	pUser->SetPassword(pPassword);
 	return pUser;
@@ -89,6 +92,7 @@ int User::IsCapturing(char* pUrl)
 }
 int User::IsCapturing(Stream* pUrl)
 {
+	mysql_thread_init();
 	MYSQL conn;
 	mysql_init(&conn);
 	mysql_real_connect(&conn, "localhost", "root","123456", "ts", 0, NULL, 0);
@@ -104,12 +108,14 @@ int User::IsCapturing(Stream* pUrl)
 	{
 		mysql_free_result(res);
 		mysql_close(&conn);
+		mysql_thread_end();
 
 		return FALSE;
 	}
 	int canCapture = atoi(row[0]);
 	mysql_free_result(res);
 	mysql_close(&conn);
+	mysql_thread_end();
 	if(canCapture)
 		return TRUE;
 	return FALSE;
