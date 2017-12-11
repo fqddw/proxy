@@ -84,6 +84,7 @@ class IOHandler
 		int m_iSendRefCount;
 		int m_bRealClosed;
 		int m_bDeleted;
+		ReceiveProccessor* m_pRecvTask;
 };
 
 

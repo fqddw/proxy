@@ -13,7 +13,8 @@ IOHandler::IOHandler():
 	m_iRecvRefCount(0),
 	m_bRealClosed(0),
 	m_bDeleted(FALSE),
-	m_pMainTask(NULL)
+	m_pMainTask(NULL),
+	m_pRecvTask(NULL)
 {
 	//pGlobalList->Append(this);
 }
@@ -39,6 +40,9 @@ MasterThread* IOHandler::GetMasterThread()
 }
 IOHandler::~IOHandler()
 {
+	if(m_pRecvTask)
+		m_pRecvTask->CancelRepeatable();
+	m_pRecvTask = NULL;
 	delete m_pEvent;
 	m_pEvent = NULL;
 	delete cs_;
@@ -217,9 +221,13 @@ Task* IOHandler::GetRecvTask()
 	//						return NULL;
 	AddRef();
 	AddRecvRefCount();
-	ReceiveProccessor* task = new ReceiveProccessor(this);
-	task->CancelRepeatable();
-	return task;
+	if(!m_pRecvTask)
+	{
+		ReceiveProccessor* task = new ReceiveProccessor(this);
+		//task->CancelRepeatable();
+		m_pRecvTask = task;
+	}
+	return m_pRecvTask;
 }
 
 Task* IOHandler::GetSendTask()
