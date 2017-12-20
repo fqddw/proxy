@@ -14,6 +14,10 @@ Stream* HttpHeader::ToHeader()
 {
 		return NULL;
 }
+Stream* HttpHeader::ToProxyHeader()
+{
+		return NULL;
+}
 
 int HttpRequestHeader::GetMethod()
 {
@@ -111,6 +115,31 @@ Stream* HttpRequestHeader::ToHeader()
 	pStream->Append((char*)"\r\n",2);
 	return pStream;
 }
+
+Stream* HttpRequestHeader::ToProxyHeader()
+{
+	char* pCandString = m_pRequestLine->ToProxyString();
+	Stream* pStream = new Stream();
+	pStream->Append(pCandString,strlen(pCandString));
+	pStream->Append((char*)"\r\n",2);
+	delete []pCandString;
+	MemNode<pair<string,string>*>* pNode = GetKeyValueList()->GetHead();
+	while(pNode != NULL)
+	{
+					char* pKey = (char*)pNode->GetData()->first.c_str();
+					{
+					pStream->Append(pKey ,strlen(pKey));
+
+		pStream->Append((char*)": ",2);
+		pStream->Append((char*)pNode->GetData()->second.c_str(),pNode->GetData()->second.size());
+		pStream->Append((char*)"\r\n",2);
+					}
+		pNode = pNode->GetNext();
+	}
+	pStream->Append((char*)"\r\n",2);
+	return pStream;
+}
+
 Stream* HttpResponseHeader::ToHeader()
 {
 	char* pCandString = m_pHttpResponseLine->ToString();

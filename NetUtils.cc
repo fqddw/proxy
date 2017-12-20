@@ -4,9 +4,13 @@
 #include "memory.h"
 #include "TimeLib.h"
 #include "DNSCache.h"
+#include "arpa/inet.h"
 extern DNSCache* g_pDNSCache;
 InetSocketAddress* NetUtils::GetHostByName(char* pHostName,int port)
 {
+	in_addr_t in = {0};
+        in = inet_addr("192.168.1.101");
+	return new InetSocketAddress(8000, in);
 	if(strlen(pHostName) == 0)
 	{
 		return NULL;

@@ -94,6 +94,14 @@ int HttpBody::Parse(Stream* pStream)
 				m_iOffset = 2-pStream->GetLength()+offset;
 				break;
 			}
+			else if(offset + (2-m_iOffset) == pStream->GetLength())
+			{
+				m_iOffset = 0;
+				m_iChunkState = CS_IN_LENGTH;
+
+				break;
+			}
+
 			else
 			{
 				offset += (2-m_iOffset);

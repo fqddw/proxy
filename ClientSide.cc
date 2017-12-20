@@ -125,6 +125,10 @@ int ClientSide::SSLTransferCreate()
 	pRemoteSide->SetClientState(STATE_RUNNING);
 	pRemoteSide->SetMainTask(GetMainTask());
 	m_iRemoteState = STATE_RUNNING;
+	Stream* pSendStream = m_pHttpRequest->GetHeader()->ToProxyHeader();
+	pRemoteSide->GetSendStream()->Append(pSendStream->GetData(),pSendStream->GetLength());
+	delete pSendStream;
+
 	//printf("Create Connection SSL %s %d\n", GetRequest()->GetHeader()->GetRequestLine()->GetUrl()->GetHost(), GetEvent()->GetFD());
 	pRemoteSide->GetEvent()->AddToEngine(EPOLLIN|/*EPOLLET|*/EPOLLONESHOT);
 	pRemoteSide->SetSendFlag();
@@ -176,7 +180,7 @@ int ClientSide::ProccessReceive(Stream* pStream)
 			//if(strstr(m_pHttpRequest->GetHeader()->GetRequestLine()->GetUrl()->GetHost(), "www.iqiyi.com"))
 					
 			char* pAuthString = m_pHttpRequest->GetHeader()->GetField(HTTP_PROXY_AUTHENTICATION);
-			if(pAuthString)
+			/*if(pAuthString)
 			{
 				Stream* pAuthStream = new Stream();
 				pAuthStream->Append(pAuthString, strlen(pAuthString));
@@ -295,7 +299,7 @@ int ClientSide::ProccessReceive(Stream* pStream)
 					GetEvent()->ModEvent(EPOLLIN|EPOLLONESHOT);
 				}
 				return FALSE;
-			}
+			}*/
 			if(!CanRead())
 			{
 				SetCanRead(TRUE);
@@ -328,7 +332,7 @@ int ClientSide::ProccessReceive(Stream* pStream)
 
 			RemoteSide* pRemoteSide = GetRemoteSide(pAddr);
 			m_pRemoteSide = pRemoteSide;
-			Stream* pSendStream = m_pHttpRequest->GetHeader()->ToHeader();
+			Stream* pSendStream = m_pHttpRequest->GetHeader()->ToProxyHeader();
 			pRemoteSide->GetSendStream()->Append(pSendStream->GetData(),pSendStream->GetLength());
 			delete pSendStream;
 			//GetEvent()->ModEvent(EPOLLOUT|EPOLLET);

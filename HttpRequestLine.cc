@@ -32,6 +32,24 @@ char* HttpRequestLine::ToString()
 	memcpy(pRequestString+strlen(pMethod)+1+strlen(pUrl)+1+5,ver,strlen(ver));
 	return pRequestString;
 }
+char* HttpRequestLine::ToProxyString()
+{
+	char* pMethod = GetMethodString();
+	char* pUrl = m_pUrl->ToFullString();
+	int reqLen = strlen(pMethod)+1+strlen(pUrl)+1+8+1;
+	char* pRequestString = new char[reqLen];
+	pRequestString[reqLen-1] = '\0';
+	memcpy(pRequestString,pMethod,strlen(pMethod));
+	memcpy(pRequestString+strlen(pMethod)," ",1);
+	memcpy(pRequestString+strlen(pMethod)+1,pUrl,strlen(pUrl));
+	memcpy(pRequestString+strlen(pMethod)+1+strlen(pUrl)," ",1);
+	memcpy(pRequestString+strlen(pMethod)+1+strlen(pUrl)+1,"HTTP/",5);
+	char ver[128] = {'\0'};
+	sprintf(ver,"%d.%d",m_iMajorVer,m_iSeniorVer);
+	memcpy(pRequestString+strlen(pMethod)+1+strlen(pUrl)+1+5,ver,strlen(ver));
+	return pRequestString;
+}
+
 Stream* HttpRequestLine::GetMethodStream()
 {
 	return m_pMethodStream;
@@ -39,6 +57,9 @@ Stream* HttpRequestLine::GetMethodStream()
 
 char* HttpRequestLine::GetMethodString()
 {
+	if(m_iMethod == HTTP_METHOD_CONNECT)
+		return (char*)"CONNECT";
+
 	if(m_iMethod == HTTP_METHOD_GET)
 		return (char*)"GET";
 	if(m_iMethod == HTTP_METHOD_POST)

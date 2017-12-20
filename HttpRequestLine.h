@@ -9,6 +9,7 @@ class HttpRequestLine
 		HttpRequestLine();
 		~HttpRequestLine();
 		char* ToString();
+		char* ToProxyString();
 		char* GetMethodString();
 		int SetUrl(char*);
 		int SetVersion(int,int);

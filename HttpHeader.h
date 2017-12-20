@@ -22,6 +22,7 @@ class HttpHeader
 	public:
 		~HttpHeader();
 		virtual Stream* ToHeader() = 0;
+		virtual Stream* ToProxyHeader();
 		int SetKeyValueList(HttpKeyValueList*);
 		HttpKeyValueList* GetKeyValueList();
 		int AppendHeader(char*, int, char*, int);
@@ -41,6 +42,7 @@ class HttpRequestHeader : public HttpHeader
 		~HttpRequestHeader();
 		int GetMethod();
 		Stream* ToHeader();
+		Stream* ToProxyHeader();
 		int SetRequestLine(HttpRequestLine*);
 		HttpRequestLine* GetRequestLine();
 	private:
