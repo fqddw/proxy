@@ -196,7 +196,9 @@ int HttpHeader::DeleteField(char* pKey)
 		if(pNode->GetData()->first == pKey)
 		{
 			MemNode<pair<string,string>*>* pTmpNode = pNode->GetNext();
+			pair<string,string>* pData = pNode->GetData();
 			m_pKeyValueList->Delete(pNode->GetData());
+			delete pData;
 			pNode = pTmpNode;
 		}
 		else
