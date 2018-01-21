@@ -29,6 +29,7 @@ ClientSide::ClientSide():
 {
 	m_iSide = CLIENT_SIDE;
 	GetEvent()->SetIOHandler(this);
+	SetServiceType(SERVICE_TYPE_HTTP_PROXY);
 	m_iState = HEADER_NOTFOUND;
 	m_iTransState = CLIENT_STATE_IDLE;
 }
@@ -61,6 +62,7 @@ ClientSide::ClientSide(int sockfd):
 	GetEvent()->SetIOHandler(this);
 	m_pHttpRequest = new HttpRequest(m_pStream);
 	SetMainTask(new QueuedNetTask());
+	SetServiceType(SERVICE_TYPE_HTTP_PROXY);
 }
 
 int ClientSide::Proccess()

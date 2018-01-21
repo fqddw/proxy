@@ -176,7 +176,7 @@ int NetEngine::Run()
 
 	if(m_iTaskCount < 0)
 	{
-		printf("%d\n", m_iTaskCount);
+		printf("count %d\n", m_iTaskCount);
 	}
 	m_iTaskCount = iTaskSize;
 
@@ -205,6 +205,11 @@ int NetEngine::SetMasterThread(MasterThread* pMasterThread)
 {
 	m_pMasterThread = pMasterThread;
 	return TRUE;
+}
+
+void NetEngine::IncTaskCount()
+{
+	m_iTaskCount = m_iTaskCount + 1;
 }
 
 void NetEngine::ReduceTaskCount()

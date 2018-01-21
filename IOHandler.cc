@@ -14,7 +14,8 @@ IOHandler::IOHandler():
 	m_bRealClosed(0),
 	m_bDeleted(FALSE),
 	m_pMainTask(NULL),
-	m_pRecvTask(NULL)
+	m_pRecvTask(NULL),
+	m_pSendTask(NULL)
 {
 	//pGlobalList->Append(this);
 }
@@ -51,6 +52,8 @@ IOHandler::~IOHandler()
 #include "stdio.h"
 int IOHandler::Dispatch(int events)
 {
+	if(GetServiceType() == SERVICE_TYPE_HTTP_PROXY)
+	{
 	if(IsServer())
 	{
 		GetMasterThread()->InsertTask(GetRecvTask());
@@ -88,6 +91,18 @@ int IOHandler::Dispatch(int events)
 	{
 	}
 	UnlockTask();
+	}
+	if(GetServiceType() == SERVICE_TYPE_ADMIN)
+	{
+		if(events & EPOLLIN)
+		{
+			GetMasterThread()->InsertTask(GetRecvTask());
+		}
+		if(events & EPOLLOUT)
+		{
+			GetMasterThread()->InsertTask(GetRecvTask());
+		}
+	}
 
 	return 0;
 	/*
@@ -236,9 +251,13 @@ Task* IOHandler::GetSendTask()
 	//						return NULL;
 	AddRef();
 	AddSendRefCount();
+	if(!m_pSendTask)
+	{
 	SendProccessor* task = new SendProccessor(this);
-	task->CancelRepeatable();
-	return task;
+	m_pSendTask = task;
+	//task->CancelRepeatable();
+	}
+	return m_pSendTask;
 }
 
 int IOHandler::GetSide()
@@ -372,4 +391,22 @@ QueuedNetTask* IOHandler::GetMainTask()
 int IOHandler::IsRecvScheduled()
 {
 	return TRUE;
+}
+
+int IOHandler::GetServiceType()
+{
+	return m_iServiceType;
+}
+
+
+void IOHandler::SetServiceType(int iServerTyp)
+{
+	m_iServiceType = iServerTyp;
+}
+
+void IOHandler::DeleteSendTask()
+{
+	if(m_pSendTask)
+		delete m_pSendTask;
+	m_pSendTask = NULL;
 }

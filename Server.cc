@@ -17,6 +17,7 @@ Server::Server():IOHandler()
 	int sock = socket(AF_INET,SOCK_STREAM,0);
 	GetEvent()->SetFD(sock);
 	GetEvent()->SetIOHandler(this);
+	SetServiceType(SERVICE_TYPE_HTTP_PROXY);
 }
 
 int Server::Create()

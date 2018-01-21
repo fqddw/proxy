@@ -6,7 +6,7 @@
 class AdminServer : public IOHandler
 {
 	public:
-		Server();
+		AdminServer();
 		int Create();
 		void SetPort(int);
 		int ProccessReceive(Stream*);

@@ -1,4 +1,14 @@
 #include "AdminServer.h"
+#include "InetSocketAddress.h"
+#include "CommonType.h"
+#include "errno.h"
+#include "stdio.h"
+#include "unistd.h"
+#include "string.h"
+#include "fcntl.h"
+#include "ServerConfig.h"
+#include "AdminClient.h"
+
 
 int AdminServerStartTask::SetNetEngine(NetEngine* pEngine)
 {
@@ -13,7 +23,7 @@ int AdminServerStartTask::SetMasterThread(MasterThread* pMasterThread)
 int AdminServerStartTask::Run()
 {
 	ServerConfigDefault* pConfig = new ServerConfigDefault();
-	Server* pServer = new AdminServer();
+	AdminServer* pServer = new AdminServer();
 	//pGlobalList->Append(pServer);
 	pServer->GetEvent()->SetNetEngine(m_pEngine);
 	pServer->SetPort(pConfig->GetAdminPort());
@@ -33,6 +43,7 @@ AdminServer::AdminServer():IOHandler()
 	int sock = socket(AF_INET,SOCK_STREAM,0);
 	GetEvent()->SetFD(sock);
 	GetEvent()->SetIOHandler(this);
+	SetServiceType(SERVICE_TYPE_ADMIN);
 }
 
 int AdminServer::Create()
@@ -80,12 +91,12 @@ int AdminServer::ProccessReceive(Stream* pStream)
 		}
 		int cflags = fcntl(client,F_GETFL,0);
 		fcntl(client,F_SETFL, cflags|O_NONBLOCK);
-		AdminClientSide* pClientSideHandler = new AdminClientSide(client);
+		AdminClient* pClientSideHandler = new AdminClient(client);
 		//pGlobalList->Append(pClientSideHandler);
 		pClientSideHandler->GetEvent()->SetNetEngine(GetEvent()->GetNetEngine());
 		pClientSideHandler->SetMasterThread(GetMasterThread());
 		pClientSideHandler->SetCanWrite(FALSE);
-		pClientSideHandler->GetEvent()->AddToEngine(EPOLLIN/*|EPOLLET*/|EPOLLONESHOT);
+		pClientSideHandler->GetEvent()->AddToEngine(EPOLLIN);
 	}
 	return TRUE;
 }

@@ -65,6 +65,7 @@ RemoteSide::RemoteSide():
 {
 	m_iSide = REMOTE_SIDE;
 	GetEvent()->SetIOHandler(this);
+	SetServiceType(SERVICE_TYPE_HTTP_PROXY);
 }
 RemoteSide::RemoteSide(InetSocketAddress* pAddr):
 	IOHandler(),
@@ -89,6 +90,7 @@ RemoteSide::RemoteSide(InetSocketAddress* pAddr):
 	fcntl(sockfd,F_SETFL, cflags|O_NONBLOCK);
 	GetEvent()->SetFD(sockfd);
 	m_pHttpResponse = new HttpResponse(m_pStream);
+	SetServiceType(SERVICE_TYPE_HTTP_PROXY);
 }
 int RemoteSide::Connect()
 {

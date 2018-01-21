@@ -12,6 +12,9 @@
 #define REMOTE_SIDE 1
 #define CLIENT_SIDE 2
 
+#define SERVICE_TYPE_HTTP_PROXY 1
+#define SERVICE_TYPE_ADMIN 2
+
 #define STATE_NORMAL 0
 #define STATE_RUNNING 1
 #define STATE_ABORT 2
@@ -68,7 +71,10 @@ class IOHandler
 		virtual void SetMainTask(QueuedNetTask*);
 		QueuedNetTask* GetMainTask();
 		virtual int IsRecvScheduled();
+		void DeleteSendTask();
 		int Schedule(int);
+		int GetServiceType();
+		void SetServiceType(int);
 	public:
 		int m_iSide;
 	private:
@@ -84,7 +90,9 @@ class IOHandler
 		int m_iSendRefCount;
 		int m_bRealClosed;
 		int m_bDeleted;
+		int m_iServiceType;
 		ReceiveProccessor* m_pRecvTask;
+		SendProccessor* m_pSendTask;
 };
 
 

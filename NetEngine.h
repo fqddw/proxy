@@ -23,6 +23,7 @@ class NetEngine
 		MasterThread* GetMasterThread();
 		int SetMasterThread(MasterThread*);
 		void ReduceTaskCount();
+		void IncTaskCount();
 		int GetTaskCount();
 	private:
 		int m_iFD;
