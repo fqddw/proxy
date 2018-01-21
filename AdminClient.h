@@ -9,6 +9,10 @@
 #define STATUS_IDLE 2
 #define SOCKET_STATUS_CONNECTING 3
 #define SOCKET_STATUS_PRE_CONNECTING 4
+#define VERSION 10
+#define LENGTH 20
+#define CMD 30
+#define CMD_GET_AUTH_TOKEN 10001
 class AdminClient:public IOHandler
 {
 	public:
@@ -33,14 +37,17 @@ class AdminClient:public IOHandler
 		void SetStartTime(struct timespec tCurTime);
 		void SetEndTime(struct timespec tCurTime);
 	private:
+		int m_iContextState;
+		int m_iOffset;
+		int m_iVersion;
+		int m_iLength;
+		Stream* m_pPartData;
 		int m_isConnected;
 		int m_iSocket;
 		int m_iState;
-		int m_iClientState;
 		Stream* m_pStream;
 		Stream* m_pSendStream;
 		int m_bShouldClose;
-		int m_bCloseClient;
 		int m_iSentTotal;
 		int m_iRecvTotal;
 		int m_iUseCount;
