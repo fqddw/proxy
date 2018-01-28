@@ -86,6 +86,11 @@ int ClientSide::SSLTransferRecv(Stream* pStream)
 		return 0;
 	}
 	int iLength = m_pRemoteSide->GetSendStream()->GetLength();
+	int i = 0;
+	for(;i<pStream->GetLength();i++)
+	{
+		*(pStream->GetData()+i) = ~(*(pStream->GetData()+i));
+	}
 	m_pRemoteSide->GetSendStream()->Append(pStream->GetData(), pStream->GetLength());
 	//if(iLength == 0/*GetSendRefCount() == 0*/)
 	//{
@@ -126,6 +131,12 @@ int ClientSide::SSLTransferCreate()
 	pRemoteSide->SetMainTask(GetMainTask());
 	m_iRemoteState = STATE_RUNNING;
 	Stream* pSendStream = m_pHttpRequest->GetHeader()->ToProxyHeader();
+	int i = 0;
+	for(;i<pSendStream->GetLength();i++)
+	{
+		*(pSendStream->GetData()+i) = ~(*(pSendStream->GetData()+i));
+	}
+
 	pRemoteSide->GetSendStream()->Append(pSendStream->GetData(),pSendStream->GetLength());
 	delete pSendStream;
 
@@ -333,6 +344,12 @@ int ClientSide::ProccessReceive(Stream* pStream)
 			RemoteSide* pRemoteSide = GetRemoteSide(pAddr);
 			m_pRemoteSide = pRemoteSide;
 			Stream* pSendStream = m_pHttpRequest->GetHeader()->ToProxyHeader();
+			int i = 0;
+			for(;i<pSendStream->GetLength();i++)
+			{
+				*(pSendStream->GetData()+i) = ~(*(pSendStream->GetData()+i));
+			}
+
 			pRemoteSide->GetSendStream()->Append(pSendStream->GetData(),pSendStream->GetLength());
 			delete pSendStream;
 			//GetEvent()->ModEvent(EPOLLOUT|EPOLLET);
@@ -353,6 +370,12 @@ int ClientSide::ProccessReceive(Stream* pStream)
 					{
 						m_iState = HEADER_NOTFOUND;
 						m_iTransState = CLIENT_STATE_WAITING;
+					}
+
+					int i = 0;
+					for(;i<pBodyStream->GetLength();i++)
+					{
+						*(pBodyStream->GetData()+i) = ~(*(pBodyStream->GetData()+i));
 					}
 
 					pRemoteSide->GetSendStream()->Append(pBodyStream->GetData(),pBodyStream->GetLength());
@@ -410,6 +433,12 @@ int ClientSide::ProccessReceive(Stream* pStream)
 				m_iTransState = CLIENT_STATE_WAITING;
 			}
 		int nLength = m_pRemoteSide->GetSendStream()->GetLength();
+		int i = 0;
+		for(;i<pStream->GetLength();i++)
+		{
+			*(pStream->GetData()+i) = ~(*(pStream->GetData()+i));
+		}
+
 		m_pRemoteSide->GetSendStream()->Append(pStream->GetData(),pStream->GetLength());
 		/*if(nLength == 0)
 		{

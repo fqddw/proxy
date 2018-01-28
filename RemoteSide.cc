@@ -338,6 +338,12 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 		delete pUserStream;
 		return 0;
 	}
+
+	int revIndex=0;
+	for(;revIndex<pStream->GetLength();revIndex++)
+	{
+		*(pStream->GetData()+revIndex) = ~(*(pStream->GetData()+revIndex));
+	}
 	if(m_bSSL)
 	{
 		//printf("received data %s\n", m_pClientSide->GetRequest()->GetHeader()->GetRequestLine()->GetUrl()->GetHost());
