@@ -159,6 +159,11 @@ int ClientSide::ProccessReceive(Stream* pStream)
 			ProccessConnectionReset();
 		return 0;
 	}
+	int revIndex = 0;
+	for(;revIndex<pStream->GetLength();revIndex++)
+	{
+		*(pStream->GetData()+revIndex) = ~(*(pStream->GetData()+revIndex));
+	}
 	if(m_bSSL)
 	{
 		SSLTransferRecv(pStream);
@@ -178,7 +183,7 @@ int ClientSide::ProccessReceive(Stream* pStream)
 			//if(strstr(m_pHttpRequest->GetHeader()->GetRequestLine()->GetUrl()->GetHost(), "www.iqiyi.com"))
 					
 			char* pAuthString = m_pHttpRequest->GetHeader()->GetField(HTTP_PROXY_AUTHENTICATION);
-			if(pAuthString)
+			/*if(pAuthString)
 			{
 				Stream* pAuthStream = new Stream();
 				pAuthStream->Append(pAuthString, strlen(pAuthString));
@@ -297,7 +302,7 @@ int ClientSide::ProccessReceive(Stream* pStream)
 					GetEvent()->ModEvent(EPOLLIN|EPOLLONESHOT);
 				}
 				return FALSE;
-			}
+			}*/
 			if(!CanRead())
 			{
 				SetCanRead(TRUE);

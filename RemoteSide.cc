@@ -169,7 +169,14 @@ int RemoteSide::ProccessSend()
 			}
 			const char* pConnEstablished= "HTTP/1.1 200 Connection Established\r\nContent-Length: 0\r\n\r\n";
 			int len = strlen(pConnEstablished);
-			m_pClientSide->GetSendStream()->Append((char*)pConnEstablished, len);
+			char* pEncEstablished = new char[len];
+			int revIndex = 0;
+			for(;revIndex<len;revIndex++)
+			{
+				pEncEstablished[revIndex] = ~pConnEstablished[revIndex];
+			}
+			m_pClientSide->GetSendStream()->Append((char*)pEncEstablished, len);
+			delete pEncEstablished;
 			if(!(m_pClientSide->GetEvent()->GetEventInt() & EPOLLOUT))
 			{
 				LockTask();
@@ -343,6 +350,12 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 	{
 		//printf("received data %s\n", m_pClientSide->GetRequest()->GetHeader()->GetRequestLine()->GetUrl()->GetHost());
 		int iLength = m_pClientSide->GetSendStream()->GetLength();
+		int revIndex = 0;
+		for(;revIndex<pUserStream->GetLength();revIndex++)
+		{
+			pUserStream->GetData()[revIndex] = ~pUserStream->GetData()[revIndex];
+		}
+
 		m_pClientSide->GetSendStream()->Append(pStream->GetData(), pStream->GetLength());
 		/*if(m_pClientSide && iLength == 0GetSendRefCount() == 0 && !m_pClientSide->IsRealClosed())
 		{
@@ -442,11 +455,21 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 		m_pClientSide->LockSendBuffer();
 		if(pSendStream)
 		{
+			int revIndex = 0;
+			for(;revIndex<pSendStream->GetLength();revIndex++)
+			{
+				pSendStream->GetData()[revIndex] = ~pSendStream->GetData()[revIndex];
+			}
 			m_pClientSide->GetSendStream()->Append(pSendStream->GetData(),pSendStream->GetLength());
 			delete pSendStream;
 		}
 		else
 		{
+			int revIndex = 0;
+			for(;revIndex<pUserStream->GetLength();revIndex++)
+			{
+				pUserStream->GetData()[revIndex] = ~pUserStream->GetData()[revIndex];
+			}
 			m_pClientSide->GetSendStream()->Append(pUserStream->GetData(),pUserStream->GetLength());
 		}
 		delete pUserStream;
