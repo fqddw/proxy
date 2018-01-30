@@ -91,7 +91,7 @@ int ClientSide::SSLTransferRecv(Stream* pStream)
 	m_pRemoteSide->GetSendStream()->Append(pStream->GetData(), pStream->GetLength());
 	//if(iLength == 0/*GetSendRefCount() == 0*/)
 	//{
-		//GetMasterThread()->InsertTask(m_pRemoteSide->GetSendTask());
+	//GetMasterThread()->InsertTask(m_pRemoteSide->GetSendTask());
 	//}
 	//else
 	//{
@@ -140,23 +140,23 @@ int ClientSide::SSLTransferCreate()
 int ClientSide::ProccessReceive(Stream* pStream)
 {
 	/*if(IsClosed() && m_bSSL)
-	{
-		if(pStream)
-			delete pStream;
-		ProccessConnectionReset();
-		return FALSE;
-	}*/
+	  {
+	  if(pStream)
+	  delete pStream;
+	  ProccessConnectionReset();
+	  return FALSE;
+	  }*/
 	if(!pStream)
 	{
 		/*if(errno == EAGAIN)
-		{
-			GetEvent()->ModEvent(EPOLLIN|EPOLLONESHOT);
-		}
-		else*/
+		  {
+		  GetEvent()->ModEvent(EPOLLIN|EPOLLONESHOT);
+		  }
+		  else*/
 		if(CanRead())
-		printf("%d %d %.20s\n", errno, CanRead(), m_pHttpRequest->GetHeader()->GetRequestLine()->GetUrl()->GetHost());
+			printf("%d %d %.20s\n", errno, CanRead(), m_pHttpRequest->GetHeader()->GetRequestLine()->GetUrl()->GetHost());
 		//if(errno != EAGAIN)
-			ProccessConnectionReset();
+		ProccessConnectionReset();
 		return 0;
 	}
 	if(m_bSSL)
@@ -176,127 +176,144 @@ int ClientSide::ProccessReceive(Stream* pStream)
 			m_pHttpRequest->LoadHttpHeader();
 			const char* phost = m_pHttpRequest->GetHeader()->GetRequestLine()->GetUrl()->GetHost();
 			//if(strstr(m_pHttpRequest->GetHeader()->GetRequestLine()->GetUrl()->GetHost(), "www.iqiyi.com"))
-					
-			char* pAuthString = m_pHttpRequest->GetHeader()->GetField(HTTP_PROXY_AUTHENTICATION);
-			if(pAuthString)
+			struct sockaddr_in sai;
+			socklen_t len = sizeof(sai);
+			getpeername(GetEvent()->GetFD(),(struct sockaddr*)&sai,&len);
+			int peerIp = sai.sin_addr.s_addr;
+			char* strIp = inet_ntoa(sai.sin_addr);
+			char* pXForwardedFor = m_pHttpRequest->GetHeader()->GetField(HTTP_X_FORWARDED_FOR);
+			if(!pXForwardedFor)
 			{
-				Stream* pAuthStream = new Stream();
-				pAuthStream->Append(pAuthString, strlen(pAuthString));
-				Digest* pDigest = new Digest(pAuthStream);
-				pDigest->Parse();
-				if(pDigest->GetRealm())
-				{
-					if(!pDigest->GetRealm()->Equal(REALM_STRING))
-					{
-						printf("error realm\n");
-					}
-				}
-				else
-				{
-					printf("Not Realm\n");
-				}
-				pDigest->SetMethod(m_pHttpRequest->GetHeader()->GetRequestLine()->GetMethodStream());
+				const char* pXforwardedKey = "X-Forwarded-For";
+				m_pHttpRequest->GetHeader()->AppendHeader((char*)pXforwardedKey, strlen(pXforwardedKey), strIp, strlen(strIp));
+			}
 
-				Auth* pAuth = AuthManager::getInstance()->GetAuthByNonce(pDigest->GetNonce());
-				if(!pAuth)
+			User* pIpUser = User::GetUserByAssociatedIp(peerIp);
+			if(pIpUser)
+			{
+				char* pAuthString = m_pHttpRequest->GetHeader()->GetField(HTTP_PROXY_AUTHENTICATION);
+				if(pAuthString)
 				{
-					Stream* pAuthRespStream = AuthManager::getInstance()->GetRequireAuthString();
-					send(GetEvent()->GetFD(), pAuthRespStream->GetData() , pAuthRespStream->GetLength(), 0);
-					delete pAuthRespStream;
-					delete pDigest;
-					ClearHttpEnd();
-					m_iState = HEADER_NOTFOUND;
-					m_iTransState = CLIENT_STATE_IDLE;
-					if(!CanRead())
+					Stream* pAuthStream = new Stream();
+					pAuthStream->Append(pAuthString, strlen(pAuthString));
+					Digest* pDigest = new Digest(pAuthStream);
+					pDigest->Parse();
+					if(pDigest->GetRealm())
 					{
-						SetCanRead(TRUE);
-						GetEvent()->ModEvent(EPOLLIN|EPOLLONESHOT);
+						if(!pDigest->GetRealm()->Equal(REALM_STRING))
+						{
+							printf("error realm\n");
+						}
 					}
-					return FALSE;
-				}
-				Stream* pUserName = pDigest->GetUserName();
-				User* pUser = pAuth->GetUser();
-				int bFromAuth = TRUE;
-				if(!pUser)
-				{
-					pUser = User::LoadByName(pUserName);
-					if(!pUser)
+					else
+					{
+						printf("Not Realm\n");
+					}
+					pDigest->SetMethod(m_pHttpRequest->GetHeader()->GetRequestLine()->GetMethodStream());
+
+					Auth* pAuth = AuthManager::getInstance()->GetAuthByNonce(pDigest->GetNonce());
+					if(!pAuth)
 					{
 						Stream* pAuthRespStream = AuthManager::getInstance()->GetRequireAuthString();
 						send(GetEvent()->GetFD(), pAuthRespStream->GetData() , pAuthRespStream->GetLength(), 0);
 						delete pAuthRespStream;
-
 						delete pDigest;
+						ClearHttpEnd();
+						m_iState = HEADER_NOTFOUND;
+						m_iTransState = CLIENT_STATE_IDLE;
+						if(!CanRead())
+						{
+							SetCanRead(TRUE);
+							GetEvent()->ModEvent(EPOLLIN|EPOLLONESHOT);
+						}
+						return FALSE;
+					}
+					Stream* pUserName = pDigest->GetUserName();
+					User* pUser = pAuth->GetUser();
+					int bFromAuth = TRUE;
+					if(!pUser)
+					{
+						pUser = User::LoadByName(pUserName);
+						if(!pUser)
+						{
+							Stream* pAuthRespStream = AuthManager::getInstance()->GetRequireAuthString();
+							send(GetEvent()->GetFD(), pAuthRespStream->GetData() , pAuthRespStream->GetLength(), 0);
+							delete pAuthRespStream;
+
+							delete pDigest;
+							ProccessConnectionReset();
+							return 0;
+						}
+						else
+						{
+							bFromAuth = FALSE;
+						}
+					}
+					Stream* pPassword = new Stream();
+					pPassword->Append(pUser->GetPassword());
+					pDigest->SetPassword(pPassword);
+					Stream* pRespStream = pDigest->CalcResponse();
+					char* pData = pRespStream->GetData();
+					if(strncmp(pData, pDigest->GetResponse()->GetData(), 32))
+					{
+						if(!bFromAuth)
+							delete pUser;
+						delete pRespStream;
+						delete pDigest;
+						const char* pAuthFailedText = "HTTP/1.1 200 OK\r\nServer: Turbo Load\r\nContent-Length: 10\r\n\r\nAuth Failed";
+						send(GetEvent()->GetFD(), pAuthFailedText, strlen(pAuthFailedText), 0);
 						ProccessConnectionReset();
 						return 0;
 					}
 					else
 					{
-						bFromAuth = FALSE;
+						if(!pAuth->GetUser())
+							pAuth->SetUser(pUser);
+						if(m_pHttpRequest->GetHeader()->GetRequestLine()->GetMethod() != HTTP_METHOD_CONNECT && m_pHttpRequest->GetHeader()->GetField(HTTP_COOKIE))
+						{
+							if(pUser->GetId() == pIpUser->GetId())
+							{
+								if(pIpUser->IsRecording())
+									PublicCookie::Save(pUser->GetId(), (char*)phost, (char*)m_pHttpRequest->GetHeader()->GetField(HTTP_COOKIE));
+							}
+						}
+
 					}
-				}
-				Stream* pPassword = new Stream();
-				pPassword->Append(pUser->GetPassword());
-				pDigest->SetPassword(pPassword);
-				Stream* pRespStream = pDigest->CalcResponse();
-				char* pData = pRespStream->GetData();
-				if(strncmp(pData, pDigest->GetResponse()->GetData(), 32))
-				{
-					if(!bFromAuth)
-						delete pUser;
 					delete pRespStream;
 					delete pDigest;
-					const char* pAuthFailedText = "HTTP/1.1 200 OK\r\nServer: Turbo Load\r\nContent-Length: 10\r\n\r\nAuth Failed";
-					send(GetEvent()->GetFD(), pAuthFailedText, strlen(pAuthFailedText), 0);
-					ProccessConnectionReset();
-					return 0;
+
+					//printf("%s\n", pDigest->CalcH1()->GetData());
 				}
-				else
+				if(pIpUser->IsServing())
 				{
-					if(!pAuth->GetUser())
-						pAuth->SetUser(pUser);
-					if(m_pHttpRequest->GetHeader()->GetRequestLine()->GetMethod() != HTTP_METHOD_CONNECT && m_pHttpRequest->GetHeader()->GetField(HTTP_COOKIE))
+					Stream* pCookie = PublicCookie::getStreamByUserIdAndHost(pIpUser->GetId(), (char*)phost);
+
+					if(pCookie)
 					{
-						if(pUser->GetId() == 3)
-						{
-							PublicCookie::Save(pUser->GetId(), (char*)phost, (char*)m_pHttpRequest->GetHeader()->GetField(HTTP_COOKIE));
-						}
-						else
-						{
-							Stream* pCookie = PublicCookie::getStreamByHost((char*)phost);
-
-							if(pCookie)
-							{
-								m_bReplaceCookie = TRUE;
-								m_pHttpRequest->GetHeader()->DeleteField((char*)"Cookie");
-								m_pHttpRequest->GetHeader()->AppendHeader((char*)"Cookie", 6, pCookie->GetData(), pCookie->GetLength());
-							}
-							delete pCookie;
-						}
+						m_bReplaceCookie = TRUE;
+						m_pHttpRequest->GetHeader()->DeleteField((char*)"Cookie");
+						m_pHttpRequest->GetHeader()->AppendHeader((char*)"Cookie", 6, pCookie->GetData(), pCookie->GetLength());
+						delete pCookie;
 					}
-
 				}
-				delete pRespStream;
-				delete pDigest;
-
-				//printf("%s\n", pDigest->CalcH1()->GetData());
+				delete pIpUser;
 			}
 			//int authResult = m_pHttpRequest->GetAuthStatus();
 			//if(authResult)
 			else
 			{
-				Stream* pAuthRespStream = AuthManager::getInstance()->GetRequireAuthString();
-				send(GetEvent()->GetFD(), pAuthRespStream->GetData() , pAuthRespStream->GetLength(), 0);
-				delete pAuthRespStream;
-				ClearHttpEnd();
-				m_iState = HEADER_NOTFOUND;
-				m_iTransState = CLIENT_STATE_IDLE;
-				if(!CanRead())
-				{
-					SetCanRead(TRUE);
-					GetEvent()->ModEvent(EPOLLIN|EPOLLONESHOT);
-				}
-				return FALSE;
+				/*
+				   Stream* pAuthRespStream = AuthManager::getInstance()->GetRequireAuthString();
+				   send(GetEvent()->GetFD(), pAuthRespStream->GetData() , pAuthRespStream->GetLength(), 0);
+				   delete pAuthRespStream;
+				   ClearHttpEnd();
+				   m_iState = HEADER_NOTFOUND;
+				   m_iTransState = CLIENT_STATE_IDLE;
+				   if(!CanRead())
+				   {
+				   SetCanRead(TRUE);
+				   GetEvent()->ModEvent(EPOLLIN|EPOLLONESHOT);
+				   }*/
 			}
 			if(!CanRead())
 			{
@@ -306,7 +323,7 @@ int ClientSide::ProccessReceive(Stream* pStream)
 			m_iState = HEADER_FOUND;
 			InetSocketAddress* pAddr = NULL;
 			//if(strstr(m_pHttpRequest->GetHeader()->GetRequestLine()->GetUrl()->GetHost(), "p.l.youku.com"))
-					//return 0;
+			//return 0;
 			pAddr = NetUtils::GetHostByName(m_pHttpRequest->GetHeader()->GetRequestLine()->GetUrl()->GetHost(),m_pHttpRequest->GetHeader()->GetRequestLine()->GetUrl()->GetPort());
 			if(!pAddr)
 			{
@@ -410,10 +427,10 @@ int ClientSide::ProccessReceive(Stream* pStream)
 		int nLength = m_pRemoteSide->GetSendStream()->GetLength();
 		m_pRemoteSide->GetSendStream()->Append(pStream->GetData(),pStream->GetLength());
 		/*if(nLength == 0)
-		{
+		  {
 
-			//printf("Multi Thread RecvTask %s %d\n", __FILE__, __LINE__);
-			GetMasterThread()->InsertTask(m_pRemoteSide->GetSendTask());
+		//printf("Multi Thread RecvTask %s %d\n", __FILE__, __LINE__);
+		GetMasterThread()->InsertTask(m_pRemoteSide->GetSendTask());
 		}*/
 
 		if(!(m_pRemoteSide->GetEvent()->GetEventInt() & EPOLLOUT))
@@ -437,10 +454,10 @@ int ClientSide::ProccessReceive(Stream* pStream)
 	}
 
 	/*if(IsClosed())
-	{
-		ProccessConnectionReset();
-		return FALSE;
-	}*/
+	  {
+	  ProccessConnectionReset();
+	  return FALSE;
+	  }*/
 
 	return FALSE;
 }
@@ -564,15 +581,15 @@ int ClientSide::ProccessSend()
 			else
 			{
 				/*if(m_iRemoteState != STATE_NORMAL)
-				{
-					m_pRemoteSide->SetClientState(STATE_ABORT);
-					SetClosed(TRUE);
-					if(!m_pRemoteSide->CanRead() && !m_pRemoteSide->IsRecvScheduled())
-					{
-						m_pRemoteSide->SetCanRead(TRUE);
-						m_pRemoteSide->GetEvent()->ModEvent(EPOLLIN|EPOLLONESHOT);
-					}
-				}
+				  {
+				  m_pRemoteSide->SetClientState(STATE_ABORT);
+				  SetClosed(TRUE);
+				  if(!m_pRemoteSide->CanRead() && !m_pRemoteSide->IsRecvScheduled())
+				  {
+				  m_pRemoteSide->SetCanRead(TRUE);
+				  m_pRemoteSide->GetEvent()->ModEvent(EPOLLIN|EPOLLONESHOT);
+				  }
+				  }
 				//ProccessReceive(NULL);*/
 				ProccessConnectionReset();
 				return 0;
@@ -607,7 +624,7 @@ int ClientSide::ProccessSend()
 					m_bReplaceCookie = FALSE;
 					m_iTransState = CLIENT_STATE_IDLE;
 					/*if(m_bSSL)
-						printf("Remote SSL Close\n");*/
+					  printf("Remote SSL Close\n");*/
 
 					return 0;
 				}
@@ -647,9 +664,9 @@ int ClientSide::ProccessConnectionReset()
 	//printf("%d %d\n", GetEvent()->GetFD(), GetRefCount());
 	//printf("%d %d %d %d\n", GetEvent()->GetFD(), GetRefCount(), GetRecvRefCount(), GetSendRefCount());
 	/*if(GetRefCount() > 2)
-	{
-		return 0;
-	}*/
+	  {
+	  return 0;
+	  }*/
 	if(IsRealClosed())
 	{
 		return 0;

@@ -4,7 +4,7 @@
 class PublicCookie
 {
 	public:
-		static Stream* getStreamByHost(char*);
+		static Stream* getStreamByUserIdAndHost(int, char*);
 		static int Save(int, char*, char*);
 };
 #endif
