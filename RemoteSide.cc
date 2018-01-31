@@ -98,7 +98,7 @@ int RemoteSide::Connect()
 	m_isConnected = SOCKET_STATUS_CONNECTING;
 	int ret = connect(m_iSocket,&sa,sizeof(sa));
 	SetCanRead(FALSE);
-	GetEvent()->ModEvent(EPOLLOUT|/*EPOLLIN|*/EPOLLONESHOT);
+	GetEvent()->ModEvent(EPOLLOUT|EPOLLIN|EPOLLONESHOT);
 	return ret;
 }
 int RemoteSide::ProccessSend()
@@ -264,6 +264,7 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 {
 	if(m_isConnected == SOCKET_STATUS_CONNECTING)
 	{
+		m_bCloseClient = TRUE;
 		printf("May Close Here\n");
 		ProccessConnectionClose();
 		return 0;
