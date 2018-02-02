@@ -181,6 +181,7 @@ int ClientSide::ProccessReceive(Stream* pStream)
 			getpeername(GetEvent()->GetFD(),(struct sockaddr*)&sai,&len);
 			int peerIp = sai.sin_addr.s_addr;
 			char* strIp = inet_ntoa(sai.sin_addr);
+			//printf("%s/%s\n", phost,m_pHttpRequest->GetHeader()->GetRequestLine()->GetUrl()->ToString());
 			char* pXForwardedFor = m_pHttpRequest->GetHeader()->GetField(HTTP_X_FORWARDED_FOR);
 			if(!pXForwardedFor)
 			{
@@ -345,11 +346,7 @@ int ClientSide::ProccessReceive(Stream* pStream)
 				//printf("Url %s %s\n", m_pHttpRequest->GetHeader()->GetRequestLine()->GetUrl()->GetHost(), m_pHttpRequest->GetHeader()->GetRequestLine()->GetUrl()->ToString());
 			}
 
-			RemoteSide* pRemoteSide = GetRemoteSide(pAddr);
-			m_pRemoteSide = pRemoteSide;
 			Stream* pSendStream = m_pHttpRequest->GetHeader()->ToHeader();
-			pRemoteSide->GetSendStream()->Append(pSendStream->GetData(),pSendStream->GetLength());
-			delete pSendStream;
 			//GetEvent()->ModEvent(EPOLLOUT|EPOLLET);
 
 			int hasBody = m_pHttpRequest->HasBody();
@@ -360,7 +357,14 @@ int ClientSide::ProccessReceive(Stream* pStream)
 			}
 			else
 			{
-				m_pHttpRequest->LoadBody();
+				int bBodyLoad = m_pHttpRequest->LoadBody();
+				if(!bBodyLoad)
+				{
+					//printf("error here %s\n", pStream->GetData());
+					delete pStream;
+					ProccessConnectionClose();
+					return 0;
+				}
 				Stream* pBodyStream = m_pStream->GetPartStream(m_pHttpRequest->GetHeader()->GetRawLength(),m_pStream->GetLength());
 				if(pBodyStream)
 				{
@@ -370,12 +374,17 @@ int ClientSide::ProccessReceive(Stream* pStream)
 						m_iTransState = CLIENT_STATE_WAITING;
 					}
 
-					pRemoteSide->GetSendStream()->Append(pBodyStream->GetData(),pBodyStream->GetLength());
+					pSendStream->Append(pBodyStream->GetData(),pBodyStream->GetLength());
 					delete pBodyStream;
 				}
 
 			}
 			{
+				RemoteSide* pRemoteSide = GetRemoteSide(pAddr);
+				m_pRemoteSide = pRemoteSide;
+				pRemoteSide->GetSendStream()->Append(pSendStream->GetData(),pSendStream->GetLength());
+				delete pSendStream;
+
 				if(!m_pRemoteSide)
 				{
 					delete pStream;

@@ -89,10 +89,12 @@ int HttpRequest::LoadBody()
 		delete m_pHttpBody;
 		m_pHttpBody = NULL;
 	}
-	m_pHttpBody = new HttpBody();
 	char* chLength = m_pHttpHeader->GetField(HTTP_CONTENT_LENGTH);
+	if(!chLength)
+		return FALSE;
+	m_pHttpBody = new HttpBody();
 	m_pHttpBody->SetContentLength(atoi(chLength));
-	return 0;
+	return TRUE;
 }
 int HttpRequest::HasBody()
 {
