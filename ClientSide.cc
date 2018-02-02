@@ -173,7 +173,13 @@ int ClientSide::ProccessReceive(Stream* pStream)
 		m_pStream->Append(pStream->GetData(),pStream->GetLength());
 		if(m_pHttpRequest->IsHeaderEnd())
 		{
-			m_pHttpRequest->LoadHttpHeader();
+			int headerValid = m_pHttpRequest->LoadHttpHeader();
+			if(!headerValid)
+			{
+				delete pStream;
+				ProccessConnectionClose();
+				return 0;
+			}
 			const char* phost = m_pHttpRequest->GetHeader()->GetRequestLine()->GetUrl()->GetHost();
 			//if(strstr(m_pHttpRequest->GetHeader()->GetRequestLine()->GetUrl()->GetHost(), "www.iqiyi.com"))
 			struct sockaddr_in sai;

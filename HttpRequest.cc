@@ -48,7 +48,9 @@ int HttpRequest::LoadHttpHeader()
 	string stringHttpRequestLine = strHeaderString.substr(0,nLineEnd);
 	HttpRequestLine* pLine = pHeader->GetRequestLine();
 	pLine->AppendString((char*)stringHttpRequestLine.data(),stringHttpRequestLine.size());
-	pLine->Parse();
+	int state = pLine->Parse();
+	if(!state)
+		return FALSE;
 	pHeader->SetRequestLine(pLine);
 	HttpUrl* pHttpUrl = pLine->GetUrl();
 	pHttpUrl->Parse();

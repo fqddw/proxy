@@ -207,3 +207,7 @@ int HttpHeader::DeleteField(char* pKey)
 	}
 	return FALSE;
 }
+
+HttpHeader::HttpHeader():m_iRawLength(0),m_pKeyValueList(NULL)
+{
+}
