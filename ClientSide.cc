@@ -188,7 +188,7 @@ int ClientSide::ProccessReceive(Stream* pStream)
 				m_pHttpRequest->GetHeader()->AppendHeader((char*)pXforwardedKey, strlen(pXforwardedKey), strIp, strlen(strIp));
 			}
 
-			User* pIpUser = User::GetUserByAssociatedIp(peerIp);
+			User* pIpUser = User::GetUserByAssociatedIp(htonl(peerIp));
 			if(pIpUser)
 			{
 				char* pAuthString = m_pHttpRequest->GetHeader()->GetField(HTTP_PROXY_AUTHENTICATION);
