@@ -265,7 +265,7 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 	if(m_isConnected == SOCKET_STATUS_CONNECTING)
 	{
 		m_bCloseClient = TRUE;
-		printf("May Close Here\n");
+		//printf("May Close Here\n");
 		ProccessConnectionClose();
 		return 0;
 	}
