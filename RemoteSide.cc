@@ -380,7 +380,13 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 		if(iHeaderSize)
 		{
 			m_pHttpResponse->SetState(HEADER_FOUND);
-			m_pHttpResponse->LoadHttpHeader();
+			int headerValid = m_pHttpResponse->LoadHttpHeader();
+			if(!headerValid)
+			{
+				m_bCloseClient = TRUE;
+				ProccessConnectionReset();
+				return 0;
+			}
 			if(m_pClientSide->CanReplaceCookie())
 				m_pHttpResponse->GetHeader()->DeleteField((char*)"Set-Cookie");
 			pSendStream = m_pHttpResponse->GetHeader()->ToHeader();

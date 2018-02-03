@@ -17,6 +17,16 @@ void DNSItem::SetSaddr(int iSaddr)
 	m_iSaddr = iSaddr;
 }
 
+void DNSItem::SetValid(int bValid)
+{
+	m_bValid = bValid;
+}
+
+int DNSItem::IsValid()
+{
+	return m_bValid;
+}
+
 void DNSItem::SetHostName(char* pHost)
 {
 	int len = strlen(pHost);
@@ -42,11 +52,25 @@ int DNSCache::getSaddrByHost(char* pHost)
 	return FALSE;
 }
 
-int DNSCache::AddRecord(char* pHost, int iSaddr)
+DNSItem* DNSCache::getItemByHost(char* pHost)
+{
+	MemNode<DNSItem*>* pItem = m_pCacheData->GetHead();
+	while(pItem) {
+		if(strlen(pHost) == strlen(pItem->GetData()->GetHostName())) {
+			if(strstr(pHost, pItem->GetData()->GetHostName()))
+				return pItem->GetData();
+		}
+		pItem = pItem->GetNext();
+	}
+	return NULL;
+}
+
+int DNSCache::AddRecord(char* pHost, int iSaddr, int bValid)
 {
 	DNSItem* pDNSItem = new DNSItem;
 	pDNSItem->SetSaddr(iSaddr);
 	pDNSItem->SetHostName(pHost);
+	pDNSItem->SetValid(bValid);
 	m_pCacheData->Append(pDNSItem);
 	return TRUE;
 }

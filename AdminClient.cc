@@ -210,6 +210,10 @@ int AdminClient::ProccessReceive(Stream* pStream)
 					return 0;
 				}
 
+				if(cmd == CMD_LOAD_MODULE)
+				{
+				}
+
 			}
 			break;
 		default:

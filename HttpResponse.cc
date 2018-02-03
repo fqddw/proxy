@@ -55,6 +55,15 @@ HttpBody* HttpResponse::GetBody()
 int HttpResponse::LoadHttpHeader()
 {
 	char* pData = m_pStream->GetData();
+	if(pData[0] != 'H'
+			|| pData[1] != 'T'
+			|| pData[2] != 'T'
+			|| pData[3] != 'P'
+			)
+	{
+		return FALSE;
+	}
+
 	int it = 0;
 	int state = PS_PROTOCOL;
 	char* pKey = NULL;
@@ -63,7 +72,7 @@ int HttpResponse::LoadHttpHeader()
 	if(!m_pHeader)
 		m_pHeader = new HttpResponseHeader();
 	m_pHeader->SetKeyValueList(pKeyValueList);
-	int nStart = 0;
+	int nStart = 4;
 	for(;it <m_pStream->GetLength();it++)
 	{
 		if(state == PS_PROTOCOL)
@@ -228,7 +237,7 @@ int HttpResponse::LoadHttpHeader()
 
 		}
 	}
-	return 0;
+	return TRUE;
 }
 #define RESPONSE_CODE_NOT_MODIFIED 304
 #define RESPONSE_CODE_INTERNAL_REDIRECT 307
