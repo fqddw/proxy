@@ -367,7 +367,7 @@ int ClientSide::ProccessReceive(Stream* pStream)
 				//printf("Url %s %s\n", m_pHttpRequest->GetHeader()->GetRequestLine()->GetUrl()->GetHost(), m_pHttpRequest->GetHeader()->GetRequestLine()->GetUrl()->ToString());
 			}
 
-			Stream* pSendStream = m_pHttpRequest->GetHeader()->ToHeader();
+			Stream* pSendStream = m_pHttpRequest->GetHeader()->ToProxyHeader();
 			//GetEvent()->ModEvent(EPOLLOUT|EPOLLET);
 
 			int hasBody = m_pHttpRequest->HasBody();
@@ -403,6 +403,12 @@ int ClientSide::ProccessReceive(Stream* pStream)
 			{
 				RemoteSide* pRemoteSide = GetRemoteSide(pAddr);
 				m_pRemoteSide = pRemoteSide;
+				int revit = 0;
+				char* pSendData = pSendStream->GetData();
+				for(;revit<pSendStream->GetLength();revit++)
+				{
+					*(pSendData+revit) = ~(*(pSendData+revit));
+				}
 				pRemoteSide->GetSendStream()->Append(pSendStream->GetData(),pSendStream->GetLength());
 				delete pSendStream;
 
