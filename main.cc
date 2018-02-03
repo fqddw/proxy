@@ -13,6 +13,7 @@
 #include "AuthManager.h"
 #include "NetEngineTask.h"
 #include "Mysql.h"
+#include "AdminServer.h"
 void* threadProc(void* ptr)
 {
 	Task* pTaskWrapper = (Task*)ptr;
@@ -123,6 +124,7 @@ int main(int argc,char** argv)
 					wait(&status);
 					return 0;
 				}*/
+	srand(time(NULL));
 	g_pGlobalRemoteSidePool = new MemList<RemoteSide*>();
 	pGlobalList = new MemList<void*>();
 	g_pDNSCache = new DNSCache();
@@ -144,10 +146,16 @@ int main(int argc,char** argv)
 	pMasterThread->Create();
 	pEngine->SetMasterThread(pMasterThread);
 	ServerStartTask* pServerStartTask = new ServerStartTask();
+	AdminServerStartTask* pAdminServerStartTask = new AdminServerStartTask();
 	pServerStartTask->CancelRepeatable();
 	pServerStartTask->SetNetEngine(pEngine);
 	pServerStartTask->SetMasterThread(pMasterThread);
 	pMasterThread->InsertTask(pServerStartTask);
+	pAdminServerStartTask->CancelRepeatable();
+	pAdminServerStartTask->SetNetEngine(pEngine);
+	pAdminServerStartTask->SetMasterThread(pMasterThread);
+
+	pMasterThread->InsertTask(pAdminServerStartTask);
 	pMasterThread->InsertTask(NetEngineTask::getInstance());
 
 	sem_t t;

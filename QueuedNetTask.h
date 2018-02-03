@@ -24,7 +24,7 @@ class QueuedNetTask : public Task
 		int m_iCount;
 	public:
 		QueuedNetTask();
-		~QueuedNetTask();
+		virtual ~QueuedNetTask();
 		int Run();
 		void Lock();
 		void Unlock();

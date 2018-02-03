@@ -7,10 +7,14 @@ class User
 		Stream* m_pUserName;
 		Stream* m_pPassword;
 		int m_iId;
+		int m_bServing;
+		int m_bRecording;
+		int m_iIp;
 	public:
 		User();
 		~User();
 		static User* LoadByName(Stream*);
+		static User* GetUserByAssociatedIp(int);
 		void SetUserName(Stream*);
 		void SetPassword(Stream*);
 		Stream* GetPassword();
@@ -18,5 +22,8 @@ class User
 		int GetId();
 		int IsCapturing(Stream*);
 		int IsCapturing(char*);
+		int IsRecording();
+		int IsServing();
+		int LoadServerStatus();
 };
 #endif

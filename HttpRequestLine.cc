@@ -143,7 +143,9 @@ int HttpRequestLine::Parse()
 		sVer[0] = *(pString+index);
 		m_iSeniorVer = atoi(sVer);
 	}
-	return 0;
+	else
+		return FALSE;
+	return TRUE;
 }
 
 int HttpRequestLine::GetMethodId(char* pMethod)

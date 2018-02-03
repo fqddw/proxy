@@ -1,4 +1,4 @@
-#include "Server.h"
+#include "AdminServer.h"
 #include "InetSocketAddress.h"
 #include "CommonType.h"
 #include "errno.h"
@@ -6,21 +6,47 @@
 #include "unistd.h"
 #include "string.h"
 #include "fcntl.h"
-#include "ClientSide.h"
-#include "QueuedNetTask.h"
-void Server::SetPort(int port){
+#include "ServerConfig.h"
+#include "AdminClient.h"
+
+
+int AdminServerStartTask::SetNetEngine(NetEngine* pEngine)
+{
+	m_pEngine = pEngine;
+	return TRUE;
+}
+int AdminServerStartTask::SetMasterThread(MasterThread* pMasterThread)
+{
+	m_pMasterThread = pMasterThread;
+	return TRUE;
+}
+int AdminServerStartTask::Run()
+{
+	ServerConfigDefault* pConfig = new ServerConfigDefault();
+	AdminServer* pServer = new AdminServer();
+	//pGlobalList->Append(pServer);
+	pServer->GetEvent()->SetNetEngine(m_pEngine);
+	pServer->SetPort(pConfig->GetAdminPort());
+	pServer->SetMasterThread(m_pMasterThread);
+	pServer->Create();
+	pServer->SetCanWrite(FALSE);
+	pServer->GetEvent()->AddToEngine(EPOLLET|EPOLLOUT|EPOLLIN|EPOLLERR);
+	return TRUE;
+}
+
+void AdminServer::SetPort(int port){
 	m_iPort = port;
 }
 
-Server::Server():IOHandler()
+AdminServer::AdminServer():IOHandler()
 {
 	int sock = socket(AF_INET,SOCK_STREAM,0);
 	GetEvent()->SetFD(sock);
 	GetEvent()->SetIOHandler(this);
-	SetServiceType(SERVICE_TYPE_HTTP_PROXY);
+	SetServiceType(SERVICE_TYPE_ADMIN);
 }
 
-int Server::Create()
+int AdminServer::Create()
 {
 	int sockfd = GetEvent()->GetFD();
 	int cflags = fcntl(sockfd,F_GETFL,0);
@@ -37,7 +63,7 @@ int Server::Create()
 
 #include "MemList.h"
 extern MemList<void*>* pGlobalList;
-int Server::ProccessReceive(Stream* pStream)
+int AdminServer::ProccessReceive(Stream* pStream)
 {
 	struct sockaddr sa = {0};
 	socklen_t len = sizeof(sa);
@@ -65,17 +91,17 @@ int Server::ProccessReceive(Stream* pStream)
 		}
 		int cflags = fcntl(client,F_GETFL,0);
 		fcntl(client,F_SETFL, cflags|O_NONBLOCK);
-		ClientSide* pClientSideHandler = new ClientSide(client);
+		AdminClient* pClientSideHandler = new AdminClient(client);
 		//pGlobalList->Append(pClientSideHandler);
 		pClientSideHandler->GetEvent()->SetNetEngine(GetEvent()->GetNetEngine());
 		pClientSideHandler->SetMasterThread(GetMasterThread());
 		pClientSideHandler->SetCanWrite(FALSE);
-		pClientSideHandler->GetEvent()->AddToEngine(EPOLLIN/*|EPOLLET*/|EPOLLONESHOT);
+		pClientSideHandler->GetEvent()->AddToEngine(EPOLLIN);
 	}
 	return TRUE;
 }
 
-int Server::IsServer()
+int AdminServer::IsServer()
 {
 	return TRUE;
 }

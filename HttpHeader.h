@@ -13,6 +13,7 @@ using namespace std;
 #define HTTP_TRANSFER_ENCODING 103
 #define HTTP_COOKIE 104
 #define HTTP_PROXY_AUTHENTICATION 105
+#define HTTP_X_FORWARDED_FOR 106
 #define HEADER_NOTFOUND 100
 #define HEADER_FOUND 101
 
@@ -20,6 +21,7 @@ typedef MemList<pair<string,string>* > HttpKeyValueList;
 class HttpHeader
 {
 	public:
+		HttpHeader();
 		~HttpHeader();
 		virtual Stream* ToHeader() = 0;
 		virtual Stream* ToProxyHeader();

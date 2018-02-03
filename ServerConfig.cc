@@ -6,11 +6,20 @@ int ServerConfig::GetPort()
 {
 	return m_iPort;
 }
+int ServerConfig::GetAdminPort()
+{
+	return m_iAdminPort;
+}
 
 void ServerConfig::SetPort(int port)
 {
 	m_iPort = port;
 }
+void ServerConfig::SetAdminPort(int port)
+{
+	m_iAdminPort = port;
+}
+
 
 int ServerConfig::Load()
 {
@@ -20,4 +29,5 @@ int ServerConfig::Load()
 ServerConfigDefault::ServerConfigDefault()
 {
 	SetPort(8000);
+	SetAdminPort(4631);
 }

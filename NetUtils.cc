@@ -15,9 +15,15 @@ InetSocketAddress* NetUtils::GetHostByName(char* pHostName,int port)
 	{
 		return NULL;
 	}
-	int ip = g_pDNSCache->getSaddrByHost(pHostName);
-	if(ip != FALSE){
-		return new InetSocketAddress(port, ip);
+	DNSItem* pItem = g_pDNSCache->getItemByHost(pHostName);
+	if(pItem){
+		int ip = pItem->GetSaddr();
+		int bValid = pItem->IsValid();
+
+		if(bValid)
+			return new InetSocketAddress(port, ip);
+		else
+			return NULL;
 	}
 	else{
 
@@ -32,6 +38,8 @@ InetSocketAddress* NetUtils::GetHostByName(char* pHostName,int port)
 		struct timespec end = Time::GetNow();
 		struct timespec sub = Time::Sub(end, start);
 		if (ret != 0) {
+
+			g_pDNSCache->AddRecord(pHostName, 0, FALSE);
 			fprintf(stderr,"getaddrinfo: %s %s/n", pHostName,
 					gai_strerror(ret));
 			return NULL;
@@ -43,9 +51,9 @@ InetSocketAddress* NetUtils::GetHostByName(char* pHostName,int port)
 			if(ptr->ai_family == AF_INET)
 			{
 				struct sockaddr_in *psa = (struct sockaddr_in*)ptr->ai_addr;
-				ip = g_pDNSCache->getSaddrByHost(pHostName);
+				int ip = g_pDNSCache->getSaddrByHost(pHostName);
 				if(ip == FALSE)
-					g_pDNSCache->AddRecord(pHostName, psa->sin_addr.s_addr);
+					g_pDNSCache->AddRecord(pHostName, psa->sin_addr.s_addr, TRUE);
 				InetSocketAddress* pAddr = new InetSocketAddress(port,psa->sin_addr.s_addr);
 				freeaddrinfo(result);
 				return pAddr;
@@ -53,5 +61,7 @@ InetSocketAddress* NetUtils::GetHostByName(char* pHostName,int port)
 		}
 		freeaddrinfo(result);
 	}
+
+	g_pDNSCache->AddRecord(pHostName, 0, FALSE);
 	return NULL;
 }
