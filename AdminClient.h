@@ -12,6 +12,7 @@
 #define VERSION 10
 #define LENGTH 20
 #define CMD 30
+#define CMD_LOAD_MODULE 10000
 #define CMD_GET_AUTH_TOKEN 10001
 class AdminClient:public IOHandler
 {

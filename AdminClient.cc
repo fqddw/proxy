@@ -68,6 +68,8 @@ AdminClient::AdminClient(int sockfd):
 
 int AdminClient::ProccessSend()
 {
+	if(GetEvent()->GetEventInt() & EPOLLOUT)
+		GetEvent()->ModEvent(EPOLLIN);
 	int nSent = send(GetEvent()->GetFD(), m_pSendStream->GetData()+m_iSentTotal, m_pSendStream->GetLength()-m_iSentTotal, 0);
 	if(nSent > 0)
 	{
@@ -206,6 +208,10 @@ int AdminClient::ProccessReceive(Stream* pStream)
 					Unlock();
 					GetMasterThread()->InsertTask(GetSendTask());
 					return 0;
+				}
+
+				if(cmd == CMD_LOAD_MODULE)
+				{
 				}
 
 			}

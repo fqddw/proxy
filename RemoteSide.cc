@@ -235,7 +235,10 @@ int RemoteSide::ProccessSend()
 		}
 		if(nSent == 0)
 		{
-			printf("Remote Send 0\n");
+			printf("Remote Send 0 %s\n", m_pClientSide->GetStream()->GetData());
+			m_bCloseClient = TRUE;
+			ProccessConnectionClose();
+			return 0;
 		}
 		else
 		{
@@ -390,7 +393,13 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 		if(iHeaderSize)
 		{
 			m_pHttpResponse->SetState(HEADER_FOUND);
-			m_pHttpResponse->LoadHttpHeader();
+			int headerValid = m_pHttpResponse->LoadHttpHeader();
+			if(!headerValid)
+			{
+				m_bCloseClient = TRUE;
+				ProccessConnectionReset();
+				return 0;
+			}
 			if(m_pClientSide->CanReplaceCookie())
 				m_pHttpResponse->GetHeader()->DeleteField((char*)"Set-Cookie");
 			pSendStream = m_pHttpResponse->GetHeader()->ToHeader();

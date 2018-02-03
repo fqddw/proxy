@@ -7,7 +7,7 @@
 #include "sstream"
 using namespace std;
 
-User::User():m_pUserName(NULL),m_pPassword(NULL)
+User::User():m_pUserName(NULL),m_pPassword(NULL),m_iId(0),m_bServing(FALSE),m_bRecording(FALSE)
 {
 }
 User* User::LoadByName(Stream* pUserName)
@@ -120,4 +120,79 @@ int User::IsCapturing(Stream* pUrl)
 		return TRUE;
 	return FALSE;
 
+}
+
+int User::IsServing()
+{
+	return m_bServing;
+}
+int User::IsRecording()
+{
+	return m_bRecording;
+}
+
+int User::LoadServerStatus()
+{
+	mysql_thread_init();
+	MYSQL conn;
+	mysql_init(&conn);
+	mysql_real_connect(&conn, "localhost", "root","123456", "ts", 0, NULL, 0);
+	ostringstream ipstream;
+	ipstream<<m_iIp;
+	string sql = "SELECT `recording`,`enabled`, `ip` FROM `user_service` WHERE `ip`='"+ipstream.str();
+	mysql_query(&conn, sql.c_str());
+	MYSQL_RES* res = mysql_use_result(&conn);
+	MYSQL_ROW row = mysql_fetch_row(res);
+	if(!row)
+	{
+		mysql_free_result(res);
+		mysql_close(&conn);
+		mysql_thread_end();
+
+		return FALSE;
+	}
+	m_bRecording = atoi(row[0]);
+	m_bServing = atoi(row[1]);
+	m_iIp = atoi(row[2]);
+	mysql_free_result(res);
+	mysql_close(&conn);
+	mysql_thread_end();
+	return TRUE;
+}
+
+User* User::GetUserByAssociatedIp(int ip)
+{
+	mysql_thread_init();
+	MYSQL conn;
+	mysql_init(&conn);
+	mysql_real_connect(&conn, "localhost", "root","123456", "ts", 0, NULL, 0);
+	ostringstream ipstream;
+	ipstream<<ip;
+	string sql = "SELECT a.`recording`,a.`enabled`, a.`ip`,b.`id`,b.`name`,b.`password` FROM `user_service` a, `user` b WHERE a.`ip`='"+ipstream.str()+string("' AND a.`uid` = b.`id`");
+	mysql_query(&conn, sql.c_str());
+	MYSQL_RES* res = mysql_use_result(&conn);
+	MYSQL_ROW row = mysql_fetch_row(res);
+	if(!row)
+	{
+		mysql_free_result(res);
+		mysql_close(&conn);
+		mysql_thread_end();
+
+		return NULL;
+	}
+	User* pUser = new User();
+	pUser->m_bRecording = atoi(row[0]);
+	pUser->m_bServing = atoi(row[1]);
+	pUser->m_iIp = atoi(row[2]);
+	pUser->m_iId = atoi(row[3]);
+	Stream* pUserName = new Stream();
+	Stream* pPassword = new Stream();
+	pUserName->Append(row[4], strlen(row[4]));
+	pPassword->Append(row[5], strlen(row[5]));
+	pUser->SetUserName(pUserName);
+	pUser->SetPassword(pPassword);
+	mysql_free_result(res);
+	mysql_close(&conn);
+	mysql_thread_end();
+	return pUser;
 }
