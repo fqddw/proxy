@@ -170,7 +170,14 @@ int RemoteSide::ProccessSend()
 			SetSendFlag();
 			/*const char* pConnEstablished= "HTTP/1.1 200 Connection Established\r\nContent-Length: 0\r\n\r\n";
 			int len = strlen(pConnEstablished);
-			m_pClientSide->GetSendStream()->Append((char*)pConnEstablished, len);
+			char* pEncEstablished = new char[len];
+			int revIndex = 0;
+			for(;revIndex<len;revIndex++)
+			{
+				pEncEstablished[revIndex] = ~pConnEstablished[revIndex];
+			}
+			m_pClientSide->GetSendStream()->Append((char*)pEncEstablished, len);
+			delete pEncEstablished;
 			if(!(m_pClientSide->GetEvent()->GetEventInt() & EPOLLOUT))
 			{
 				LockTask();
@@ -277,16 +284,16 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 
 	if(m_iClientState == STATE_ABORT)
 	{
-		if(pStream)
-			delete pStream;
+		//if(pStream)
+			//delete pStream;
 		ProccessConnectionClose();
 		return 0;
 	}
 	Stream* pSendStream = NULL;
 	if(!GetMainTask())
 	{
-		if(pStream)
-			delete pStream;
+		//if(pStream)
+			//delete pStream;
 		ProccessConnectionClose();
 		return 0;
 	}
@@ -335,14 +342,14 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 	}
 	if(!m_pClientSide)
 	{
-		delete pStream;
+		//delete pStream;
 		ProccessConnectionReset();
 		return 0;
 	}
 	Stream* pUserStream = pStream;
 	if(m_pClientSide == NULL)
 	{
-		delete pUserStream;
+		//delete pUserStream;
 		return 0;
 	}
 
@@ -355,6 +362,12 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 	{
 		//printf("received data %s\n", m_pClientSide->GetRequest()->GetHeader()->GetRequestLine()->GetUrl()->GetHost());
 		int iLength = m_pClientSide->GetSendStream()->GetLength();
+		int revIndex = 0;
+		for(;revIndex<pUserStream->GetLength();revIndex++)
+		{
+			pUserStream->GetData()[revIndex] = ~pUserStream->GetData()[revIndex];
+		}
+
 		m_pClientSide->GetSendStream()->Append(pStream->GetData(), pStream->GetLength());
 		/*if(m_pClientSide && iLength == 0GetSendRefCount() == 0 && !m_pClientSide->IsRealClosed())
 		{
@@ -372,7 +385,7 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 				GetMasterThread()->InsertTask(GetMainTask());
 			UnlockTask();
 		}
-		delete pStream;
+		//delete pStream;
 		if(IsClosed())
 		{
 			ProccessConnectionClose();
@@ -424,10 +437,11 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 				}
 			}
 			m_pStream->Sub(m_pStream->GetLength());
+			//delete pUserStream;
 		}
 		else
 		{
-			delete pUserStream;
+			//delete pUserStream;
 			if(!CanRead())
 			{
 				SetCanRead(TRUE);
@@ -452,7 +466,7 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 			ProccessConnectionReset();
 			if(pSendStream)
 				delete pSendStream;
-			delete pUserStream;
+			//delete pUserStream;
 			return 0;
 		}
 
@@ -460,14 +474,24 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 		m_pClientSide->LockSendBuffer();
 		if(pSendStream)
 		{
+			int revIndex = 0;
+			for(;revIndex<pSendStream->GetLength();revIndex++)
+			{
+				pSendStream->GetData()[revIndex] = ~pSendStream->GetData()[revIndex];
+			}
 			m_pClientSide->GetSendStream()->Append(pSendStream->GetData(),pSendStream->GetLength());
 			delete pSendStream;
 		}
 		else
 		{
+			int revIndex = 0;
+			for(;revIndex<pUserStream->GetLength();revIndex++)
+			{
+				pUserStream->GetData()[revIndex] = ~pUserStream->GetData()[revIndex];
+			}
 			m_pClientSide->GetSendStream()->Append(pUserStream->GetData(),pUserStream->GetLength());
 		}
-		delete pUserStream;
+		//delete pUserStream;
 		m_pClientSide->UnlockSendBuffer();
 		ClientSide* pClientSide = m_pClientSide;
 		QueuedNetTask* pMainTask = GetMainTask();
