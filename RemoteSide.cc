@@ -468,21 +468,11 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 		m_pClientSide->LockSendBuffer();
 		if(pSendStream)
 		{
-			int revIndex = 0;
-			for(;revIndex<pSendStream->GetLength();revIndex++)
-			{
-				pSendStream->GetData()[revIndex] = ~pSendStream->GetData()[revIndex];
-			}
 			m_pClientSide->GetSendStream()->Append(pSendStream->GetData(),pSendStream->GetLength());
 			delete pSendStream;
 		}
 		else
 		{
-			int revIndex = 0;
-			for(;revIndex<pUserStream->GetLength();revIndex++)
-			{
-				pUserStream->GetData()[revIndex] = ~pUserStream->GetData()[revIndex];
-			}
 			m_pClientSide->GetSendStream()->Append(pUserStream->GetData(),pUserStream->GetLength());
 		}
 		//delete pUserStream;
