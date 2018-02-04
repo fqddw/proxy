@@ -434,6 +434,7 @@ int ClientSide::ProccessReceive(Stream* pStream)
 				}
 			}
 			m_pStream->Sub(m_pStream->GetLength());
+			delete pStream;
 		}
 		else
 		{
