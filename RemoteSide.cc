@@ -275,16 +275,16 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 
 	if(m_iClientState == STATE_ABORT)
 	{
-		if(pStream)
-			delete pStream;
+		//if(pStream)
+			//delete pStream;
 		ProccessConnectionClose();
 		return 0;
 	}
 	Stream* pSendStream = NULL;
 	if(!GetMainTask())
 	{
-		if(pStream)
-			delete pStream;
+		//if(pStream)
+			//delete pStream;
 		ProccessConnectionClose();
 		return 0;
 	}
@@ -333,14 +333,14 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 	}
 	if(!m_pClientSide)
 	{
-		delete pStream;
+		//delete pStream;
 		ProccessConnectionReset();
 		return 0;
 	}
 	Stream* pUserStream = pStream;
 	if(m_pClientSide == NULL)
 	{
-		delete pUserStream;
+		//delete pUserStream;
 		return 0;
 	}
 	if(m_bSSL)
@@ -364,7 +364,7 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 				GetMasterThread()->InsertTask(GetMainTask());
 			UnlockTask();
 		}
-		delete pStream;
+		//delete pStream;
 		if(IsClosed())
 		{
 			ProccessConnectionClose();
@@ -420,7 +420,7 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 		}
 		else
 		{
-			delete pUserStream;
+			//delete pUserStream;
 			if(!CanRead())
 			{
 				SetCanRead(TRUE);
@@ -445,7 +445,7 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 			ProccessConnectionReset();
 			if(pSendStream)
 				delete pSendStream;
-			delete pUserStream;
+			//delete pUserStream;
 			return 0;
 		}
 
@@ -460,7 +460,7 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 		{
 			m_pClientSide->GetSendStream()->Append(pUserStream->GetData(),pUserStream->GetLength());
 		}
-		delete pUserStream;
+		//delete pUserStream;
 		m_pClientSide->UnlockSendBuffer();
 		ClientSide* pClientSide = m_pClientSide;
 		QueuedNetTask* pMainTask = GetMainTask();
