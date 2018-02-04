@@ -25,6 +25,8 @@ int ReceiveProccessor::Run()
 			int ret = GetDataStream(&pStream);
 			m_pIOHandler->ReleaseRecvRefCount();
 			m_pIOHandler->Release();
+			if(pStream)
+				delete pStream;
 		}
 		NetEngineTask::getInstance()->GetNetEngine()->Lock();
 		NetEngineTask::getInstance()->GetNetEngine()->ReduceTaskCount();
@@ -59,8 +61,8 @@ int ReceiveProccessor::GetDataStream(Stream** ppStream)
 			}
 			else
 			{
-							if(*ppStream)
-								delete *ppStream;
+							//if(*ppStream)
+								//delete *ppStream;
 							//m_pIOHandler->SetClosed(TRUE);
 							m_pIOHandler->ProccessConnectionReset();
 							return FALSE;

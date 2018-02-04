@@ -83,7 +83,7 @@ int ClientSide::SSLTransferRecv(Stream* pStream)
 {
 	if(m_iRemoteState != STATE_RUNNING)
 	{
-		delete pStream;
+		//delete pStream;
 		ProccessConnectionReset();
 		return 0;
 	}
@@ -105,7 +105,7 @@ int ClientSide::SSLTransferRecv(Stream* pStream)
 			GetMasterThread()->InsertTask(GetMainTask());
 		UnlockTask();
 	}
-	delete pStream;
+	//delete pStream;
 	return TRUE;
 }
 
@@ -181,7 +181,7 @@ int ClientSide::ProccessReceive(Stream* pStream)
 			int headerValid = m_pHttpRequest->LoadHttpHeader();
 			if(!headerValid)
 			{
-				delete pStream;
+				//delete pStream;
 				ProccessConnectionClose();
 				return 0;
 			}
@@ -372,7 +372,7 @@ int ClientSide::ProccessReceive(Stream* pStream)
 				if(!bBodyLoad)
 				{
 					//printf("error here %s\n", pStream->GetData());
-					delete pStream;
+					//delete pStream;
 					ProccessConnectionClose();
 					return 0;
 				}
@@ -398,7 +398,7 @@ int ClientSide::ProccessReceive(Stream* pStream)
 
 				if(!m_pRemoteSide)
 				{
-					delete pStream;
+					//delete pStream;
 					ProccessConnectionClose();
 					return 0;
 				}
@@ -418,11 +418,11 @@ int ClientSide::ProccessReceive(Stream* pStream)
 				}
 			}
 			m_pStream->Sub(m_pStream->GetLength());
-			delete pStream;
+			//delete pStream;
 		}
 		else
 		{
-			delete pStream;
+			//delete pStream;
 			if(!CanRead())
 			{
 				SetCanRead(TRUE);
@@ -435,7 +435,7 @@ int ClientSide::ProccessReceive(Stream* pStream)
 	{
 		if(!m_pRemoteSide)
 		{
-			delete pStream;
+			//delete pStream;
 			ProccessConnectionClose();
 			return 0;
 		}
@@ -464,12 +464,12 @@ int ClientSide::ProccessReceive(Stream* pStream)
 		}
 		//m_pRemoteSide->ProccessSend();
 		m_pStream->Sub(m_pStream->GetLength());
-		delete pStream;
+		//delete pStream;
 	}
 	else if(m_iTransState == CLIENT_STATE_WAITING)
 	{
 		//printf("logic error!\n");
-		delete pStream;
+		//delete pStream;
 		ProccessConnectionReset();
 		return FALSE;
 	}
