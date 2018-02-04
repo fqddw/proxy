@@ -429,6 +429,7 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 				}
 			}
 			m_pStream->Sub(m_pStream->GetLength());
+			//delete pUserStream;
 		}
 		else
 		{

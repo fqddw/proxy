@@ -418,6 +418,7 @@ int ClientSide::ProccessReceive(Stream* pStream)
 				}
 			}
 			m_pStream->Sub(m_pStream->GetLength());
+			delete pStream;
 		}
 		else
 		{
@@ -507,7 +508,7 @@ RemoteSide* ClientSide::GetRemoteSide(InetSocketAddress* pAddr)
 	for(;pSocketPool!=NULL;pSocketPool = pSocketPool->GetNext())
 	{
 		RemoteSide* pSide = pSocketPool->GetData();
-		if(pSide->GetAddr()->Equal(pAddr) && pSide->IsIdle())
+		if(pSide->GetAddr() && pSide->GetAddr()->Equal(pAddr) && pSide->IsIdle())
 		{
 			delete pAddr;
 			pSide->SetStatusBlocking();
