@@ -38,6 +38,8 @@ int QueuedNetTask::Run()
 					Stream* pStream = NULL;
 					GetDataStream(m_pClientSide, &pStream);
 					m_pClientSide->ProccessReceive(pStream);
+					if(pStream)
+						delete pStream;
 				}
 				break;
 			case CLIENT_SENDING:
@@ -56,7 +58,8 @@ int QueuedNetTask::Run()
 					Stream* pStream = NULL;
 					GetDataStream(m_pRemoteSide, &pStream);
 					m_pRemoteSide->ProccessReceive(pStream);
-
+					if(pStream)
+						delete pStream;
 				}
 				break;
 			case REMOTE_SENDING:
