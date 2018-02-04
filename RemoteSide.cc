@@ -362,12 +362,6 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 	{
 		//printf("received data %s\n", m_pClientSide->GetRequest()->GetHeader()->GetRequestLine()->GetUrl()->GetHost());
 		int iLength = m_pClientSide->GetSendStream()->GetLength();
-		int revIndex = 0;
-		for(;revIndex<pUserStream->GetLength();revIndex++)
-		{
-			pUserStream->GetData()[revIndex] = ~pUserStream->GetData()[revIndex];
-		}
-
 		m_pClientSide->GetSendStream()->Append(pStream->GetData(), pStream->GetLength());
 		/*if(m_pClientSide && iLength == 0GetSendRefCount() == 0 && !m_pClientSide->IsRealClosed())
 		{

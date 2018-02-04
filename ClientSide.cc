@@ -174,11 +174,6 @@ int ClientSide::ProccessReceive(Stream* pStream)
 		ProccessConnectionReset();
 		return 0;
 	}
-	int revIndex = 0;
-	for(;revIndex<pStream->GetLength();revIndex++)
-	{
-		*(pStream->GetData()+revIndex) = ~(*(pStream->GetData()+revIndex));
-	}
 	if(m_bSSL)
 	{
 		SSLTransferRecv(pStream);
