@@ -28,6 +28,7 @@ int ReceiveProccessor::Run()
 			if(pStream)
 				delete pStream;
 		}
+		int bRepeatable = Repeatable();
 		NetEngineTask::getInstance()->GetNetEngine()->Lock();
 		NetEngineTask::getInstance()->GetNetEngine()->ReduceTaskCount();
 		int iTaskCount = NetEngineTask::getInstance()->GetNetEngine()->GetTaskCount();
@@ -39,7 +40,7 @@ int ReceiveProccessor::Run()
 		}
 		NetEngineTask::getInstance()->GetNetEngine()->Unlock();
 
-		return 0;
+		return bRepeatable;
 }
 #include "RemoteSide.h"
 extern MemList<RemoteSide*>* g_pGlobalRemoteSidePool;

@@ -45,8 +45,7 @@ int WorkThread::Run()
 		Task* pTask = task_;
 		if (pTask)
 		{
-			int bRepeatable = pTask->Repeatable();
-			pTask->Run();
+			int bRepeatable	= pTask->Run();
 			if(!bRepeatable){
 				//if(pGlobalList->Delete(pTask))
 				{

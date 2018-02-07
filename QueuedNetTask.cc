@@ -12,11 +12,16 @@ int QueuedNetTask::Run()
 		{
 			m_iCount--;
 			m_bRunning = FALSE;
-			if(m_pClientSide == NULL && m_pRemoteSide == NULL)
+			if(m_pClientSide == NULL/* && m_pRemoteSide == NULL*/)
 			{
+				if(m_pRemoteSide && m_pRemoteSide->GetMainTask())
+				{
+					m_pRemoteSide->SetMainTask(NULL);
+				}
 				CancelRepeatable();
 			}
 			cs_->Leave();
+			int bRepeatable = Repeatable();
 			NetEngineTask::getInstance()->GetNetEngine()->Lock();
 			NetEngineTask::getInstance()->GetNetEngine()->ReduceTaskCount();
 			int iTaskCount = NetEngineTask::getInstance()->GetNetEngine()->GetTaskCount();
@@ -26,7 +31,7 @@ int QueuedNetTask::Run()
 				NetEngineTask::getInstance()->GetNetEngine()->GetMasterThread()->InsertTask(NetEngineTask::getInstance());
 			}
 			NetEngineTask::getInstance()->GetNetEngine()->Unlock();
-			return 0;
+			return bRepeatable;
 		}
 		cs_->Leave();
 		switch(task)

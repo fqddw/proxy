@@ -5,16 +5,24 @@
 #include "MemList.h"
 #include "AdminModule.h"
 using namespace std;
-typedef MemList<pair<Stream*,AdminModule*>> ModuleList;
+class ModuleInfo
+{
+	public:
+		void* handle;
+		AdminModule* module;
+};
+typedef MemList<ModuleInfo*> ModuleList;
 class AdminCommand
 {
 	public:
-		AdminCommand();
-		~AdminCommand();
+		static AdminCommand* getInstance();
 		int LoadModule(char*);
 		int UnloadModule(char*);
+		Stream* RunComman(int,int,char*);
 	private:
-		MemList* m_pList;
+		AdminCommand();
+		~AdminCommand();
+		static ModuleList* g_pList;
 };
 
 #endif

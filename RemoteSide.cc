@@ -41,6 +41,8 @@ int RemoteSide::SetStatusIdle()
 	m_iRecvTotal = 0;
 	m_pSendStream->Clear();
 	SetEndTime(Time::GetNow());
+	if(GetMainTask())
+		GetMainTask()->SetRemote(NULL);
 	SetMainTask(NULL);
 	m_iState = STATUS_IDLE; 
 	return TRUE;
@@ -478,10 +480,10 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 				{
 					g_pGlobalRemoteSidePool->Delete(this);
 				}
-				SetStatusIdle();
 				//else
 					//SetClosed(TRUE);
 			}
+			SetStatusIdle();
 			if(!CanRead())
 			{
 				SetCanRead(TRUE);

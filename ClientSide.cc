@@ -14,6 +14,7 @@
 #include "QueuedNetTask.h"
 #include "User.h"
 #include "PublicCookie.h"
+#include "NetEngineTask.h"
 extern MemList<void*>* pGlobalList;
 #define SEND_BUFFER_LENGTH 256*1024
 ClientSide::ClientSide():
@@ -76,6 +77,7 @@ int ClientSide::ClearHttpEnd()
 	m_pStream->Sub(m_pStream->GetLength());
 	m_pSendStream->Sub(m_pSendStream->GetLength());
 	m_iState = HEADER_NOTFOUND;
+	m_iTransState = CLIENT_STATE_IDLE;
 	return 0;
 }
 #include "stdlib.h"
