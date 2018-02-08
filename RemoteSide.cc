@@ -468,7 +468,6 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 		QueuedNetTask* pMainTask = GetMainTask();
 		if(isEnd)
 		{
-			SetMainTask(NULL);
 			//如果拉取信息结束,则解耦
 			if(m_iClientState == STATE_RUNNING)
 			{
