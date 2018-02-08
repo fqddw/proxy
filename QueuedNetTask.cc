@@ -17,6 +17,7 @@ int QueuedNetTask::Run()
 				if(m_pRemoteSide && m_pRemoteSide->GetMainTask())
 				{
 					m_pRemoteSide->SetMainTask(NULL);
+					m_pRemoteSide->ProccessConnectionClose();
 				}
 				CancelRepeatable();
 			}
