@@ -160,7 +160,7 @@ int User::LoadServerStatus()
 	return TRUE;
 }
 
-User* User::GetUserByAssociatedIp(int ip)
+User* User::GetUserByAssociatedIp(unsigned int ip)
 {
 	mysql_thread_init();
 	MYSQL conn;
@@ -171,6 +171,14 @@ User* User::GetUserByAssociatedIp(int ip)
 	string sql = "SELECT a.`recording`,a.`enabled`, a.`ip`,b.`id`,b.`name`,b.`password` FROM `user_service` a, `user` b WHERE a.`ip`='"+ipstream.str()+string("' AND a.`uid` = b.`id`");
 	mysql_query(&conn, sql.c_str());
 	MYSQL_RES* res = mysql_use_result(&conn);
+	if(!res)
+	{
+		mysql_close(&conn);
+		mysql_thread_end();
+
+		return NULL;
+	}
+
 	MYSQL_ROW row = mysql_fetch_row(res);
 	if(!row)
 	{

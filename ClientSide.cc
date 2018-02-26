@@ -161,6 +161,16 @@ int ClientSide::ProccessReceive(Stream* pStream)
 		ProccessConnectionReset();
 		return 0;
 	}
+	struct sockaddr_in sai;
+	socklen_t len = sizeof(sai);
+	getpeername(GetEvent()->GetFD(),(struct sockaddr*)&sai,&len);
+	int peerIp = sai.sin_addr.s_addr;
+	User* pIpUser = User::GetUserByAssociatedIp(htonl(peerIp));
+	/*if(!pIpUser)
+	{
+		ProccessConnectionClose();
+		return 0;
+	}*/
 	if(m_bSSL)
 	{
 		SSLTransferRecv(pStream);
@@ -184,10 +194,7 @@ int ClientSide::ProccessReceive(Stream* pStream)
 			}
 			const char* phost = m_pHttpRequest->GetHeader()->GetRequestLine()->GetUrl()->GetHost();
 			//if(strstr(m_pHttpRequest->GetHeader()->GetRequestLine()->GetUrl()->GetHost(), "www.iqiyi.com"))
-			struct sockaddr_in sai;
-			socklen_t len = sizeof(sai);
-			getpeername(GetEvent()->GetFD(),(struct sockaddr*)&sai,&len);
-			int peerIp = sai.sin_addr.s_addr;
+	
 			char* strIp = inet_ntoa(sai.sin_addr);
 			//printf("%s/%s\n", phost,m_pHttpRequest->GetHeader()->GetRequestLine()->GetUrl()->ToString());
 			char* pXForwardedFor = m_pHttpRequest->GetHeader()->GetField(HTTP_X_FORWARDED_FOR);
@@ -197,7 +204,6 @@ int ClientSide::ProccessReceive(Stream* pStream)
 				m_pHttpRequest->GetHeader()->AppendHeader((char*)pXforwardedKey, strlen(pXforwardedKey), strIp, strlen(strIp));
 			}
 
-			User* pIpUser = User::GetUserByAssociatedIp(htonl(peerIp));
 			if(pIpUser)
 			{
 				char* pAuthString = m_pHttpRequest->GetHeader()->GetField(HTTP_PROXY_AUTHENTICATION);
@@ -311,6 +317,8 @@ int ClientSide::ProccessReceive(Stream* pStream)
 			//if(authResult)
 			else
 			{
+				//ProccessConnectionReset();
+				//return 0;
 				/*
 				   Stream* pAuthRespStream = AuthManager::getInstance()->GetRequireAuthString();
 				   send(GetEvent()->GetFD(), pAuthRespStream->GetData() , pAuthRespStream->GetLength(), 0);
@@ -685,6 +693,8 @@ int ClientSide::ProccessConnectionReset()
 	  {
 	  return 0;
 	  }*/
+
+	//printf("Close Here %s %d\n", __FILE__, __LINE__);
 	if(IsRealClosed())
 	{
 		return 0;

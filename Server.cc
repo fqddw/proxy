@@ -8,6 +8,8 @@
 #include "fcntl.h"
 #include "ClientSide.h"
 #include "QueuedNetTask.h"
+#include "User.h"
+#include "arpa/inet.h"
 void Server::SetPort(int port){
 	m_iPort = port;
 }
@@ -65,6 +67,21 @@ int Server::ProccessReceive(Stream* pStream)
 		}
 		int cflags = fcntl(client,F_GETFL,0);
 		fcntl(client,F_SETFL, cflags|O_NONBLOCK);
+		/*struct sockaddr_in sai;
+		socklen_t len = sizeof(sai);
+		getpeername(client,(struct sockaddr*)&sai,&len);
+		int peerIp = sai.sin_addr.s_addr;
+		//printf("Ip %d\n", htonl(peerIp));
+		User* pIpUser = User::GetUserByAssociatedIp(htonl(peerIp));
+		if(!pIpUser)
+		{
+			close(client);
+			continue;
+		}
+		else
+			delete pIpUser;
+			*/
+
 		ClientSide* pClientSideHandler = new ClientSide(client);
 		//pGlobalList->Append(pClientSideHandler);
 		pClientSideHandler->GetEvent()->SetNetEngine(GetEvent()->GetNetEngine());

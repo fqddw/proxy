@@ -210,6 +210,7 @@ void IOHandler::SetCanRead(int flag)
 }
 int IOHandler::CanRead()
 {
+	//return TRUE;
 	return m_bCanRead;
 }
 int IOHandler::CanWrite()
