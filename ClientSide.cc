@@ -193,20 +193,24 @@ int ClientSide::ProccessReceive(Stream* pStream)
 				return 0;
 			}
 			const char* phost = m_pHttpRequest->GetHeader()->GetRequestLine()->GetUrl()->GetHost();
+			//printf("%s\n", phost);
 			//if(strstr(m_pHttpRequest->GetHeader()->GetRequestLine()->GetUrl()->GetHost(), "www.iqiyi.com"))
 	
 			char* strIp = inet_ntoa(sai.sin_addr);
 			//printf("%s/%s\n", phost,m_pHttpRequest->GetHeader()->GetRequestLine()->GetUrl()->ToString());
+			char* pAuthString = m_pHttpRequest->GetHeader()->GetField(HTTP_PROXY_AUTHENTICATION);
+			if(pAuthString)
+			{
 			char* pXForwardedFor = m_pHttpRequest->GetHeader()->GetField(HTTP_X_FORWARDED_FOR);
 			if(!pXForwardedFor)
 			{
 				const char* pXforwardedKey = "X-Forwarded-For";
 				m_pHttpRequest->GetHeader()->AppendHeader((char*)pXforwardedKey, strlen(pXforwardedKey), strIp, strlen(strIp));
 			}
+			}
 
 			if(pIpUser)
 			{
-				char* pAuthString = m_pHttpRequest->GetHeader()->GetField(HTTP_PROXY_AUTHENTICATION);
 				if(pAuthString)
 				{
 					Stream* pAuthStream = new Stream();

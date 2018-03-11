@@ -200,6 +200,8 @@ int RemoteSide::ProccessSend()
 		return 0;
 	}
 
+	if(!m_pSendStream->GetLength())
+		printf("111 Remote Send %d %s\n", m_pSendStream->GetLength(), m_pClientSide->GetStream()->GetData());
 	int totalSend = 0;
 	int flag = TRUE;
 	while(flag)
@@ -230,7 +232,7 @@ int RemoteSide::ProccessSend()
 		}
 		if(nSent == 0)
 		{
-			printf("Remote Send 0 %s\n", m_pClientSide->GetStream()->GetData());
+			printf("Remote Send %d %s\n", m_pSendStream->GetLength(), m_pClientSide->GetStream()->GetData());
 			m_bCloseClient = TRUE;
 			ProccessConnectionClose();
 			return 0;
@@ -270,7 +272,7 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 	if(m_isConnected == SOCKET_STATUS_CONNECTING)
 	{
 		m_bCloseClient = TRUE;
-		printf("May Close Here\n");
+		//printf("May Close Here\n");
 		ProccessConnectionClose();
 		return 0;
 	}

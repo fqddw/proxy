@@ -168,7 +168,8 @@ User* User::GetUserByAssociatedIp(unsigned int ip)
 	mysql_real_connect(&conn, "localhost", "root","123456", "ts", 0, NULL, 0);
 	ostringstream ipstream;
 	ipstream<<ip;
-	string sql = "SELECT a.`recording`,a.`enabled`, a.`ip`,b.`id`,b.`name`,b.`password` FROM `user_service` a, `user` b WHERE a.`ip`='"+ipstream.str()+string("' AND a.`uid` = b.`id`");
+	//string sql = "SELECT a.`recording`,a.`enabled`, a.`ip`,b.`id`,b.`name`,b.`password` FROM `user_service` a, `user` b WHERE a.`ip`='"+ipstream.str()+string("' AND a.`uid` = b.`id`");
+	string sql = "CALL GetUserByAssociatedIp("+ipstream.str()+")";
 	mysql_query(&conn, sql.c_str());
 	MYSQL_RES* res = mysql_use_result(&conn);
 	if(!res)

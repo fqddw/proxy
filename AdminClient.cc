@@ -10,7 +10,9 @@
 #include "AdminClient.h"
 #include "AuthManager.h"
 #include "NetEngineTask.h"
+#include "DNSCache.h"
 
+extern DNSCache* g_pDNSCache;
 int AdminClient::IsIdle()
 {
 	return m_iState == STATUS_IDLE;
@@ -212,6 +214,44 @@ int AdminClient::ProccessReceive(Stream* pStream)
 
 				if(cmd == CMD_LOAD_MODULE)
 				{
+				}
+				if(cmd == CMD_GET_DNS_LIST)
+				{
+					MemList<DNSItem*>* pList = g_pDNSCache->GetList();
+					MemNode<DNSItem*>* pNode = pList->GetHead();
+					int dataLen = 4;
+					MemNode<DNSItem*>* pTmpNode = pNode;
+					while(pTmpNode)
+					{
+						int len = strlen(pTmpNode->GetData()->GetHostName());
+						dataLen+=len+4;
+						pTmpNode = pTmpNode->GetNext();
+					}
+					char* pData = new char[dataLen];
+					int offset = 0;
+					memcpy(pData+offset, &dataLen, sizeof(int));
+					offset+=4;
+					pTmpNode = pNode;
+					while(pTmpNode)
+					{
+						char* pHostName = pTmpNode->GetData()->GetHostName();
+						int len = strlen(pHostName);
+						memcpy(pData+offset, &len, sizeof(int));
+						offset += sizeof(int);
+						memcpy(pData+offset, pHostName, len);
+						offset += len;
+						pTmpNode = pTmpNode->GetNext();
+					}
+					m_pSendStream->Clear();
+					m_pSendStream->Append(pData, dataLen);
+					NetEngineTask::getInstance()->GetNetEngine()->Lock();
+					NetEngineTask::getInstance()->GetNetEngine()->IncTaskCount();
+					NetEngineTask::getInstance()->GetNetEngine()->Unlock();
+					Lock();
+					AddRef();
+					Unlock();
+					GetMasterThread()->InsertTask(GetSendTask());
+					return 0;
 				}
 
 			}
