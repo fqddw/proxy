@@ -165,7 +165,6 @@ int ClientSide::ProccessReceive(Stream* pStream)
 	socklen_t len = sizeof(sai);
 	getpeername(GetEvent()->GetFD(),(struct sockaddr*)&sai,&len);
 	int peerIp = sai.sin_addr.s_addr;
-	User* pIpUser = User::GetUserByAssociatedIp(htonl(peerIp));
 	/*if(!pIpUser)
 	{
 		ProccessConnectionClose();
@@ -209,6 +208,7 @@ int ClientSide::ProccessReceive(Stream* pStream)
 			}
 			}
 
+			User* pIpUser = User::GetUserByAssociatedIp(htonl(peerIp));
 			if(pIpUser)
 			{
 				if(pAuthString)
