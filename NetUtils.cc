@@ -36,8 +36,8 @@ InetSocketAddress* NetUtils::GetHostByName(char* pHostName,int port)
 		if (ret != 0) {
 
 			g_pDNSCache->AddRecord(pHostName, 0, FALSE);
-			fprintf(stderr,"getaddrinfo: %s %s/n", pHostName,
-					gai_strerror(ret));
+			//fprintf(stderr,"getaddrinfo: %s %s/n", pHostName,
+					//gai_strerror(ret));
 			return NULL;
 		}
 		int index = 0;

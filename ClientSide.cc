@@ -59,6 +59,7 @@ ClientSide::ClientSide(int sockfd):
 	m_iSide = CLIENT_SIDE;
 	m_iTransState = CLIENT_STATE_IDLE;
 	m_iState = HEADER_NOTFOUND;
+	m_pRemoteSide = NULL;
 	GetEvent()->SetFD(sockfd);
 	GetEvent()->SetIOHandler(this);
 	m_pHttpRequest = new HttpRequest(m_pStream);
@@ -303,7 +304,7 @@ int ClientSide::ProccessReceive(Stream* pStream)
 
 					//printf("%s\n", pDigest->CalcH1()->GetData());
 				}
-				if(pIpUser->IsServing())
+				if(pIpUser->IsServing() && !strstr(phost,"transit-server.com"))
 				{
 					Stream* pCookie = PublicCookie::getStreamByUserIdAndHost(pIpUser->GetId(), (char*)phost);
 
@@ -652,6 +653,7 @@ int ClientSide::ProccessSend()
 					}
 					ClearHttpEnd();
 					m_bReplaceCookie = FALSE;
+					m_pRemoteSide = NULL;
 					m_iTransState = CLIENT_STATE_IDLE;
 					/*if(m_bSSL)
 					  printf("Remote SSL Close\n");*/
@@ -722,6 +724,8 @@ int ClientSide::ProccessConnectionReset()
 				//正在传输，此时应该标记远端为ABORT
 			case STATE_RUNNING:
 				{
+					//if(GetMainTask()->GetRemoteSide())
+					{
 					m_pRemoteSide->SetClientState(STATE_ABORT);
 					m_pRemoteSide->SetClientSide(NULL);
 					//m_pRemoteSide->GetEvent()->ModEvent(EPOLLIN|EPOLLONESHOT);
@@ -729,6 +733,7 @@ int ClientSide::ProccessConnectionReset()
 					//printf("Multi Thread RecvTask %s %d\n", __FILE__, __LINE__);
 					//GetMasterThread()->InsertTask(m_pRemoteSide->GetRecvTask());
 					m_pRemoteSide = NULL;
+					}
 				}
 				break;
 				//远端已经关闭且自我清理

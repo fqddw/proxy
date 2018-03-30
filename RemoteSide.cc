@@ -81,7 +81,8 @@ RemoteSide::RemoteSide(InetSocketAddress* pAddr):
 	m_bSSL(FALSE),
 	m_iSentTotal(0),
 	m_iRecvTotal(0),
-	m_iUseCount(0)
+	m_iUseCount(0),
+	m_iSentCount(0)
 {
 	m_iSide = REMOTE_SIDE;
 	GetEvent()->SetIOHandler(this);
@@ -105,6 +106,7 @@ int RemoteSide::Connect()
 }
 int RemoteSide::ProccessSend()
 {
+	m_iSentCount++;
 	if(m_pSendStream->GetLength() == m_iSentTotal)
 	{
 	/*
@@ -200,8 +202,8 @@ int RemoteSide::ProccessSend()
 		return 0;
 	}
 
-	if(!m_pSendStream->GetLength())
-		printf("111 Remote Send %d %s\n", m_pSendStream->GetLength(), m_pClientSide->GetStream()->GetData());
+	//if(!m_pSendStream->GetLength())
+		//printf("111 Remote Send %d %s\n", m_pSendStream->GetLength(), m_pClientSide->GetStream()->GetData());
 	int totalSend = 0;
 	int flag = TRUE;
 	while(flag)
@@ -232,7 +234,7 @@ int RemoteSide::ProccessSend()
 		}
 		if(nSent == 0)
 		{
-			printf("Remote Send %d %s\n", m_pSendStream->GetLength(), m_pClientSide->GetStream()->GetData());
+			printf("Remote Send %d %d %s\n", IsRealClosed(), m_bSSL, m_pClientSide->GetStream()->GetData());
 			m_bCloseClient = TRUE;
 			ProccessConnectionClose();
 			return 0;
@@ -308,7 +310,7 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 		m_pClientSide->SetSendFlag();
 		//m_pClientSide->ProccessConnectionReset();
 		}
-		else
+		else if(m_iUseCount != 0)
 		{
 			if(m_iRecvTotal == 0)
 			{
@@ -318,6 +320,7 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 				GetMainTask()->SetRemote(pRemoteSide);
 				pRemoteSide->GetSendStream()->Append(m_pSendStream);
 				pRemoteSide->SetSendFlag();
+				pRemoteSide->m_iClientState = STATE_RUNNING;
 				SetMainTask(NULL);
 				m_pClientSide = NULL;
 				m_pAddr = NULL;

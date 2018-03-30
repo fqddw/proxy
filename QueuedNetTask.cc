@@ -87,12 +87,12 @@ int QueuedNetTask::Run()
 int QueuedNetTask::GetDataStream(IOHandler* pIOHandler, Stream** ppStream)
 {
 	int sockfd = pIOHandler->GetEvent()->GetFD();
-	char* buffer = new char[1024*256];
+	char* buffer = new char[1024*4];
 	int flag = TRUE;
 	int total = 0;
 	//while(flag)
 	{
-		int n = recv(sockfd, buffer, 256*1024, 0);
+		int n = recv(sockfd, buffer, 4*1024, 0);
 		if(n > 0)
 		{
 			if(errno == EAGAIN)
@@ -223,4 +223,14 @@ int QueuedNetTask::IssetRemoteRecving()
 void QueuedNetTask::IncCount()
 {
 	m_iCount=m_iCount+1;
+}
+
+ClientSide* QueuedNetTask::GetClientSide()
+{
+	return m_pClientSide;
+}
+
+RemoteSide* QueuedNetTask::GetRemoteSide()
+{
+	return m_pRemoteSide;
 }
