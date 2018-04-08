@@ -65,7 +65,7 @@ int HttpBody::GetLastChunkLength()
 int HttpBody::Parse(Stream* pStream)
 {
 	char* pData = pStream->GetData();
-	int offset = m_iOffset;
+	int offset = 0;
 	int begin = 0;
 	char* pCrlf = (char*)"\r\n";
 	while(offset < pStream->GetLength())
@@ -95,12 +95,25 @@ int HttpBody::Parse(Stream* pStream)
 				break;
 			}
 			else
+				if(offset + (2-m_iOffset) == pStream->GetLength())
 			{
 				offset += (2-m_iOffset);
 				m_iOffset = 0;
 				m_iChunkState = CS_IN_LENGTH;
 				begin = offset;
+				break;
 			}
+				else
+				{
+			if(m_iOffset == 0)
+				offset += (2-m_iOffset);
+			else
+				offset += m_iOffset;
+				m_iOffset = 0;
+				m_iChunkState = CS_IN_LENGTH;
+				begin = offset;
+			}
+
 		}
 		if(m_iChunkState == CS_IN_LENGTH)
 		{
@@ -111,6 +124,7 @@ int HttpBody::Parse(Stream* pStream)
 					Stream* pPartData = pStream->GetPartStream(begin,offset);
 					if(pPartData)
 					{
+						printf("part %s\n", pPartData->GetData());
 						m_pLengthStream->Append(pPartData->GetData(),pPartData->GetLength());
 						delete pPartData;
 					}

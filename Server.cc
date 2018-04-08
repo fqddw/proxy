@@ -71,7 +71,7 @@ int Server::ProccessReceive(Stream* pStream)
 		int cflags = fcntl(client,F_GETFL,0);
 		fcntl(client,F_SETFL, cflags|O_NONBLOCK);
 		{
-			   struct sockaddr_in sai;
+			   /*struct sockaddr_in sai;
 			   socklen_t len = sizeof(sai);
 			   getpeername(client,(struct sockaddr*)&sai,&len);
 			   int peerIp = sai.sin_addr.s_addr;
