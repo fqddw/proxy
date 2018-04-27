@@ -6,5 +6,6 @@
 #define HTTP_METHOD_PUT 2
 #define HTTP_METHOD_DELETE 3
 #define HTTP_METHOD_CONNECT 4
+#define HTTP_METHOD_OPTIONS 5
 
 #endif

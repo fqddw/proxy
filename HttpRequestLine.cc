@@ -43,6 +43,9 @@ char* HttpRequestLine::GetMethodString()
 		return (char*)"GET";
 	if(m_iMethod == HTTP_METHOD_POST)
 		return (char*)"POST";
+	if(m_iMethod == HTTP_METHOD_OPTIONS)
+		return (char*)"OPTIONS";
+
 	return NULL;
 }
 int HttpRequestLine::GetMajorVer()
@@ -142,6 +145,10 @@ int HttpRequestLine::GetMethodId(char* pMethod)
 	if(strlen(pMethod) == strlen("CONNECT"))
 					if(strstr(pMethod, "CONNECT"))
 									return HTTP_METHOD_CONNECT;
+	if(strlen(pMethod) == strlen("OPTIONS"))
+					if(strstr(pMethod, "OPTIONS"))
+									return HTTP_METHOD_OPTIONS;
+
 	return HTTP_METHOD_GET;
 }
 
