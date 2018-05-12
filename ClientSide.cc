@@ -15,6 +15,7 @@
 #include "User.h"
 #include "PublicCookie.h"
 #include "NetEngineTask.h"
+#include "AccessLog.h"
 extern MemList<void*>* pGlobalList;
 #define SEND_BUFFER_LENGTH 256*1024
 ClientSide::ClientSide():
@@ -198,6 +199,9 @@ int ClientSide::ProccessReceive(Stream* pStream)
 	
 			char* strIp = inet_ntoa(sai.sin_addr);
 			//printf("%s/%s\n", phost,m_pHttpRequest->GetHeader()->GetRequestLine()->GetUrl()->ToString());
+			AccessLog* pLog = new AccessLog();
+			pLog->Save((char*)phost, (char*)m_pHttpRequest->GetHeader()->GetRequestLine()->GetUrl()->ToString());
+			delete pLog;
 			char* pAuthString = m_pHttpRequest->GetHeader()->GetField(HTTP_PROXY_AUTHENTICATION);
 			if(pAuthString)
 			{

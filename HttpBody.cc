@@ -124,7 +124,6 @@ int HttpBody::Parse(Stream* pStream)
 					Stream* pPartData = pStream->GetPartStream(begin,offset);
 					if(pPartData)
 					{
-						printf("part %s\n", pPartData->GetData());
 						m_pLengthStream->Append(pPartData->GetData(),pPartData->GetLength());
 						delete pPartData;
 					}
