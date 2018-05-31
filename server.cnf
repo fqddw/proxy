@@ -1,4 +1,4 @@
-host: localhost
-username: root
-password: 123456
-dbname: ts
+db.mysql.host  = localhost
+db.mysql.user=root
+db.mysql.password = 123456
+db.mysql.port = 3306
