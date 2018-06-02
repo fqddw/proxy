@@ -42,6 +42,7 @@ int ServerConfig::Load()
 	pContent[len] = '\0';
 	fseek(fp, 0 , SEEK_SET);
 	size_t count = fread(pContent, len, 1, fp);
+	fclose(fp);
 	int start = 0;
 	int offset = 0;
 	int state = BEFORE_KEY;
