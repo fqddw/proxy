@@ -5,7 +5,7 @@
 class UrlProject
 {
 	public:
-		int GetIpIntFromUidAndUrl(int, Stream*);
+		static int GetIpIntFromUidAndUrl(int, Stream*);
 };
 
 #endif

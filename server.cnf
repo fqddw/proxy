@@ -1,4 +1,4 @@
-db.mysql.host  = localhost
+db.mysql.host  = 192.168.1.101
 db.mysql.user=root
 db.mysql.password = 123456
 db.mysql.port = 3306
