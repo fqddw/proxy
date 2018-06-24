@@ -11,8 +11,10 @@
 #include "AuthManager.h"
 #include "NetEngineTask.h"
 #include "DNSCache.h"
+#include "ServerConfig.h"
 
 extern DNSCache* g_pDNSCache;
+extern ServerConfigDefault* g_pServerConfig;
 int AdminClient::IsIdle()
 {
 	return m_iState == STATUS_IDLE;
@@ -244,6 +246,32 @@ int AdminClient::ProccessReceive(Stream* pStream)
 					}
 					m_pSendStream->Clear();
 					m_pSendStream->Append(pData, dataLen);
+					NetEngineTask::getInstance()->GetNetEngine()->Lock();
+					NetEngineTask::getInstance()->GetNetEngine()->IncTaskCount();
+					NetEngineTask::getInstance()->GetNetEngine()->Unlock();
+					Lock();
+					AddRef();
+					Unlock();
+					GetMasterThread()->InsertTask(GetSendTask());
+					return 0;
+				}
+				if(cmd == CMD_GET_DB_CONF)
+				{
+					Stream* pResponse = new Stream();
+					pResponse->Append("{host: ");
+					pResponse->Append(g_pServerConfig->GetDBHost());
+					pResponse->Append(",user: ");
+					pResponse->Append(g_pServerConfig->GetDBUsername());
+					pResponse->Append(",password: ");
+					pResponse->Append(g_pServerConfig->GetDBPassword());
+					pResponse->Append(",port: ");
+					char portString[16] = {'\0'};
+					sprintf(portString, "%d", g_pServerConfig->GetDBPort());
+					pResponse->Append(portString);
+					pResponse->Append("}");
+					m_pSendStream->Clear();
+					m_pSendStream->Append(pResponse);
+					delete pResponse;
 					NetEngineTask::getInstance()->GetNetEngine()->Lock();
 					NetEngineTask::getInstance()->GetNetEngine()->IncTaskCount();
 					NetEngineTask::getInstance()->GetNetEngine()->Unlock();
