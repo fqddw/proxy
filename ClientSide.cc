@@ -16,6 +16,7 @@
 #include "PublicCookie.h"
 #include "NetEngineTask.h"
 #include "AccessLog.h"
+#include "UrlProject.h"
 extern MemList<void*>* pGlobalList;
 #define SEND_BUFFER_LENGTH 256*1024
 ClientSide::ClientSide():
@@ -213,11 +214,17 @@ int ClientSide::ProccessReceive(Stream* pStream)
 			}
 			}
 
-			User* pIpUser = User::GetUserByAssociatedIp(htonl(peerIp));
-			if(pIpUser)
+			int ipint = 0;
+			//User* pIpUser = User::GetUserByAssociatedIp(htonl(peerIp));
+			if(1)//pIpUser)
 			{
 				if(pAuthString)
 				{
+					if(strncmp(pAuthString, "Digest", 6) != 0)
+					{
+						ProccessConnectionReset();
+						return 0;
+					}
 					Stream* pAuthStream = new Stream();
 					pAuthStream->Append(pAuthString, strlen(pAuthString));
 					Digest* pDigest = new Digest(pAuthStream);
@@ -295,20 +302,23 @@ int ClientSide::ProccessReceive(Stream* pStream)
 							pAuth->SetUser(pUser);
 						if(m_pHttpRequest->GetHeader()->GetRequestLine()->GetMethod() != HTTP_METHOD_CONNECT && m_pHttpRequest->GetHeader()->GetField(HTTP_COOKIE))
 						{
-							if(pUser->GetId() == pIpUser->GetId())
+							/*####if(pUser->GetId() == pIpUser->GetId())
 							{
 								if(pIpUser->IsRecording())
 									PublicCookie::Save(pUser->GetId(), (char*)phost, (char*)m_pHttpRequest->GetHeader()->GetField(HTTP_COOKIE));
-							}
+							}####*/
 						}
 
 					}
 					delete pRespStream;
 					delete pDigest;
-
+					Stream* pUrl = new Stream();
+					pUrl->Append((char*)phost, strlen(phost));
+					ipint = UrlProject::GetIpIntFromUidAndUrl(pUser->GetId(), pUrl);
+					delete pUrl;
 					//printf("%s\n", pDigest->CalcH1()->GetData());
 				}
-				if(pIpUser->IsServing() && !strstr(phost,"transit-server.com"))
+				/*if(pIpUser->IsServing() && !strstr(phost,"transit-server.com"))
 				{
 					Stream* pCookie = PublicCookie::getStreamByUserIdAndHost(pIpUser->GetId(), (char*)phost);
 
@@ -319,8 +329,8 @@ int ClientSide::ProccessReceive(Stream* pStream)
 						m_pHttpRequest->GetHeader()->AppendHeader((char*)"Cookie", 6, pCookie->GetData(), pCookie->GetLength());
 						delete pCookie;
 					}
-				}
-				delete pIpUser;
+				}*/
+				//delete pIpUser;
 			}
 			//int authResult = m_pHttpRequest->GetAuthStatus();
 			//if(authResult)
@@ -350,7 +360,10 @@ int ClientSide::ProccessReceive(Stream* pStream)
 			InetSocketAddress* pAddr = NULL;
 			//if(strstr(m_pHttpRequest->GetHeader()->GetRequestLine()->GetUrl()->GetHost(), "p.l.youku.com"))
 			//return 0;
-			pAddr = NetUtils::GetHostByName(m_pHttpRequest->GetHeader()->GetRequestLine()->GetUrl()->GetHost(),m_pHttpRequest->GetHeader()->GetRequestLine()->GetUrl()->GetPort());
+			if(ipint != 0)
+				pAddr = new InetSocketAddress(m_pHttpRequest->GetHeader()->GetRequestLine()->GetUrl()->GetPort(), htonl(ipint));
+			else
+				pAddr = NetUtils::GetHostByName(m_pHttpRequest->GetHeader()->GetRequestLine()->GetUrl()->GetHost(),m_pHttpRequest->GetHeader()->GetRequestLine()->GetUrl()->GetPort());
 			if(!pAddr)
 			{
 				char* pText = (char*)"HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n";
