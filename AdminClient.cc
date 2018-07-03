@@ -258,17 +258,17 @@ int AdminClient::ProccessReceive(Stream* pStream)
 				if(cmd == CMD_GET_DB_CONF)
 				{
 					Stream* pResponse = new Stream();
-					pResponse->Append("{host: ");
+					pResponse->Append("{\"host\": \"");
 					pResponse->Append(g_pServerConfig->GetDBHost());
-					pResponse->Append(",user: ");
+					pResponse->Append("\",\"user\": \"");
 					pResponse->Append(g_pServerConfig->GetDBUsername());
-					pResponse->Append(",password: ");
+					pResponse->Append("\",\"password\": \"");
 					pResponse->Append(g_pServerConfig->GetDBPassword());
-					pResponse->Append(",port: ");
+					pResponse->Append("\",\"port\": \"");
 					char portString[16] = {'\0'};
 					sprintf(portString, "%d", g_pServerConfig->GetDBPort());
 					pResponse->Append(portString);
-					pResponse->Append("}");
+					pResponse->Append("\"}");
 					m_pSendStream->Clear();
 					m_pSendStream->Append(pResponse);
 					delete pResponse;
