@@ -1,5 +1,9 @@
 #include "NetEngine.h"
 #include "QueuedNetTask.h"
+class RemoteSide;
+extern MemList<void*>* pGlobalList;
+extern MemList<RemoteSide*>* g_pGlobalRemoteSidePool;
+
 int NetEngine::Init(){
 	m_iFD = epoll_create(m_iSize);
 	if(m_iFD)
@@ -151,6 +155,7 @@ int NetEngine::Run()
 			pTaskArray[iTaskSize].pTask = pHandler->GetRecvTask();
 			pTaskArray[iTaskSize].type = TASK_NULL;
 			iTaskSize++;
+			g_pGlobalRemoteSidePool->Delete((RemoteSide*)pHandler);
 		}
 		else
 		{

@@ -12,6 +12,7 @@ class HttpUrl
 		char* GetHost();
 		int Parse();
 		char* ToString();
+		char* GetFullString();
 		int GetPort();
 	private:
 		string m_pUrl;

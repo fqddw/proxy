@@ -1,9 +1,11 @@
 #include "NetEngineTask.h"
+//#include "malloc.h"
 
 int NetEngineTask::Run()
 {
 	m_pNetEngine->Run();
 	m_iCount--;
+	//malloc_trim(0);
 	return TRUE;
 }
 

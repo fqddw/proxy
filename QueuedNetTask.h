@@ -32,6 +32,8 @@ class QueuedNetTask : public Task
 		int IsRunning();
 		void SetClient(ClientSide*);
 		void SetRemote(RemoteSide*);
+		ClientSide* GetClientSide();
+		RemoteSide* GetRemoteSide();
 		void SetClientRecving();
 		void SetClientSending();
 		void SetRemoteRecving();

@@ -8,6 +8,11 @@
 #include "fcntl.h"
 #include "ClientSide.h"
 #include "QueuedNetTask.h"
+#include "User.h"
+#include "arpa/inet.h"
+#include "mysql/mysql.h"
+#include "sstream"
+#include "BlackListIp.h"
 void Server::SetPort(int port){
 	m_iPort = port;
 }
@@ -65,6 +70,40 @@ int Server::ProccessReceive(Stream* pStream)
 		}
 		int cflags = fcntl(client,F_GETFL,0);
 		fcntl(client,F_SETFL, cflags|O_NONBLOCK);
+		{
+			   /*struct sockaddr_in sai;
+			   socklen_t len = sizeof(sai);
+			   getpeername(client,(struct sockaddr*)&sai,&len);
+			   int peerIp = sai.sin_addr.s_addr;
+			//printf("Ip %d\n", htonl(peerIp));
+
+			User* pIpUser = User::GetUserByAssociatedIp(htonl(peerIp));
+			if(!pIpUser)
+			{
+			mysql_thread_init();
+			MYSQL conn;
+			mysql_init(&conn);
+			mysql_real_connect(&conn, "localhost", "root","123456", "ts", 0, NULL, 0);
+			ostringstream ipstream;
+			ipstream<<htonl(peerIp);
+			//string sql = string("REPLACE INTO `ipblacklist` set `ip` = '")+ipstream.str()+string("'");
+			string sql = "CALL AddIpToIpBlackList('"+ipstream.str()+"')";
+			mysql_query(&conn, sql.c_str());
+
+			mysql_close(&conn);
+			mysql_thread_end();
+
+			close(client);
+			continue;
+			}
+			else
+			delete pIpUser;
+			   /*if(IpBlackList::InBlackList(htonl(peerIp)))
+			   {
+				   close(client);
+				   continue;
+			   }*/
+		}
 		ClientSide* pClientSideHandler = new ClientSide(client);
 		//pGlobalList->Append(pClientSideHandler);
 		pClientSideHandler->GetEvent()->SetNetEngine(GetEvent()->GetNetEngine());

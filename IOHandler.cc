@@ -1,7 +1,9 @@
 #include "IOHandler.h"
 #include "MemList.h"
 #include "QueuedNetTask.h"
+class RemoteSide;
 extern MemList<void*>* pGlobalList;
+extern MemList<RemoteSide*>* g_pGlobalRemoteSidePool;
 IOHandler::IOHandler():
 	m_pEvent(new IOEvent),
 	m_bCanRead(TRUE),
@@ -62,6 +64,7 @@ int IOHandler::Dispatch(int events)
 
 	if(!m_pMainTask)
 	{
+		g_pGlobalRemoteSidePool->Delete((RemoteSide*)this);
 		GetMasterThread()->InsertTask(GetRecvTask());
 		return 0;
 	}
@@ -210,6 +213,7 @@ void IOHandler::SetCanRead(int flag)
 }
 int IOHandler::CanRead()
 {
+	//return TRUE;
 	return m_bCanRead;
 }
 int IOHandler::CanWrite()

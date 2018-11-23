@@ -71,6 +71,7 @@ int Thread::SetTask(Task* pTask)
 MemList<void*>* pGlobalList = NULL;
 DNSCache* g_pDNSCache = NULL;
 AuthManager* AuthManager::m_pInstance = NULL;
+ServerConfigDefault* g_pServerConfig;
 #include "RemoteSide.h"
 class ServerStartTask : public Task
 {
@@ -101,6 +102,8 @@ int ServerStartTask::SetMasterThread(MasterThread* pMasterThread)
 int ServerStartTask::Run()
 {
 	ServerConfigDefault* pConfig = new ServerConfigDefault();
+	pConfig->Load();
+	g_pServerConfig = pConfig;
 	Server* pServer = new Server();
 	//pGlobalList->Append(pServer);
 	pServer->GetEvent()->SetNetEngine(m_pEngine);

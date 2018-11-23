@@ -5,8 +5,10 @@
 #include "CommonType.h"
 #include "iostream"
 #include "sstream"
+#include "ServerConfig.h"
 using namespace std;
 
+extern ServerConfigDefault* g_pServerConfig;
 User::User():m_pUserName(NULL),m_pPassword(NULL),m_iId(0),m_bServing(FALSE),m_bRecording(FALSE)
 {
 }
@@ -15,7 +17,7 @@ User* User::LoadByName(Stream* pUserName)
 	mysql_thread_init();
 	MYSQL conn;
 	mysql_init(&conn);
-	mysql_real_connect(&conn, "localhost", "root","123456", "ts", 0, NULL, 0);
+	mysql_real_connect(&conn, g_pServerConfig->GetDBHost(), g_pServerConfig->GetDBUsername(),g_pServerConfig->GetDBPassword(), "ts", g_pServerConfig->GetDBPort(), NULL, 0);
 	string name;
 	name.append(pUserName->GetData(), pUserName->GetLength());
 	string sql = "SELECT * FROM `user` WHERE `name`='"+name+"'";
@@ -95,7 +97,7 @@ int User::IsCapturing(Stream* pUrl)
 	mysql_thread_init();
 	MYSQL conn;
 	mysql_init(&conn);
-	mysql_real_connect(&conn, "localhost", "root","123456", "ts", 0, NULL, 0);
+	mysql_real_connect(&conn, g_pServerConfig->GetDBHost(), g_pServerConfig->GetDBUsername(),g_pServerConfig->GetDBPassword(), "ts", g_pServerConfig->GetDBPort(), NULL, 0);
 	string url;
 	url.append(pUrl->GetData(), pUrl->GetLength());
 	ostringstream id;
@@ -136,7 +138,7 @@ int User::LoadServerStatus()
 	mysql_thread_init();
 	MYSQL conn;
 	mysql_init(&conn);
-	mysql_real_connect(&conn, "localhost", "root","123456", "ts", 0, NULL, 0);
+	mysql_real_connect(&conn, g_pServerConfig->GetDBHost(), g_pServerConfig->GetDBUsername(),g_pServerConfig->GetDBPassword(), "ts", g_pServerConfig->GetDBPort(), NULL, 0);
 	ostringstream ipstream;
 	ipstream<<m_iIp;
 	string sql = "SELECT `recording`,`enabled`, `ip` FROM `user_service` WHERE `ip`='"+ipstream.str();
@@ -160,15 +162,16 @@ int User::LoadServerStatus()
 	return TRUE;
 }
 
-User* User::GetUserByAssociatedIp(int ip)
+User* User::GetUserByAssociatedIp(unsigned int ip)
 {
 	mysql_thread_init();
 	MYSQL conn;
 	mysql_init(&conn);
-	mysql_real_connect(&conn, "localhost", "root","123456", "ts", 0, NULL, 0);
+	mysql_real_connect(&conn, g_pServerConfig->GetDBHost(), g_pServerConfig->GetDBUsername(),g_pServerConfig->GetDBPassword(), "ts", g_pServerConfig->GetDBPort(), NULL, 0);
 	ostringstream ipstream;
 	ipstream<<ip;
-	string sql = "SELECT a.`recording`,a.`enabled`, a.`ip`,b.`id`,b.`name`,b.`password` FROM `user_service` a, `user` b WHERE a.`ip`='"+ipstream.str()+string("' AND a.`uid` = b.`id`");
+	//string sql = "SELECT a.`recording`,a.`enabled`, a.`ip`,b.`id`,b.`name`,b.`password` FROM `user_service` a, `user` b WHERE a.`ip`='"+ipstream.str()+string("' AND a.`uid` = b.`id`");
+	string sql = "CALL GetUserByAssociatedIp("+ipstream.str()+")";
 	mysql_query(&conn, sql.c_str());
 	MYSQL_RES* res = mysql_use_result(&conn);
 	if(!res)

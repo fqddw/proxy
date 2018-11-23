@@ -3,7 +3,7 @@
 #include "sys/epoll.h"
 #include "IOHandler.h"
 #include "MasterThread.h"
-#define MAX_WAIT 1024
+#define MAX_WAIT 100000
 #define INFINITE -1
 
 typedef struct epoll_event EPOLLEVENT;

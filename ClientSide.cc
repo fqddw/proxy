@@ -14,6 +14,9 @@
 #include "QueuedNetTask.h"
 #include "User.h"
 #include "PublicCookie.h"
+#include "NetEngineTask.h"
+#include "AccessLog.h"
+#include "UrlProject.h"
 extern MemList<void*>* pGlobalList;
 #define SEND_BUFFER_LENGTH 256*1024
 ClientSide::ClientSide():
@@ -58,6 +61,7 @@ ClientSide::ClientSide(int sockfd):
 	m_iSide = CLIENT_SIDE;
 	m_iTransState = CLIENT_STATE_IDLE;
 	m_iState = HEADER_NOTFOUND;
+	m_pRemoteSide = NULL;
 	GetEvent()->SetFD(sockfd);
 	GetEvent()->SetIOHandler(this);
 	m_pHttpRequest = new HttpRequest(m_pStream);
@@ -76,6 +80,7 @@ int ClientSide::ClearHttpEnd()
 	m_pStream->Sub(m_pStream->GetLength());
 	m_pSendStream->Sub(m_pSendStream->GetLength());
 	m_iState = HEADER_NOTFOUND;
+	m_iTransState = CLIENT_STATE_IDLE;
 	return 0;
 }
 #include "stdlib.h"
@@ -164,6 +169,15 @@ int ClientSide::ProccessReceive(Stream* pStream)
 	{
 		*(pStream->GetData()+revIndex) = ~(*(pStream->GetData()+revIndex));
 	}
+	struct sockaddr_in sai;
+	socklen_t len = sizeof(sai);
+	getpeername(GetEvent()->GetFD(),(struct sockaddr*)&sai,&len);
+	int peerIp = sai.sin_addr.s_addr;
+	/*if(!pIpUser)
+	{
+		ProccessConnectionClose();
+		return 0;
+	}*/
 	if(m_bSSL)
 	{
 		SSLTransferRecv(pStream);
@@ -186,26 +200,36 @@ int ClientSide::ProccessReceive(Stream* pStream)
 				return 0;
 			}
 			const char* phost = m_pHttpRequest->GetHeader()->GetRequestLine()->GetUrl()->GetHost();
+			//printf("%s\n", phost);
 			//if(strstr(m_pHttpRequest->GetHeader()->GetRequestLine()->GetUrl()->GetHost(), "www.iqiyi.com"))
-			struct sockaddr_in sai;
-			socklen_t len = sizeof(sai);
-			getpeername(GetEvent()->GetFD(),(struct sockaddr*)&sai,&len);
-			int peerIp = sai.sin_addr.s_addr;
+	
 			char* strIp = inet_ntoa(sai.sin_addr);
 			//printf("%s/%s\n", phost,m_pHttpRequest->GetHeader()->GetRequestLine()->GetUrl()->ToString());
+			AccessLog* pLog = new AccessLog();
+			pLog->Save((char*)phost, (char*)m_pHttpRequest->GetHeader()->GetRequestLine()->GetUrl()->ToString());
+			delete pLog;
+			char* pAuthString = m_pHttpRequest->GetHeader()->GetField(HTTP_PROXY_AUTHENTICATION);
+			if(pAuthString)
+			{
 			char* pXForwardedFor = m_pHttpRequest->GetHeader()->GetField(HTTP_X_FORWARDED_FOR);
 			if(!pXForwardedFor)
 			{
 				const char* pXforwardedKey = "X-Forwarded-For";
 				m_pHttpRequest->GetHeader()->AppendHeader((char*)pXforwardedKey, strlen(pXforwardedKey), strIp, strlen(strIp));
 			}
+			}
 
-			User* pIpUser = User::GetUserByAssociatedIp(htonl(peerIp));
-			if(pIpUser)
+			int ipint = 0;
+			//User* pIpUser = User::GetUserByAssociatedIp(htonl(peerIp));
+			if(1)//pIpUser)
 			{
-				char* pAuthString = m_pHttpRequest->GetHeader()->GetField(HTTP_PROXY_AUTHENTICATION);
 				if(pAuthString)
 				{
+					if(strncmp(pAuthString, "Digest", 6) != 0)
+					{
+						ProccessConnectionReset();
+						return 0;
+					}
 					Stream* pAuthStream = new Stream();
 					pAuthStream->Append(pAuthString, strlen(pAuthString));
 					Digest* pDigest = new Digest(pAuthStream);
@@ -283,20 +307,23 @@ int ClientSide::ProccessReceive(Stream* pStream)
 							pAuth->SetUser(pUser);
 						if(m_pHttpRequest->GetHeader()->GetRequestLine()->GetMethod() != HTTP_METHOD_CONNECT && m_pHttpRequest->GetHeader()->GetField(HTTP_COOKIE))
 						{
-							if(pUser->GetId() == pIpUser->GetId())
+							/*####if(pUser->GetId() == pIpUser->GetId())
 							{
 								if(pIpUser->IsRecording())
 									PublicCookie::Save(pUser->GetId(), (char*)phost, (char*)m_pHttpRequest->GetHeader()->GetField(HTTP_COOKIE));
-							}
+							}####*/
 						}
 
 					}
 					delete pRespStream;
 					delete pDigest;
-
+					Stream* pUrl = new Stream();
+					pUrl->Append((char*)phost, strlen(phost));
+					ipint = UrlProject::GetIpIntFromUidAndUrl(pUser->GetId(), pUrl);
+					delete pUrl;
 					//printf("%s\n", pDigest->CalcH1()->GetData());
 				}
-				if(pIpUser->IsServing())
+				/*if(pIpUser->IsServing() && !strstr(phost,"transit-server.com"))
 				{
 					Stream* pCookie = PublicCookie::getStreamByUserIdAndHost(pIpUser->GetId(), (char*)phost);
 
@@ -307,13 +334,15 @@ int ClientSide::ProccessReceive(Stream* pStream)
 						m_pHttpRequest->GetHeader()->AppendHeader((char*)"Cookie", 6, pCookie->GetData(), pCookie->GetLength());
 						delete pCookie;
 					}
-				}
-				delete pIpUser;
+				}*/
+				//delete pIpUser;
 			}
 			//int authResult = m_pHttpRequest->GetAuthStatus();
 			//if(authResult)
 			else
 			{
+				//ProccessConnectionReset();
+				//return 0;
 				/*
 				   Stream* pAuthRespStream = AuthManager::getInstance()->GetRequireAuthString();
 				   send(GetEvent()->GetFD(), pAuthRespStream->GetData() , pAuthRespStream->GetLength(), 0);
@@ -336,7 +365,10 @@ int ClientSide::ProccessReceive(Stream* pStream)
 			InetSocketAddress* pAddr = NULL;
 			//if(strstr(m_pHttpRequest->GetHeader()->GetRequestLine()->GetUrl()->GetHost(), "p.l.youku.com"))
 			//return 0;
-			pAddr = NetUtils::GetHostByName(m_pHttpRequest->GetHeader()->GetRequestLine()->GetUrl()->GetHost(),m_pHttpRequest->GetHeader()->GetRequestLine()->GetUrl()->GetPort());
+			if(ipint != 0)
+				pAddr = new InetSocketAddress(m_pHttpRequest->GetHeader()->GetRequestLine()->GetUrl()->GetPort(), htonl(ipint));
+			else
+				pAddr = NetUtils::GetHostByName(m_pHttpRequest->GetHeader()->GetRequestLine()->GetUrl()->GetHost(),m_pHttpRequest->GetHeader()->GetRequestLine()->GetUrl()->GetPort());
 			if(!pAddr)
 			{
 				char* pText = (char*)"HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n";
@@ -643,6 +675,7 @@ int ClientSide::ProccessSend()
 					}
 					ClearHttpEnd();
 					m_bReplaceCookie = FALSE;
+					m_pRemoteSide = NULL;
 					m_iTransState = CLIENT_STATE_IDLE;
 					/*if(m_bSSL)
 					  printf("Remote SSL Close\n");*/
@@ -688,6 +721,8 @@ int ClientSide::ProccessConnectionReset()
 	  {
 	  return 0;
 	  }*/
+
+	//printf("Close Here %s %d\n", __FILE__, __LINE__);
 	if(IsRealClosed())
 	{
 		return 0;
@@ -711,6 +746,8 @@ int ClientSide::ProccessConnectionReset()
 				//正在传输，此时应该标记远端为ABORT
 			case STATE_RUNNING:
 				{
+					//if(GetMainTask()->GetRemoteSide())
+					{
 					m_pRemoteSide->SetClientState(STATE_ABORT);
 					m_pRemoteSide->SetClientSide(NULL);
 					//m_pRemoteSide->GetEvent()->ModEvent(EPOLLIN|EPOLLONESHOT);
@@ -718,6 +755,7 @@ int ClientSide::ProccessConnectionReset()
 					//printf("Multi Thread RecvTask %s %d\n", __FILE__, __LINE__);
 					//GetMasterThread()->InsertTask(m_pRemoteSide->GetRecvTask());
 					m_pRemoteSide = NULL;
+					}
 				}
 				break;
 				//远端已经关闭且自我清理

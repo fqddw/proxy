@@ -10,7 +10,11 @@
 #include "AdminClient.h"
 #include "AuthManager.h"
 #include "NetEngineTask.h"
+#include "DNSCache.h"
+#include "ServerConfig.h"
 
+extern DNSCache* g_pDNSCache;
+extern ServerConfigDefault* g_pServerConfig;
 int AdminClient::IsIdle()
 {
 	return m_iState == STATUS_IDLE;
@@ -212,6 +216,70 @@ int AdminClient::ProccessReceive(Stream* pStream)
 
 				if(cmd == CMD_LOAD_MODULE)
 				{
+				}
+				if(cmd == CMD_GET_DNS_LIST)
+				{
+					MemList<DNSItem*>* pList = g_pDNSCache->GetList();
+					MemNode<DNSItem*>* pNode = pList->GetHead();
+					int dataLen = 4;
+					MemNode<DNSItem*>* pTmpNode = pNode;
+					while(pTmpNode)
+					{
+						int len = strlen(pTmpNode->GetData()->GetHostName());
+						dataLen+=len+4;
+						pTmpNode = pTmpNode->GetNext();
+					}
+					char* pData = new char[dataLen];
+					int offset = 0;
+					memcpy(pData+offset, &dataLen, sizeof(int));
+					offset+=4;
+					pTmpNode = pNode;
+					while(pTmpNode)
+					{
+						char* pHostName = pTmpNode->GetData()->GetHostName();
+						int len = strlen(pHostName);
+						memcpy(pData+offset, &len, sizeof(int));
+						offset += sizeof(int);
+						memcpy(pData+offset, pHostName, len);
+						offset += len;
+						pTmpNode = pTmpNode->GetNext();
+					}
+					m_pSendStream->Clear();
+					m_pSendStream->Append(pData, dataLen);
+					NetEngineTask::getInstance()->GetNetEngine()->Lock();
+					NetEngineTask::getInstance()->GetNetEngine()->IncTaskCount();
+					NetEngineTask::getInstance()->GetNetEngine()->Unlock();
+					Lock();
+					AddRef();
+					Unlock();
+					GetMasterThread()->InsertTask(GetSendTask());
+					return 0;
+				}
+				if(cmd == CMD_GET_DB_CONF)
+				{
+					Stream* pResponse = new Stream();
+					pResponse->Append("{\"host\": \"");
+					pResponse->Append(g_pServerConfig->GetDBHost());
+					pResponse->Append("\",\"user\": \"");
+					pResponse->Append(g_pServerConfig->GetDBUsername());
+					pResponse->Append("\",\"password\": \"");
+					pResponse->Append(g_pServerConfig->GetDBPassword());
+					pResponse->Append("\",\"port\": \"");
+					char portString[16] = {'\0'};
+					sprintf(portString, "%d", g_pServerConfig->GetDBPort());
+					pResponse->Append(portString);
+					pResponse->Append("\"}");
+					m_pSendStream->Clear();
+					m_pSendStream->Append(pResponse);
+					delete pResponse;
+					NetEngineTask::getInstance()->GetNetEngine()->Lock();
+					NetEngineTask::getInstance()->GetNetEngine()->IncTaskCount();
+					NetEngineTask::getInstance()->GetNetEngine()->Unlock();
+					Lock();
+					AddRef();
+					Unlock();
+					GetMasterThread()->InsertTask(GetSendTask());
+					return 0;
 				}
 
 			}

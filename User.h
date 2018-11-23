@@ -14,7 +14,7 @@ class User
 		User();
 		~User();
 		static User* LoadByName(Stream*);
-		static User* GetUserByAssociatedIp(int);
+		static User* GetUserByAssociatedIp(unsigned int);
 		void SetUserName(Stream*);
 		void SetPassword(Stream*);
 		Stream* GetPassword();

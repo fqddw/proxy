@@ -14,6 +14,8 @@
 #define CMD 30
 #define CMD_LOAD_MODULE 10000
 #define CMD_GET_AUTH_TOKEN 10001
+#define CMD_GET_DNS_LIST 10002
+#define CMD_GET_DB_CONF 10003
 class AdminClient:public IOHandler
 {
 	public:

@@ -82,3 +82,8 @@ char* HttpUrl::ToString()
 {
 	return (char*)m_pRequestString.c_str();
 }
+
+char* HttpUrl::GetFullString()
+{
+	return (char*)m_pUrl.c_str();
+}

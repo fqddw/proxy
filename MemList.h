@@ -53,7 +53,7 @@ void MemNode<T>::SetData(T pData)
 template<typename T>
 int MemNode<T>::Append(T pData)
 {
-	MemNode<T>* pNode = new MemNode();
+	MemNode<T>* pNode = new MemNode<T>();
 	pNode->SetData(pData);
 	SetNext(pNode);
 	return TRUE;
@@ -116,6 +116,8 @@ int MemList<T>::Delete(T pData)
 	{
 		m_pHead = m_pHead->GetNext();
 		delete pNode;
+		if(pNode == m_pEnd)
+			m_pEnd = NULL;
 		cs_->Leave();
 		return TRUE;
 	}
@@ -135,8 +137,9 @@ int MemList<T>::Delete(T pData)
 						m_pEnd = pPreNode;
 					}
 					delete pNode;
-					cs_->Leave();
-					return TRUE;
+					pNode = pPreNode;
+					//cs_->Leave();
+					//return TRUE;
 				}
 			}
 		}while(pNode);

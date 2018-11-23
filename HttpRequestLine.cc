@@ -4,6 +4,21 @@
 #include "unistd.h"
 #include "HttpRequestLine.h"
 #include "CommonType.h"
+typedef struct __STHttpMethod
+{
+	int id;
+	char* name;
+}HttpMethod;
+HttpMethod methods[] = {
+	{HTTP_METHOD_GET, (char*)"GET"},
+	{HTTP_METHOD_POST, (char*)"POST"},
+	{HTTP_METHOD_OPTIONS, (char*)"OPTIONS"},
+	{HTTP_METHOD_PUT, (char*)"PUT"},
+	{HTTP_METHOD_DELETE, (char*)"DELETE"},
+	{HTTP_METHOD_CONNECT, (char*)"CONNECT"},
+	{HTTP_METHOD_HEAD, (char*)"HEAD"},
+	{HTTP_METHOD_TRACE, (char*)"TRACE"}
+};
 HttpRequestLine::HttpRequestLine():
 								m_pString(0),
 								m_iStringLength(0),
@@ -39,10 +54,14 @@ Stream* HttpRequestLine::GetMethodStream()
 
 char* HttpRequestLine::GetMethodString()
 {
-	if(m_iMethod == HTTP_METHOD_GET)
-		return (char*)"GET";
-	if(m_iMethod == HTTP_METHOD_POST)
-		return (char*)"POST";
+	int i=0;
+	for(;i<sizeof(methods);i++)
+	{
+		if(m_iMethod == (methods+i)->id)
+		{
+			return (methods+i)->name;
+		}
+	}
 	return NULL;
 }
 int HttpRequestLine::GetMajorVer()
@@ -129,19 +148,15 @@ int HttpRequestLine::Parse()
 
 int HttpRequestLine::GetMethodId(char* pMethod)
 {
-	if(strlen(pMethod) == 3)
+	int i = 0;
+	for(;i<sizeof(methods)/sizeof(methods[0]);i++)
 	{
-		if(pMethod[0] == 'G' && pMethod[1] == 'E' && pMethod[2] == 'T')
-			return HTTP_METHOD_GET;
+		if(strlen((methods+i)->name) == strlen(pMethod))
+		{
+			if(strstr(pMethod, (methods+i)->name))
+				return (methods+i)->id;
+		}
 	}
-	if(strlen(pMethod) == 4)
-	{
-		if(pMethod[0] == 'P' && pMethod[1] == 'O' && pMethod[2] == 'S' && pMethod[3] == 'T')
-			return HTTP_METHOD_POST;
-	}
-	if(strlen(pMethod) == strlen("CONNECT"))
-					if(strstr(pMethod, "CONNECT"))
-									return HTTP_METHOD_CONNECT;
 	return HTTP_METHOD_GET;
 }
 

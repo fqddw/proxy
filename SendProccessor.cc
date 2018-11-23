@@ -32,7 +32,7 @@ int SendProccessor::Run()
 	}
 	NetEngineTask::getInstance()->GetNetEngine()->Unlock();
 
-	return 0;
+	return Repeatable();
 }
 
 SendProccessor::~SendProccessor()

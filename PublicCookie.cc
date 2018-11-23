@@ -3,7 +3,9 @@
 #include "string"
 #include "CommonType.h"
 #include "sstream"
+#include "ServerConfig.h"
 using namespace std;
+extern ServerConfigDefault* g_pServerConfig;
 
 Stream* PublicCookie::getStreamByUserIdAndHost(int userId, char* pHost)
 {
@@ -12,7 +14,7 @@ Stream* PublicCookie::getStreamByUserIdAndHost(int userId, char* pHost)
 	MYSQL* h;
 	mysql_init(&conn);
 	h = &conn;
-	mysql_real_connect(h, "localhost", "root", "123456", "ts", 0, NULL, 0);
+	mysql_real_connect(&conn, g_pServerConfig->GetDBHost(), g_pServerConfig->GetDBUsername(),g_pServerConfig->GetDBPassword(), "ts", g_pServerConfig->GetDBPort(), NULL, 0);
 	ostringstream os;
 	os<<userId;
 
@@ -41,7 +43,7 @@ int PublicCookie::Save(int iUserId, char* pHost, char* pSession)
 	MYSQL* h;
 	mysql_init(&conn);
 	h = &conn;
-	mysql_real_connect(h, "localhost", "root", "123456", "ts", 0, NULL, 0);
+	mysql_real_connect(&conn, g_pServerConfig->GetDBHost(), g_pServerConfig->GetDBUsername(),g_pServerConfig->GetDBPassword(), "ts", g_pServerConfig->GetDBPort(), NULL, 0);
 
 	mysql_query(h, "SET NAMES utf8");
 	//if(pUser->IsCapturing(m_pHttpRequest->GetHeader()->GetRequestLine()->GetUrl()->GetHost()))

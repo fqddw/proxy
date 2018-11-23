@@ -41,6 +41,8 @@ int RemoteSide::SetStatusIdle()
 	m_iRecvTotal = 0;
 	m_pSendStream->Clear();
 	SetEndTime(Time::GetNow());
+	if(GetMainTask())
+		GetMainTask()->SetRemote(NULL);
 	SetMainTask(NULL);
 	m_iState = STATUS_IDLE; 
 	return TRUE;
@@ -79,7 +81,8 @@ RemoteSide::RemoteSide(InetSocketAddress* pAddr):
 	m_bSSL(FALSE),
 	m_iSentTotal(0),
 	m_iRecvTotal(0),
-	m_iUseCount(0)
+	m_iUseCount(0),
+	m_iSentCount(0)
 {
 	m_iSide = REMOTE_SIDE;
 	GetEvent()->SetIOHandler(this);
@@ -103,6 +106,7 @@ int RemoteSide::Connect()
 }
 int RemoteSide::ProccessSend()
 {
+	m_iSentCount++;
 	if(m_pSendStream->GetLength() == m_iSentTotal)
 	{
 	/*
@@ -205,6 +209,8 @@ int RemoteSide::ProccessSend()
 		return 0;
 	}
 
+	//if(!m_pSendStream->GetLength())
+		//printf("111 Remote Send %d %s\n", m_pSendStream->GetLength(), m_pClientSide->GetStream()->GetData());
 	int totalSend = 0;
 	int flag = TRUE;
 	while(flag)
@@ -235,7 +241,7 @@ int RemoteSide::ProccessSend()
 		}
 		if(nSent == 0)
 		{
-			printf("Remote Send 0 %s\n", m_pClientSide->GetStream()->GetData());
+			printf("Remote Send %d %d %s\n", IsRealClosed(), m_bSSL, m_pClientSide->GetStream()->GetData());
 			m_bCloseClient = TRUE;
 			ProccessConnectionClose();
 			return 0;
@@ -275,7 +281,7 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 	if(m_isConnected == SOCKET_STATUS_CONNECTING)
 	{
 		m_bCloseClient = TRUE;
-		printf("May Close Here\n");
+		//printf("May Close Here\n");
 		ProccessConnectionClose();
 		return 0;
 	}
@@ -311,7 +317,7 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 		m_pClientSide->SetSendFlag();
 		//m_pClientSide->ProccessConnectionReset();
 		}
-		else
+		else if(m_iUseCount != 0)
 		{
 			if(m_iRecvTotal == 0)
 			{
@@ -321,6 +327,7 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 				GetMainTask()->SetRemote(pRemoteSide);
 				pRemoteSide->GetSendStream()->Append(m_pSendStream);
 				pRemoteSide->SetSendFlag();
+				pRemoteSide->m_iClientState = STATE_RUNNING;
 				SetMainTask(NULL);
 				m_pClientSide = NULL;
 				m_pAddr = NULL;
@@ -489,7 +496,6 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 		QueuedNetTask* pMainTask = GetMainTask();
 		if(isEnd)
 		{
-			SetMainTask(NULL);
 			//如果拉取信息结束,则解耦
 			if(m_iClientState == STATE_RUNNING)
 			{
@@ -501,10 +507,10 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 				{
 					g_pGlobalRemoteSidePool->Delete(this);
 				}
-				SetStatusIdle();
 				//else
 					//SetClosed(TRUE);
 			}
+			SetStatusIdle();
 			if(!CanRead())
 			{
 				SetCanRead(TRUE);

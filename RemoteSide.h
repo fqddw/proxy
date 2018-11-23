@@ -66,5 +66,6 @@ class RemoteSide:public IOHandler
 		int m_iUseCount;
 		struct timespec start_time;
 		struct timespec end_time;
+		int m_iSentCount;
 };
 #endif

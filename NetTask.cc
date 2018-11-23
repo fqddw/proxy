@@ -1,7 +1,7 @@
-#include "QueuedNetTask.h"
+#include "NetTask.h"
 #include "errno.h"
 #include "NetEngineTask.h"
-int QueuedNetTask::Run()
+int NetTask::Run()
 {
 	int flag = TRUE;
 	while(flag)
@@ -17,7 +17,6 @@ int QueuedNetTask::Run()
 				if(m_pRemoteSide && m_pRemoteSide->GetMainTask())
 				{
 					m_pRemoteSide->SetMainTask(NULL);
-					m_pRemoteSide->ProccessConnectionClose();
 				}
 				CancelRepeatable();
 			}
@@ -84,15 +83,15 @@ int QueuedNetTask::Run()
 }
 
 
-int QueuedNetTask::GetDataStream(IOHandler* pIOHandler, Stream** ppStream)
+int NetTask::GetDataStream(IOHandler* pIOHandler, Stream** ppStream)
 {
 	int sockfd = pIOHandler->GetEvent()->GetFD();
-	char* buffer = new char[1024*4];
+	char* buffer = new char[1024*256];
 	int flag = TRUE;
 	int total = 0;
 	//while(flag)
 	{
-		int n = recv(sockfd, buffer, 4*1024, 0);
+		int n = recv(sockfd, buffer, 256*1024, 0);
 		if(n > 0)
 		{
 			if(errno == EAGAIN)
@@ -116,7 +115,7 @@ int QueuedNetTask::GetDataStream(IOHandler* pIOHandler, Stream** ppStream)
 	}
 	delete []buffer;
 }
-int QueuedNetTask::GetNextTask()
+int NetTask::GetNextTask()
 {
 	if(m_bClientRecving)
 	{
@@ -145,11 +144,11 @@ int QueuedNetTask::GetNextTask()
 }
 
 
-QueuedNetTask::QueuedNetTask():Task(),m_pClientSide(NULL),m_pRemoteSide(NULL),m_bClientRecving(FALSE),m_bClientSending(FALSE),m_bRemoteRecving(FALSE),m_bRemoteSending(FALSE),cs_(new CriticalSection()),m_bRunning(FALSE),m_iCount(1)
+NetTask::NetTask():Task(),m_pClientSide(NULL),m_pRemoteSide(NULL),m_bClientRecving(FALSE),m_bClientSending(FALSE),m_bRemoteRecving(FALSE),m_bRemoteSending(FALSE),cs_(new CriticalSection()),m_bRunning(FALSE),m_iCount(1)
 {
 }
 
-QueuedNetTask::~QueuedNetTask()
+NetTask::~NetTask()
 {
 	cs_->Enter();
 	m_iCount--;
@@ -157,80 +156,70 @@ QueuedNetTask::~QueuedNetTask()
 	delete cs_;
 	cs_ = NULL;
 }
-void QueuedNetTask::Lock()
+void NetTask::Lock()
 {
 	cs_->Enter();
 }
 
 
-void QueuedNetTask::Unlock()
+void NetTask::Unlock()
 {
 	cs_->Leave();
 }
 
-int QueuedNetTask::IsRunning()
+int NetTask::IsRunning()
 {
 	return m_bRunning;
 }
 
 
-void QueuedNetTask::SetClient(ClientSide* pSide)
+void NetTask::SetClient(ClientSide* pSide)
 {
 	m_pClientSide = pSide;
 }
 
-void QueuedNetTask::SetRemote(RemoteSide* pSide)
+void NetTask::SetRemote(RemoteSide* pSide)
 {
 	m_pRemoteSide = pSide;
 }
 
-void QueuedNetTask::SetClientRecving()
+void NetTask::SetClientRecving()
 {
 	m_bClientRecving = TRUE;
 }
 
-void QueuedNetTask::SetClientSending()
+void NetTask::SetClientSending()
 {
 	m_bClientSending = TRUE;
 }
 
-void QueuedNetTask::SetRemoteRecving()
+void NetTask::SetRemoteRecving()
 {
 	m_bRemoteRecving = TRUE;
 }
 
 
-void QueuedNetTask::SetRemoteSending()
+void NetTask::SetRemoteSending()
 {
 	m_bRemoteSending = TRUE;
 }
 
-void QueuedNetTask::SetRunning()
+void NetTask::SetRunning()
 {
 	m_bRunning = TRUE;
 }
 
-int QueuedNetTask::IssetClientRecving()
+int NetTask::IssetClientRecving()
 {
 	return m_bClientRecving;
 }
 
-int QueuedNetTask::IssetRemoteRecving()
+int NetTask::IssetRemoteRecving()
 {
 	return m_bRemoteRecving;
 }
 
-void QueuedNetTask::IncCount()
+void NetTask::IncCount()
 {
 	m_iCount=m_iCount+1;
-}
-
-ClientSide* QueuedNetTask::GetClientSide()
-{
-	return m_pClientSide;
-}
-
-RemoteSide* QueuedNetTask::GetRemoteSide()
-{
-	return m_pRemoteSide;
 }
