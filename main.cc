@@ -14,6 +14,7 @@
 #include "NetEngineTask.h"
 #include "Mysql.h"
 #include "AdminServer.h"
+#include "MemStore.h"
 void* threadProc(void* ptr)
 {
 	Task* pTaskWrapper = (Task*)ptr;
@@ -71,6 +72,7 @@ int Thread::SetTask(Task* pTask)
 MemList<void*>* pGlobalList = NULL;
 DNSCache* g_pDNSCache = NULL;
 AuthManager* AuthManager::m_pInstance = NULL;
+MemStore* MemStore::g_pInstance = NULL;
 ServerConfigDefault* g_pServerConfig;
 #include "RemoteSide.h"
 class ServerStartTask : public Task

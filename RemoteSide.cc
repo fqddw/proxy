@@ -379,6 +379,8 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 
 		return 0;
 	}
+	if(m_pClientSide->GetStoreItem())
+	m_pClientSide->GetStoreItem()->AppendResponse(pStream);
 	int isEnd = TRUE;
 	if(m_pHttpResponse->GetState() == HEADER_NOTFOUND)
 	{

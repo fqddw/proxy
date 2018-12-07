@@ -5,6 +5,8 @@
 #include "RemoteSide.h"
 #include "HttpRequest.h"
 #include "InetSocketAddress.h"
+
+#include "MemStore.h"
 #define CLIENT_STATE_IDLE 1
 #define CLIENT_STATE_RUNNING 2
 #define CLIENT_STATE_WAITING 3
@@ -44,6 +46,9 @@ class ClientSide : public IOHandler
 		void SetMainTask(QueuedNetTask*);
 		virtual int IsRecvScheduled();
 		int CanReplaceCookie();
+
+
+		StoreItem* GetStoreItem();
 	private:
 		int m_iState;
 		int m_iTransState;
@@ -58,5 +63,6 @@ class ClientSide : public IOHandler
 		int m_bSSL;
 		int m_iSSLState;
 		int m_bReplaceCookie;
+		StoreItem* m_pStoreItem;
 };
 #endif

@@ -195,6 +195,27 @@ int ClientSide::ProccessReceive(Stream* pStream)
 				return 0;
 			}
 			const char* phost = m_pHttpRequest->GetHeader()->GetRequestLine()->GetUrl()->GetHost();
+			const char* prequesturl = m_pHttpRequest->GetHeader()->GetRequestLine()->GetUrl()->ToString();
+			Stream* pStreamHost = new Stream(phost);
+			Stream* pStreamRequestURL = new Stream(prequesturl);
+			StoreItem* pStoreItem = NULL;
+			if(!(pStoreItem = MemStore::getInstance()->GetByHostAndUrl(pStreamHost, pStreamRequestURL)))
+			{
+				pStoreItem = MemStore::getInstance()->AppendItem(new StoreItem(pStreamHost, pStreamRequestURL));
+				m_pStoreItem = pStoreItem;
+			}
+			else
+			{
+				if(!(m_pHttpRequest->GetHeader()->GetRequestLine()->GetMethod() == HTTP_METHOD_CONNECT))
+				{
+				m_pSendStream->Append(pStoreItem->GetResponse());
+				SetSendFlag();
+				m_bCloseAsLength = TRUE;
+				return TRUE;
+				}
+				else
+				m_pStoreItem = NULL;
+			}
 			//printf("%s\n", phost);
 			//if(strstr(m_pHttpRequest->GetHeader()->GetRequestLine()->GetUrl()->GetHost(), "www.iqiyi.com"))
 	
@@ -764,6 +785,7 @@ int ClientSide::ProccessConnectionReset()
 		}
 		ClearHttpEnd();
 	}
+	m_pStoreItem = NULL;
 	int sockfd = GetEvent()->GetFD();
 	GetEvent()->RemoveFromEngine();
 	//pGlobalList->Delete(this);
@@ -852,4 +874,9 @@ int ClientSide::IsRecvScheduled()
 int ClientSide::CanReplaceCookie()
 {
 	return m_bReplaceCookie;
+}
+
+StoreItem* ClientSide::GetStoreItem()
+{
+	return m_pStoreItem;
 }
