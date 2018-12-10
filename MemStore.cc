@@ -1,13 +1,15 @@
 #include "MemStore.h"
 
-StoreItem::StoreItem()
+StoreItem::StoreItem():cs_(new CriticalSection())
 {
+	m_bSaving = FALSE;
 	m_pHost = NULL;
 	m_pRequestURL = NULL;
 	m_pResponse = NULL;
 }
-StoreItem::StoreItem(Stream* pHost, Stream* pRequestURL)
+StoreItem::StoreItem(Stream* pHost, Stream* pRequestURL):cs_(new CriticalSection())
 {
+	m_bSaving = FALSE;
 	m_pHost = NULL;
 	m_pRequestURL = NULL;
 	m_pResponse = NULL;
@@ -17,6 +19,25 @@ StoreItem::StoreItem(Stream* pHost, Stream* pRequestURL)
 	m_pResponse = new Stream();
 }
 
+void StoreItem::StartSave()
+{
+	m_bSaving = TRUE;
+}
+
+void StoreItem::FinishSave()
+{
+	m_bSaving = FALSE;
+}
+
+int StoreItem::IsSaving()
+{
+	return m_bSaving;
+}
+
+void StoreItem::AbortSave()
+{
+	delete this;
+}
 Stream* StoreItem::GetHost()
 {
 	return m_pHost;
@@ -56,6 +77,7 @@ Stream* StoreItem::GetResponse()
 MemStore::MemStore()
 {
 	m_pList = new MEMSTORE;
+	cs_ = new CriticalSection();
 }
 
 StoreItem* MemStore::AppendItem(StoreItem* pItem)
@@ -90,4 +112,25 @@ StoreItem* MemStore::GetByHostAndUrl(Stream* pHost, Stream* pRequestURL)
 	}
 	m_pList->Unlock();
 	return NULL;
+}
+
+void StoreItem::Lock()
+{
+	cs_->Enter();
+}
+void StoreItem::Unlock()
+{
+	cs_->Leave();
+}
+void MemStore::Lock()
+{
+	cs_->Enter();
+}
+void MemStore::Unlock()
+{
+	cs_->Leave();
+}
+void MemStore::Delete(StoreItem* pItem)
+{
+	m_pList->Delete(pItem);
 }

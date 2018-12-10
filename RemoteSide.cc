@@ -481,6 +481,8 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 				m_iClientState = STATE_NORMAL;
 				m_pClientSide->SetRemoteState(STATE_NORMAL);
 
+				if(m_pClientSide->GetStoreItem())
+					m_pClientSide->GetStoreItem()->FinishSave();
 				ClearHttpEnd();
 				if(m_bShouldClose)
 				{
@@ -569,6 +571,14 @@ int RemoteSide::ProccessConnectionReset()
 		{
 			if(m_pClientSide)
 			{
+				if(m_pClientSide->GetStoreItem())
+				{
+					MemStore::getInstance()->Lock();
+					m_pClientSide->GetStoreItem()->AbortSave();
+					MemStore::getInstance()->Delete(m_pClientSide->GetStoreItem());
+					MemStore::getInstance()->Unlock();
+				}
+
 				m_pClientSide->SetRemoteState(STATE_ABORT);
 				m_iClientState = STATE_NORMAL;
 				ClearHttpEnd();
@@ -615,6 +625,11 @@ int RemoteSide::ProccessConnectionClose()
 				ClearHttpEnd();
 				//m_pClientSide->GetEvent()->ModEvent(EPOLLIN|EPOLLONESHOT);
 				//printf("Multi Thread RecvTask %s %d %s\n", __FILE__, __LINE__, m_pClientSide->GetRequest()->GetHeader()->GetRequestLine()->GetUrl()->GetHost());
+				if(m_bCloseClient)
+				{
+					if(m_pClientSide->GetStoreItem())
+					m_pClientSide->GetStoreItem()->FinishSave();
+				}
 				if((m_bCloseClient || m_bSSL) && m_pClientSide->GetSendStream()->GetLength() == 0)
 				//if(m_bSSL)
 					m_pClientSide->ProccessConnectionReset();

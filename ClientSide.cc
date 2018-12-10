@@ -28,7 +28,7 @@ ClientSide::ClientSide():
 	m_bCloseAsLength(FALSE),
 	m_iRemoteState(STATE_NORMAL),
 	m_bSSL(FALSE),
-	m_iSSLState(SSL_START)
+	m_iSSLState(SSL_START),m_pStoreItem(NULL)
 {
 	m_iSide = CLIENT_SIDE;
 	GetEvent()->SetIOHandler(this);
@@ -56,7 +56,7 @@ ClientSide::ClientSide(int sockfd):
 	m_iRemoteState(STATE_NORMAL),
 	m_bSSL(FALSE),
 	m_iSSLState(SSL_START),
-	m_bReplaceCookie(FALSE)
+	m_bReplaceCookie(FALSE),m_pStoreItem(NULL)
 {
 	m_iSide = CLIENT_SIDE;
 	m_iTransState = CLIENT_STATE_IDLE;
@@ -199,23 +199,41 @@ int ClientSide::ProccessReceive(Stream* pStream)
 			Stream* pStreamHost = new Stream(phost);
 			Stream* pStreamRequestURL = new Stream(prequesturl);
 			StoreItem* pStoreItem = NULL;
-			if(!(pStoreItem = MemStore::getInstance()->GetByHostAndUrl(pStreamHost, pStreamRequestURL)))
+			MemStore::getInstance()->Lock();
+			pStoreItem = MemStore::getInstance()->GetByHostAndUrl(pStreamHost, pStreamRequestURL);
+			if(pStoreItem && pStoreItem->IsSaving())
+			{
+			}
+			else if(!(pStoreItem))
 			{
 				pStoreItem = MemStore::getInstance()->AppendItem(new StoreItem(pStreamHost, pStreamRequestURL));
+				pStoreItem->StartSave();
 				m_pStoreItem = pStoreItem;
 			}
 			else
 			{
 				if(!(m_pHttpRequest->GetHeader()->GetRequestLine()->GetMethod() == HTTP_METHOD_CONNECT))
 				{
-				m_pSendStream->Append(pStoreItem->GetResponse());
-				SetSendFlag();
-				m_bCloseAsLength = TRUE;
-				return TRUE;
+					pStoreItem->Lock();
+					if(pStoreItem->IsSaving())
+					{
+						pStoreItem->Unlock();
+					}
+					else{
+						pStoreItem->Unlock();
+						m_pSendStream->Append(pStoreItem->GetResponse());
+						SetSendFlag();
+						m_bCloseAsLength = TRUE;
+						MemStore::getInstance()->Unlock();
+						return TRUE;
+					}
 				}
 				else
 				m_pStoreItem = NULL;
 			}
+			MemStore::getInstance()->Unlock();
+			delete pStreamHost;
+			delete pStreamRequestURL;
 			//printf("%s\n", phost);
 			//if(strstr(m_pHttpRequest->GetHeader()->GetRequestLine()->GetUrl()->GetHost(), "www.iqiyi.com"))
 	
