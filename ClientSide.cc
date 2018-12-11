@@ -201,18 +201,19 @@ int ClientSide::ProccessReceive(Stream* pStream)
 			StoreItem* pStoreItem = NULL;
 			MemStore::getInstance()->Lock();
 			pStoreItem = MemStore::getInstance()->GetByHostAndUrl(pStreamHost, pStreamRequestURL);
-			if(pStoreItem && pStoreItem->IsSaving())
+
+			if(!(m_pHttpRequest->GetHeader()->GetRequestLine()->GetMethod() == HTTP_METHOD_CONNECT))
 			{
-			}
-			else if(!(pStoreItem))
-			{
-				pStoreItem = MemStore::getInstance()->AppendItem(new StoreItem(pStreamHost, pStreamRequestURL));
-				pStoreItem->StartSave();
-				m_pStoreItem = pStoreItem;
-			}
-			else
-			{
-				if(!(m_pHttpRequest->GetHeader()->GetRequestLine()->GetMethod() == HTTP_METHOD_CONNECT))
+				if(pStoreItem && pStoreItem->IsSaving())
+				{
+				}
+				else if(!(pStoreItem))
+				{
+					pStoreItem = MemStore::getInstance()->AppendItem(new StoreItem(pStreamHost, pStreamRequestURL));
+					pStoreItem->StartSave();
+					m_pStoreItem = pStoreItem;
+				}
+				else
 				{
 					pStoreItem->Lock();
 					if(pStoreItem->IsSaving())
@@ -228,9 +229,9 @@ int ClientSide::ProccessReceive(Stream* pStream)
 						return TRUE;
 					}
 				}
-				else
-				m_pStoreItem = NULL;
 			}
+			else
+				m_pStoreItem = NULL;
 			MemStore::getInstance()->Unlock();
 			delete pStreamHost;
 			delete pStreamRequestURL;
