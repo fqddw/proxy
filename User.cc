@@ -6,6 +6,7 @@
 #include "iostream"
 #include "sstream"
 #include "ServerConfig.h"
+#include "stdlib.h"
 using namespace std;
 
 extern ServerConfigDefault* g_pServerConfig;

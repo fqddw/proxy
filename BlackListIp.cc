@@ -1,6 +1,7 @@
 #include "BlackListIp.h"
 #include "mysql/mysql.h"
 #include "sstream"
+#include "stdlib.h"
 using namespace std;
 
 int IpBlackList::InBlackList(unsigned int ip)

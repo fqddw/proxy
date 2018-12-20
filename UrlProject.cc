@@ -4,6 +4,7 @@
 #include "sstream"
 #include "mysql/mysql.h"
 #include "CommonType.h"
+#include "stdlib.h"
 using namespace std;
 
 
