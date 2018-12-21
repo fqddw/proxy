@@ -91,8 +91,9 @@ int QueuedNetTask::GetDataStream(IOHandler* pIOHandler, Stream** ppStream)
 	char* buffer = new char[1024*4];
 	int flag = TRUE;
 	int total = 0;
-	//while(flag)
+	while(flag)
 	{
+		flag = FALSE;
 		int n = recv(sockfd, buffer, 4*1024, 0);
 		if(n > 0)
 		{

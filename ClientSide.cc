@@ -570,7 +570,7 @@ RemoteSide* ClientSide::GetRemoteSide(int fd)
 			break;
 		}
 	}
-	return NULL;
+	return pRemoteSide;
 }
 RemoteSide* ClientSide::GetRemoteSide(InetSocketAddress* pAddr)
 {

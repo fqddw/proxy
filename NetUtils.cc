@@ -29,10 +29,10 @@ InetSocketAddress* NetUtils::GetHostByName(char* pHostName,int port)
 		hints.ai_socktype = SOCK_STREAM;
 		struct addrinfo* ptr,*result;
 
-		struct timespec start = Time::GetNow();
+		//struct timespec start = Time::GetNow();
 		int ret = getaddrinfo(pHostName,NULL,&hints,&result);
-		struct timespec end = Time::GetNow();
-		struct timespec sub = Time::Sub(end, start);
+		//struct timespec end = Time::GetNow();
+		//struct timespec sub = Time::Sub(end, start);
 		if (ret != 0) {
 
 			g_pDNSCache->AddRecord(pHostName, 0, FALSE);

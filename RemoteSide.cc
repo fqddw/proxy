@@ -303,7 +303,7 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 
 	if(!pStream)
 	{
-		struct timespec sec = Time::Sub(Time::GetNow(), start_time);
+		//struct timespec sec = Time::Sub(Time::GetNow(), start_time);
 		//printf("%d %ld %ld %d %d %d %d %d %d %s\n", errno, sec.tv_sec, sec.tv_nsec,  m_bSSL, m_iState, m_iUseCount, m_iSentTotal, m_iRecvTotal, m_pSendStream->GetLength(), m_pSendStream->GetData());
 		if(m_iUseCount == 1)
 		{
