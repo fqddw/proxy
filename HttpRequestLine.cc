@@ -19,12 +19,13 @@ HttpMethod methods[] = {
 	{HTTP_METHOD_HEAD, (char*)"HEAD"},
 	{HTTP_METHOD_TRACE, (char*)"TRACE"}
 };
-HttpRequestLine::HttpRequestLine():
-								m_pString(0),
-								m_iStringLength(0),
-								m_pUrl(NULL),
-								m_pMethodStream(new Stream())
+HttpRequestLine::HttpRequestLine()
 {
+								m_pString = (0);
+								m_iStringLength = (0);
+								m_pUrl = (NULL);
+								m_pMethodStream = (new Stream());
+
 }
 HttpUrl* HttpRequestLine::GetUrl()
 {
@@ -54,7 +55,7 @@ Stream* HttpRequestLine::GetMethodStream()
 
 char* HttpRequestLine::GetMethodString()
 {
-	int i=0;
+	unsigned int i=0;
 	for(;i<sizeof(methods);i++)
 	{
 		if(m_iMethod == (methods+i)->id)
@@ -88,7 +89,6 @@ int HttpRequestLine::SetVersion(int major,int senior)
 
 int HttpRequestLine::Parse()
 {
-	int offset = 0;
 	char* pString = m_pString;
 	int index=0;
 	for(;index<m_iStringLength;index++){
@@ -148,7 +148,7 @@ int HttpRequestLine::Parse()
 
 int HttpRequestLine::GetMethodId(char* pMethod)
 {
-	int i = 0;
+	unsigned int i = 0;
 	for(;i<sizeof(methods)/sizeof(methods[0]);i++)
 	{
 		if(strlen((methods+i)->name) == strlen(pMethod))

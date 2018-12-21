@@ -37,33 +37,35 @@ int AdminClient::SetStatusIdle()
 }
 
 AdminClient::AdminClient():
-	IOHandler(),
-	m_pSendStream(new Stream),
-	m_pStream(new Stream),
-	m_iState(STATUS_BLOCKING),
-	m_isConnected(FALSE),
-	m_iSentTotal(0),
-	m_iRecvTotal(0),
-	m_iUseCount(0)
+	IOHandler()
 {
+	m_pSendStream = (new Stream);
+	m_pStream = (new Stream);
+	m_iState = (STATUS_BLOCKING);
+	m_isConnected = (FALSE);
+	m_iSentTotal = (0);
+	m_iRecvTotal = (0);
+	m_iUseCount = (0);
+
 	m_iSide = REMOTE_SIDE;
 	GetEvent()->SetIOHandler(this);
 	SetServiceType(SERVICE_TYPE_ADMIN);
 }
 
 AdminClient::AdminClient(int sockfd):
-	IOHandler(),
-	m_pStream(new Stream()),
-	m_pSendStream(new Stream()),
-	m_iSentTotal(0),
-	m_iRecvTotal(0),
-	m_iState(STATUS_IDLE),
-	m_iUseCount(0),
-	m_pPartData(NULL),
-	m_iVersion(0),
-	m_iOffset(0),
-	m_iContextState(VERSION)
+	IOHandler()
 {
+	m_pStream = (new Stream()),
+	m_pSendStream = (new Stream());
+	m_iSentTotal = (0);
+	m_iRecvTotal = (0);
+	m_iState = (STATUS_IDLE);
+	m_iUseCount = (0);
+	m_pPartData = (NULL);
+	m_iVersion = (0);
+	m_iOffset = (0);
+	m_iContextState = (VERSION);
+
 	GetEvent()->SetFD(sockfd);
 	GetEvent()->SetIOHandler(this);
 	SetServiceType(SERVICE_TYPE_ADMIN);
@@ -200,7 +202,7 @@ int AdminClient::ProccessReceive(Stream* pStream)
 					char* pBuffer = new char[len];
 					memcpy(pBuffer, &nonceLen, 4);
 					memcpy(pBuffer+4, pAuth->GetNonce()->GetData(), pAuth->GetNonce()->GetLength());
-					memcpy(pBuffer +4 + 32, &nonceLen, 4);
+					memcpy(pBuffer +4 + 32, &opaqueLen, 4);
 					memcpy(pBuffer + 4+ 32 + 4, pAuth->GetOpaque()->GetData(), pAuth->GetOpaque()->GetLength());
 					m_pSendStream->Clear();
 					m_pSendStream->Append(pBuffer, len);

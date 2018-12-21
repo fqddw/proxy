@@ -39,17 +39,18 @@ int HttpBody::IsEnd(Stream* pStream)
 	}
 		return TRUE;
 }
-HttpBody::HttpBody():
-								m_iType(BODY_TYPE_CONTENT_LENGTH),
-								m_iCurChunkLength(0),
-								m_iIsEnd(FALSE),
-								m_iChunkState(CS_IN_LENGTH),
-								m_iCurInChunkLength(0),
-								m_iOffset(0),
-								m_pLengthStream(new Stream()),
-								m_iLength(0),
-								m_iCurLength(0)
+HttpBody::HttpBody()
 {
+								m_iType = (BODY_TYPE_CONTENT_LENGTH);
+								m_iCurChunkLength = (0);
+								m_iIsEnd = (FALSE);
+								m_iChunkState = (CS_IN_LENGTH);
+								m_iCurInChunkLength = (0);
+								m_iOffset = (0);
+								m_pLengthStream = (new Stream());
+								m_iLength = (0);
+								m_iCurLength = (0);
+
 }
 
 int HttpBody::SetType(int type)

@@ -10,8 +10,10 @@
 #include "RemoteSide.h"
 #include "NetEngineTask.h"
 
-SendProccessor::SendProccessor(IOHandler* pIOHandler):m_pIOHandler(pIOHandler),Task()
+SendProccessor::SendProccessor(IOHandler* pIOHandler):Task()
 {
+	m_pIOHandler = (pIOHandler);
+	m_iState = (0);
 }
 #include "stdio.h"
 #include "MemList.h"

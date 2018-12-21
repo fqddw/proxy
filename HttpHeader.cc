@@ -53,7 +53,7 @@ char* HttpHeader::GetField(int iFieldIndex)
 		{HTTP_PROXY_AUTHENTICATION, "Proxy-Authorization"},
 		{HTTP_X_FORWARDED_FOR, "X-Forwarded-For"}
 	};
-	int i=0;
+	unsigned int i=0;
 	for(;i<sizeof(sFields)/sizeof(FIELD);i++)
 	{
 		if(iFieldIndex == sFields[i].index)

@@ -135,7 +135,8 @@ typedef struct _task_detail
 int NetEngine::Run()
 {
 	EPOLLEVENT* ees=m_pEvents;
-	TaskDetail pTaskArray[MAX_WAIT] = {0};
+	TaskDetail pTaskArray[MAX_WAIT];
+	memset(pTaskArray, NULL, MAX_WAIT*sizeof(TaskDetail));
 	int iTaskSize = 0;
 	m_iNFDS = epoll_wait(m_iFD, ees,MAX_WAIT, INFINITE);
 	int iterator = 0;

@@ -4,21 +4,22 @@
 class RemoteSide;
 extern MemList<void*>* pGlobalList;
 extern MemList<RemoteSide*>* g_pGlobalRemoteSidePool;
-IOHandler::IOHandler():
-	m_pEvent(new IOEvent),
-	m_bCanRead(TRUE),
-	m_bCanWrite(TRUE),
-	cs_(new CriticalSection()),
-	m_bClosed(FALSE),
-	m_iRefCount(1),
-	m_iSendRefCount(0),
-	m_iRecvRefCount(0),
-	m_bRealClosed(0),
-	m_bDeleted(FALSE),
-	m_pMainTask(NULL),
-	m_pRecvTask(NULL),
-	m_pSendTask(NULL)
+IOHandler::IOHandler()
 {
+	m_pEvent = (new IOEvent);
+	m_bCanRead = (TRUE);
+	m_bCanWrite = (TRUE);
+	cs_ = (new CriticalSection());
+	m_bClosed = (FALSE);
+	m_iRefCount = (1);
+	m_iSendRefCount = (0);
+	m_iRecvRefCount = (0);
+	m_bRealClosed = (0);
+	m_bDeleted = (FALSE);
+	m_pMainTask = (NULL);
+	m_pRecvTask = (NULL);
+	m_pSendTask = (NULL);
+
 	//pGlobalList->Append(this);
 }
 IOEvent* IOHandler::GetEvent()

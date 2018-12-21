@@ -18,9 +18,9 @@ LPVOID WorkThreadProc(LPVOID ptr)
 	pThread->Run();
 	return 0;
 }
-MasterThread::MasterThread(EventPump* ep) :ep_(ep), pTaskQueue(new TaskQueue), state_(STATE_RUNNING),workthread_busy(WORKTHREAD_IDLE),cs_running(new CriticalSection())
+MasterThread::MasterThread(EventPump* ep) 
 {
-
+ep_ = (ep);pTaskQueue = (new TaskQueue), state_ = (STATE_RUNNING);workthread_busy = (WORKTHREAD_IDLE);cs_running = (new CriticalSection());
 }
 /*
 void MasterThread::SetDuring(DWORD time)
@@ -136,9 +136,9 @@ int MasterThread::Create()
 
 int MasterThread::DispatchTask(Task* pTask)
 {
-	WorkThread* pWorkThreadMin = NULL;
-	int count = 0;
-	int flag = 0;
+	//WorkThread* pWorkThreadMin = NULL;
+	//int count = 0;
+	//int flag = 0;
 	vector<WorkThread*>::iterator it = pWorkThread_.begin();
 	for (; it != pWorkThread_.end();it++)
 	{

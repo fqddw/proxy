@@ -81,6 +81,7 @@ int QueuedNetTask::Run()
 
 		}
 	}
+	return 0;
 }
 
 
@@ -115,6 +116,7 @@ int QueuedNetTask::GetDataStream(IOHandler* pIOHandler, Stream** ppStream)
 		}
 	}
 	delete []buffer;
+	return 0;
 }
 int QueuedNetTask::GetNextTask()
 {
@@ -145,8 +147,10 @@ int QueuedNetTask::GetNextTask()
 }
 
 
-QueuedNetTask::QueuedNetTask():Task(),m_pClientSide(NULL),m_pRemoteSide(NULL),m_bClientRecving(FALSE),m_bClientSending(FALSE),m_bRemoteRecving(FALSE),m_bRemoteSending(FALSE),cs_(new CriticalSection()),m_bRunning(FALSE),m_iCount(1)
+QueuedNetTask::QueuedNetTask():Task()
 {
+m_pClientSide = (NULL);
+m_pRemoteSide = (NULL);m_bClientRecving = (FALSE);m_bClientSending = (FALSE);m_bRemoteRecving = (FALSE);m_bRemoteSending = (FALSE),cs_ = (new CriticalSection());m_bRunning = (FALSE);m_iCount = (1);
 }
 
 QueuedNetTask::~QueuedNetTask()

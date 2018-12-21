@@ -98,7 +98,7 @@ int Server::ProccessReceive(Stream* pStream)
 			}
 			else
 			delete pIpUser;
-			   /*if(IpBlackList::InBlackList(htonl(peerIp)))
+			   if(IpBlackList::InBlackList(htonl(peerIp)))
 			   {
 				   close(client);
 				   continue;

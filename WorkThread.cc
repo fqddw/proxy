@@ -3,9 +3,9 @@
 
 #include "stdio.h"
 DWORD ThreadProc(LPVOID ptr);
-WorkThread::WorkThread(EventPump* ep) :ep_(ep), state_(STATE_RUNNING), task_(NULL)
+WorkThread::WorkThread(EventPump* ep)
 {
-
+ep_ = (ep); state_ = (STATE_RUNNING), task_ = (NULL);
 }
 
 void WorkThread::EnterWaiting()

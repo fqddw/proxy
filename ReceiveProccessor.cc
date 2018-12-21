@@ -11,8 +11,9 @@
 #include "NetEngineTask.h"
 extern MemList<void*>* pGlobalList;
 extern MemList<RemoteSide*>* g_pGlobalRemoteSidePool;
-ReceiveProccessor::ReceiveProccessor(IOHandler* pIOHandler):m_pIOHandler(pIOHandler),Task()
+ReceiveProccessor::ReceiveProccessor(IOHandler* pIOHandler):Task()
 {
+	m_pIOHandler = pIOHandler;
 }
 
 int ReceiveProccessor::Run()
@@ -22,7 +23,7 @@ int ReceiveProccessor::Run()
 			m_pIOHandler->ProccessReceive(pStream);
 		}else{
 			m_pIOHandler->GetEvent()->CancelInReady();
-			int ret = GetDataStream(&pStream);
+			GetDataStream(&pStream);
 			m_pIOHandler->ReleaseRecvRefCount();
 			m_pIOHandler->Release();
 			if(pStream)

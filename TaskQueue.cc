@@ -3,8 +3,11 @@
 #include "time.h"
 #include "stdlib.h"
 
-TaskQueue::TaskQueue() : cs_(new CriticalSection()),m_iSize(0),task_(new MemList<Task*>())
+TaskQueue::TaskQueue()
 {
+ cs_ = (new CriticalSection());
+ m_iSize = (0);
+ task_ = (new MemList<Task*>());
 }
 
 void TaskQueue::Insert(Task* pTask)

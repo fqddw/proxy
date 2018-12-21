@@ -42,21 +42,22 @@ Digest::Digest()
 {
 }
 
-Digest::Digest(Stream* pStream):
-	m_pUserName(NULL),
-	m_pNonce(NULL),
-	m_pUri(NULL),
-	m_pMethod(NULL),
-	m_pResponse(NULL),
-	m_pRealm(NULL),
-	m_pOpaque(NULL),
-	m_pQop(NULL),
-	m_pNC(NULL),
-	m_pCnonce(NULL),
-	m_pKeyValueList(NULL),
-	m_pPassword(NULL)
+Digest::Digest(Stream* pStream)
 {
 	m_pStream = pStream;
+	m_pUserName = (NULL);
+	m_pNonce = (NULL);
+	m_pUri = (NULL);
+	m_pMethod = (NULL);
+	m_pResponse = (NULL);
+	m_pRealm = (NULL);
+	m_pOpaque = (NULL);
+	m_pQop = (NULL);
+	m_pNC = (NULL);
+	m_pCnonce = (NULL);
+	m_pKeyValueList = (NULL);
+	m_pPassword = (NULL);
+
 }
 Digest::~Digest()
 {
@@ -114,13 +115,13 @@ Digest::~Digest()
 int Digest::Parse()
 {
 	KeyValueList* pKeyValueList = new KeyValueList();
-	char chDigest[] = "Digest";
+	//char chDigest[] = "Digest";
 	int state = SPACE_BEFORE_KEY_VALUE;
 	int offset = 6;
 	char* pData = m_pStream->GetData();
 	int start = offset;
 	int end = start;
-	char* pKey,*pValue;
+	//char* pKey,*pValue;
 	Stream* pKeyStream;
 	Stream* pValueStream;
 	int hasScope = FALSE;

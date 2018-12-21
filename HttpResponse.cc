@@ -8,10 +8,10 @@ HttpResponse::HttpResponse():
 {
 }
 HttpResponse::HttpResponse(Stream* pStream):
-								m_pStream(pStream),
 								m_pHeader(NULL),
-								m_iState(HEADER_NOTFOUND),
-								m_pBody(NULL)
+								m_pStream(pStream),
+								m_pBody(NULL),
+								m_iState(HEADER_NOTFOUND)
 {
 }
 

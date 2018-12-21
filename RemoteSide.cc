@@ -53,37 +53,39 @@ InetSocketAddress* RemoteSide::GetAddr()
 	return m_pAddr;
 }
 RemoteSide::RemoteSide():
-	IOHandler(),
-	m_pSendStream(new Stream),
-	m_pStream(new Stream),
-	m_iState(STATUS_BLOCKING),
-	m_isConnected(FALSE),
-	m_iClientState(STATE_NORMAL),
-	m_bCloseClient(FALSE),
-	m_bSSL(FALSE),
-	m_iSentTotal(0),
-	m_iRecvTotal(0),
-	m_iUseCount(0)
+	IOHandler()
 {
+	m_pSendStream = (new Stream);
+	m_pStream = (new Stream);
+	m_iState = (STATUS_BLOCKING);
+	m_isConnected = (FALSE);
+	m_iClientState = (STATE_NORMAL);
+	m_bCloseClient = (FALSE);
+	m_bSSL = (FALSE);
+	m_iSentTotal = (0);
+	m_iRecvTotal = (0);
+	m_iUseCount = (0);
+
 	m_iSide = REMOTE_SIDE;
 	GetEvent()->SetIOHandler(this);
 	SetServiceType(SERVICE_TYPE_HTTP_PROXY);
 }
 RemoteSide::RemoteSide(InetSocketAddress* pAddr):
-	IOHandler(),
-	m_pSendStream(new Stream),
-	m_pStream(new Stream),
-	m_iState(STATUS_BLOCKING),
-	m_isConnected(FALSE),
-	m_iClientState(STATE_NORMAL),
-	m_bCloseClient(FALSE),
-	m_bShouldClose(FALSE),
-	m_bSSL(FALSE),
-	m_iSentTotal(0),
-	m_iRecvTotal(0),
-	m_iUseCount(0),
-	m_iSentCount(0)
+	IOHandler()
 {
+	m_pSendStream = (new Stream);
+	m_pStream = (new Stream);
+	m_iState = (STATUS_BLOCKING);
+	m_isConnected = (FALSE);
+	m_iClientState = (STATE_NORMAL);
+	m_bCloseClient = (FALSE);
+	m_bShouldClose = (FALSE);
+	m_bSSL = (FALSE);
+	m_iSentTotal = (0);
+	m_iRecvTotal = (0);
+	m_iUseCount = (0);
+	m_iSentCount = (0);
+
 	m_iSide = REMOTE_SIDE;
 	GetEvent()->SetIOHandler(this);
 	m_pAddr = pAddr;
@@ -353,7 +355,7 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 	if(m_bSSL)
 	{
 		//printf("received data %s\n", m_pClientSide->GetRequest()->GetHeader()->GetRequestLine()->GetUrl()->GetHost());
-		int iLength = m_pClientSide->GetSendStream()->GetLength();
+		//int iLength = m_pClientSide->GetSendStream()->GetLength();
 		m_pClientSide->GetSendStream()->Append(pStream->GetData(), pStream->GetLength());
 		/*if(m_pClientSide && iLength == 0GetSendRefCount() == 0 && !m_pClientSide->IsRealClosed())
 		{
@@ -458,7 +460,7 @@ int RemoteSide::ProccessReceive(Stream* pStream)
 			return 0;
 		}
 
-		int nLengthSend = m_pClientSide->GetSendStream()->GetLength();
+		//int nLengthSend = m_pClientSide->GetSendStream()->GetLength();
 		m_pClientSide->LockSendBuffer();
 		if(pSendStream)
 		{

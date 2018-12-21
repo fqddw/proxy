@@ -20,16 +20,18 @@
 extern MemList<void*>* pGlobalList;
 #define SEND_BUFFER_LENGTH 256*1024
 ClientSide::ClientSide():
-	IOHandler(),
-	m_pStream(new Stream()),
-	m_pSendStream(new Stream()),
-	m_iSendEndPos(0),
-	m_iAvaibleDataSize(0),
-	m_bCloseAsLength(FALSE),
-	m_iRemoteState(STATE_NORMAL),
-	m_bSSL(FALSE),
-	m_iSSLState(SSL_START),m_pStoreItem(NULL)
+	IOHandler()
 {
+	m_pStream = (new Stream());
+	m_pSendStream = (new Stream());
+	m_iSendEndPos = (0);
+	m_iAvaibleDataSize = (0);
+	m_bCloseAsLength = (FALSE);
+	m_iRemoteState = (STATE_NORMAL);
+	m_bSSL = (FALSE);
+	m_iSSLState = (SSL_START);
+	m_pStoreItem = (NULL);
+
 	m_iSide = CLIENT_SIDE;
 	GetEvent()->SetIOHandler(this);
 	SetServiceType(SERVICE_TYPE_HTTP_PROXY);
@@ -49,15 +51,17 @@ ClientSide::~ClientSide()
 	}
 }
 ClientSide::ClientSide(int sockfd):
-	IOHandler(),
-	m_pStream(new Stream()),
-	m_pSendStream(new Stream()),
-	m_bCloseAsLength(FALSE),
-	m_iRemoteState(STATE_NORMAL),
-	m_bSSL(FALSE),
-	m_iSSLState(SSL_START),
-	m_bReplaceCookie(FALSE),m_pStoreItem(NULL)
+	IOHandler()
 {
+	m_pStream = (new Stream());
+	m_pSendStream = (new Stream());
+	m_bCloseAsLength = (FALSE);
+	m_iRemoteState = (STATE_NORMAL);
+	m_bSSL = (FALSE);
+	m_iSSLState = (SSL_START);
+	m_bReplaceCookie = (FALSE);
+	m_pStoreItem = (NULL);
+
 	m_iSide = CLIENT_SIDE;
 	m_iTransState = CLIENT_STATE_IDLE;
 	m_iState = HEADER_NOTFOUND;
@@ -92,7 +96,7 @@ int ClientSide::SSLTransferRecv(Stream* pStream)
 		ProccessConnectionReset();
 		return 0;
 	}
-	int iLength = m_pRemoteSide->GetSendStream()->GetLength();
+	//int iLength = m_pRemoteSide->GetSendStream()->GetLength();
 	m_pRemoteSide->GetSendStream()->Append(pStream->GetData(), pStream->GetLength());
 	//if(iLength == 0/*GetSendRefCount() == 0*/)
 	//{
@@ -167,7 +171,7 @@ int ClientSide::ProccessReceive(Stream* pStream)
 	struct sockaddr_in sai;
 	socklen_t len = sizeof(sai);
 	getpeername(GetEvent()->GetFD(),(struct sockaddr*)&sai,&len);
-	int peerIp = sai.sin_addr.s_addr;
+	//int peerIp = sai.sin_addr.s_addr;
 	/*if(!pIpUser)
 	{
 		ProccessConnectionClose();
@@ -512,7 +516,7 @@ int ClientSide::ProccessReceive(Stream* pStream)
 				m_iState = HEADER_NOTFOUND;
 				m_iTransState = CLIENT_STATE_WAITING;
 			}
-		int nLength = m_pRemoteSide->GetSendStream()->GetLength();
+		//int nLength = m_pRemoteSide->GetSendStream()->GetLength();
 		m_pRemoteSide->GetSendStream()->Append(pStream->GetData(),pStream->GetLength());
 		/*if(nLength == 0)
 		  {
@@ -562,6 +566,7 @@ RemoteSide* ClientSide::GetRemoteSide(int fd)
 		RemoteSide* pSide = pSocketPool->GetData();
 		if(pSide->GetEvent()->GetFD() == fd)
 		{
+			pRemoteSide = pSide;
 			break;
 		}
 	}
