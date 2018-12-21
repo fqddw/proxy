@@ -107,9 +107,13 @@ int HttpBody::Parse(Stream* pStream)
 				else
 				{
 			if(m_iOffset == 0)
+			{
 				offset += (2-m_iOffset);
+			}
 			else
+			{
 				offset += m_iOffset;
+			}
 				m_iOffset = 0;
 				m_iChunkState = CS_IN_LENGTH;
 				begin = offset;

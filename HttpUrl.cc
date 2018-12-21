@@ -8,7 +8,7 @@ int HttpUrl::Parse()
 {
 	int offset = 0;
 	string strUrl = m_pUrl;
-	unsigned int iHostEndPos=0;
+	size_t iHostEndPos=0;
 	int isConnect = FALSE;
 	if(strUrl[0] != '/')
 	{
@@ -37,7 +37,7 @@ int HttpUrl::Parse()
 			string strHostFull = strUrl.substr(offset,iHostEndPos-offset);
 			int port = 80;
 			string strHost;
-			unsigned int portpos = strHostFull.find(":");
+			size_t portpos = strHostFull.find(":");
 			if(portpos != string::npos)
 			{
 					strHost = strHostFull.substr(0,portpos);
