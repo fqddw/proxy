@@ -113,6 +113,26 @@ StoreItem* MemStore::GetByHostAndUrl(Stream* pHost, Stream* pRequestURL)
 	m_pList->Unlock();
 	return NULL;
 }
+StoreItem* MemStore::GetByHostAndUrlAndMethod(Stream* pHost, Stream* pRequestURL, int iMethod)
+{
+	m_pList->Lock();
+	MemNode<StoreItem*>* pNode = m_pList->GetHead();
+	if(!pNode)
+	{
+		m_pList->Unlock();
+		return NULL;
+	}
+	for(;pNode!=NULL;pNode = pNode->GetNext())
+	{
+		if(pNode->GetData()->GetHost()->Equal(pHost) && pNode->GetData()->GetRequestURL()->Equal(pRequestURL) && pNode->GetData()->GetMethod() == iMethod)
+		{
+			m_pList->Unlock();
+			return pNode->GetData();
+		}
+	}
+	m_pList->Unlock();
+	return NULL;
+}
 
 void StoreItem::Lock()
 {
@@ -133,4 +153,22 @@ void MemStore::Unlock()
 void MemStore::Delete(StoreItem* pItem)
 {
 	m_pList->Delete(pItem);
+}
+void StoreItem::SetCreateTime(struct timespec create_time)
+{
+	create_time_ = create_time;
+}
+
+struct timespec StoreItem::GetCreateTime()
+{
+	return create_time_;
+}
+void StoreItem::SetMethod(int iMethod)
+{
+	m_iMethod = iMethod;
+}
+
+int StoreItem::GetMethod()
+{
+	return m_iMethod;
 }

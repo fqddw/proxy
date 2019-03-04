@@ -88,13 +88,13 @@ int QueuedNetTask::Run()
 int QueuedNetTask::GetDataStream(IOHandler* pIOHandler, Stream** ppStream)
 {
 	int sockfd = pIOHandler->GetEvent()->GetFD();
-	char* buffer = new char[1024*4];
+	char* buffer = new char[1024*1024*4];
 	int flag = TRUE;
 	int total = 0;
 	while(flag)
 	{
 		flag = FALSE;
-		int n = recv(sockfd, buffer, 4*1024, 0);
+		int n = recv(sockfd, buffer, 4*1024*1024, 0);
 		if(n > 0)
 		{
 			if(errno == EAGAIN)

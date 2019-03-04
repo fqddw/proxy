@@ -9,14 +9,20 @@ class StoreItem
 		Stream* m_pHost;
 		Stream* m_pRequestURL;
 		Stream* m_pResponse;
+		int m_iMethod;
 		int m_bSaving;
 		CriticalSection* cs_;
+		struct timespec create_time_;
 	public:
 		StoreItem();
 		StoreItem(Stream*,Stream*);
 		Stream* GetHost();
 		Stream* GetRequestURL();
 		Stream* GetResponse();
+		struct timespec GetCreateTime();
+		int GetMethod();
+		void SetMethod(int);
+		void SetCreateTime(struct timespec);
 		void SetHost(Stream*);
 		void SetRequestURL(Stream*);
 		void AppendResponse(Stream*);
@@ -44,5 +50,6 @@ class MemStore
 		static MemStore* getInstance();
 		StoreItem* AppendItem(StoreItem*);
 		StoreItem* GetByHostAndUrl(Stream* /*pHost*/, Stream* /*pRequestUrl*/);
+		StoreItem* GetByHostAndUrlAndMethod(Stream* /*pHost*/, Stream* /*pRequestUrl*/, int /*iMethod*/);
 };
 #endif

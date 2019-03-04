@@ -17,6 +17,9 @@
 #include "NetEngineTask.h"
 #include "AccessLog.h"
 #include "UrlProject.h"
+
+#include "TimeLib.h"
+
 extern MemList<void*>* pGlobalList;
 #define SEND_BUFFER_LENGTH 256*1024
 ClientSide::ClientSide():
@@ -204,7 +207,7 @@ int ClientSide::ProccessReceive(Stream* pStream)
 			Stream* pStreamRequestURL = new Stream(prequesturl);
 			StoreItem* pStoreItem = NULL;
 			MemStore::getInstance()->Lock();
-			pStoreItem = MemStore::getInstance()->GetByHostAndUrl(pStreamHost, pStreamRequestURL);
+			pStoreItem = MemStore::getInstance()->GetByHostAndUrlAndMethod(pStreamHost, pStreamRequestURL, m_pHttpRequest->GetHeader()->GetRequestLine()->GetMethod());
 
 			if(!(m_pHttpRequest->GetHeader()->GetRequestLine()->GetMethod() == HTTP_METHOD_CONNECT))
 			{
@@ -214,23 +217,39 @@ int ClientSide::ProccessReceive(Stream* pStream)
 				else if(!(pStoreItem))
 				{
 					pStoreItem = MemStore::getInstance()->AppendItem(new StoreItem(pStreamHost, pStreamRequestURL));
+					pStoreItem->SetCreateTime(Time::GetNow());
+					pStoreItem->SetMethod(m_pHttpRequest->GetHeader()->GetRequestLine()->GetMethod());
 					pStoreItem->StartSave();
 					m_pStoreItem = pStoreItem;
 				}
 				else
 				{
-					pStoreItem->Lock();
-					if(pStoreItem->IsSaving())
+					struct timespec tNow = Time::GetNow();
+					struct timespec tDelta = {0};
+					tDelta.tv_sec = 600;
+					tDelta.tv_nsec = 0;
+					struct timespec tExpire = Time::Add(pStoreItem->GetCreateTime(), tDelta);
+					int bExpire = Time::Compare(tNow, tExpire);
+					if(bExpire < 0)
 					{
-						pStoreItem->Unlock();
+						pStoreItem->Lock();
+						if(pStoreItem->IsSaving())
+						{
+							pStoreItem->Unlock();
+						}
+						else{
+							pStoreItem->Unlock();
+							m_pSendStream->Append(pStoreItem->GetResponse());
+							SetSendFlag();
+							m_bCloseAsLength = TRUE;
+							MemStore::getInstance()->Unlock();
+							return TRUE;
+						}
 					}
-					else{
-						pStoreItem->Unlock();
-						m_pSendStream->Append(pStoreItem->GetResponse());
-						SetSendFlag();
-						m_bCloseAsLength = TRUE;
-						MemStore::getInstance()->Unlock();
-						return TRUE;
+					else
+					{
+						MemStore::getInstance()->Delete(pStoreItem);
+						delete pStoreItem;
 					}
 				}
 			}

@@ -131,7 +131,7 @@ int ServerConfig::Load()
 }
 ServerConfigDefault::ServerConfigDefault()
 {
-	SetPort(8000);
+	SetPort(8888);
 	SetAdminPort(4631);
 }
 
