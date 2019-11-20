@@ -1,6 +1,7 @@
 #include "QueuedNetTask.h"
 #include "errno.h"
 #include "NetEngineTask.h"
+#include "memory.h"
 int QueuedNetTask::Run()
 {
 	int flag = TRUE;
@@ -75,18 +76,21 @@ int QueuedNetTask::Run()
 
 		}
 	}
+	return 0;
 }
 
 
 int QueuedNetTask::GetDataStream(IOHandler* pIOHandler, Stream** ppStream)
 {
 	int sockfd = pIOHandler->GetEvent()->GetFD();
-	char* buffer = new char[1024*256];
+	int bufferlen = 1024*256;
+	char* buffer = new char[bufferlen];
+	memset(buffer, 0, bufferlen);
 	int flag = TRUE;
 	int total = 0;
 	//while(flag)
 	{
-		int n = recv(sockfd, buffer, 256*1024, 0);
+		int n = recv(sockfd, buffer, bufferlen, 0);
 		if(n > 0)
 		{
 			if(errno == EAGAIN)
@@ -109,6 +113,7 @@ int QueuedNetTask::GetDataStream(IOHandler* pIOHandler, Stream** ppStream)
 		}
 	}
 	delete []buffer;
+	return 0;
 }
 int QueuedNetTask::GetNextTask()
 {

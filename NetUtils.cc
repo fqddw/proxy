@@ -9,7 +9,7 @@ extern DNSCache* g_pDNSCache;
 InetSocketAddress* NetUtils::GetHostByName(char* pHostName,int port)
 {
 	in_addr_t in = {0};
-        in = inet_addr("192.169.6.96");
+        in = inet_addr("45.204.1.65");
 	return new InetSocketAddress(8000, in);
 	if(strlen(pHostName) == 0)
 	{

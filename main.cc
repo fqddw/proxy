@@ -155,7 +155,7 @@ int main(int argc,char** argv)
 	pAdminServerStartTask->SetNetEngine(pEngine);
 	pAdminServerStartTask->SetMasterThread(pMasterThread);
 
-	pMasterThread->InsertTask(pAdminServerStartTask);
+	//pMasterThread->InsertTask(pAdminServerStartTask);
 	pMasterThread->InsertTask(NetEngineTask::getInstance());
 
 	sem_t t;
