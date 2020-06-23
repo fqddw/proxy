@@ -10,6 +10,7 @@
 #define CLIENT_SENDING 2
 #define REMOTE_RECVING 3
 #define REMOTE_SENDING 4
+#define DNS_ARRIVE 5
 class QueuedNetTask : public Task
 {
 	private:

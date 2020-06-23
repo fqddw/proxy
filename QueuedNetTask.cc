@@ -76,6 +76,15 @@ int QueuedNetTask::Run()
 					m_pRemoteSide->ProccessSend();
 				}
 				break;
+			/*case DNS_ARRIVE:
+				{
+					Stream* pStream = NULL;
+					GetDataStream(m_pRemoteSide, &pStream);
+					int ip = m_pDNS->ProccessReceive(pStream);
+					if(ip)
+						m_pClientSide->AfterDNS(ip);
+				}
+				break;*/
 			default:
 				;
 
@@ -88,13 +97,13 @@ int QueuedNetTask::Run()
 int QueuedNetTask::GetDataStream(IOHandler* pIOHandler, Stream** ppStream)
 {
 	int sockfd = pIOHandler->GetEvent()->GetFD();
-	char* buffer = new char[1024*4];
+	char* buffer = new char[1024*256];
 	int flag = TRUE;
 	int total = 0;
 	while(flag)
 	{
 		flag = FALSE;
-		int n = recv(sockfd, buffer, 4*1024, 0);
+		int n = recv(sockfd, buffer, 256*1024, 0);
 		if(n > 0)
 		{
 			if(errno == EAGAIN)

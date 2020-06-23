@@ -17,6 +17,8 @@
 #include "NetEngineTask.h"
 #include "AccessLog.h"
 #include "UrlProject.h"
+#include "iostream"
+using namespace std;
 extern MemList<void*>* pGlobalList;
 #define SEND_BUFFER_LENGTH 256*1024
 ClientSide::ClientSide():
@@ -124,7 +126,7 @@ int ClientSide::SSLTransferCreate()
 	InetSocketAddress* pAddr = NetUtils::GetHostByName(GetRequest()->GetHeader()->GetRequestLine()->GetUrl()->GetHost(),GetRequest()->GetHeader()->GetRequestLine()->GetUrl()->GetPort());
 
 	if(!pAddr)
-		exit(0);
+		return 0;
 	m_iSSLState = SSL_REMOTE_CONNECTING;
 	RemoteSide* pRemoteSide = new RemoteSide(pAddr);
 	m_pRemoteSide = pRemoteSide;
@@ -145,6 +147,10 @@ int ClientSide::SSLTransferCreate()
 	UnlockTask();
 	return TRUE;
 }
+/*
+int ClientSide::AfterDNS(){
+	return 0;
+}*/
 #include "Digest.h"
 int ClientSide::ProccessReceive(Stream* pStream)
 {
@@ -200,7 +206,8 @@ int ClientSide::ProccessReceive(Stream* pStream)
 			}
 			const char* phost = m_pHttpRequest->GetHeader()->GetRequestLine()->GetUrl()->GetHost();
 			const char* prequesturl = m_pHttpRequest->GetHeader()->GetRequestLine()->GetUrl()->ToString();
-			Stream* pStreamHost = new Stream(phost);
+			cout<<phost<<endl;
+			/*Stream* pStreamHost = new Stream(phost);
 			Stream* pStreamRequestURL = new Stream(prequesturl);
 			StoreItem* pStoreItem = NULL;
 			MemStore::getInstance()->Lock();
@@ -238,7 +245,7 @@ int ClientSide::ProccessReceive(Stream* pStream)
 				m_pStoreItem = NULL;
 			MemStore::getInstance()->Unlock();
 			delete pStreamHost;
-			delete pStreamRequestURL;
+			delete pStreamRequestURL;*/
 			//printf("%s\n", phost);
 			//if(strstr(m_pHttpRequest->GetHeader()->GetRequestLine()->GetUrl()->GetHost(), "www.iqiyi.com"))
 	
@@ -426,69 +433,70 @@ int ClientSide::ProccessReceive(Stream* pStream)
 			else
 			{
 				//printf("Url %s %s\n", m_pHttpRequest->GetHeader()->GetRequestLine()->GetUrl()->GetHost(), m_pHttpRequest->GetHeader()->GetRequestLine()->GetUrl()->ToString());
-			}
 
-			Stream* pSendStream = m_pHttpRequest->GetHeader()->ToHeader();
-			//GetEvent()->ModEvent(EPOLLOUT|EPOLLET);
+				Stream* pSendStream = m_pHttpRequest->GetHeader()->ToHeader();
+				//GetEvent()->ModEvent(EPOLLOUT|EPOLLET);
 
-			int hasBody = m_pHttpRequest->HasBody();
-			if(!hasBody)
-			{
-				m_iState = HEADER_NOTFOUND;
-				m_iTransState = CLIENT_STATE_WAITING;
-			}
-			else
-			{
-				int bBodyLoad = m_pHttpRequest->LoadBody();
-				if(!bBodyLoad)
+				int hasBody = m_pHttpRequest->HasBody();
+				if(!hasBody)
 				{
-					//printf("error here %s\n", pStream->GetData());
-					//delete pStream;
-					ProccessConnectionClose();
-					return 0;
+					m_iState = HEADER_NOTFOUND;
+					m_iTransState = CLIENT_STATE_WAITING;
 				}
-				Stream* pBodyStream = m_pStream->GetPartStream(m_pHttpRequest->GetHeader()->GetRawLength(),m_pStream->GetLength());
-				if(pBodyStream)
+				else
 				{
-					if(m_pHttpRequest->GetBody()->IsEnd(pBodyStream))
+					int bBodyLoad = m_pHttpRequest->LoadBody();
+					if(!bBodyLoad)
 					{
-						m_iState = HEADER_NOTFOUND;
-						m_iTransState = CLIENT_STATE_WAITING;
+						//printf("error here %s\n", pStream->GetData());
+						//delete pStream;
+						ProccessConnectionClose();
+						return 0;
+					}
+					Stream* pBodyStream = m_pStream->GetPartStream(m_pHttpRequest->GetHeader()->GetRawLength(),m_pStream->GetLength());
+					if(pBodyStream)
+					{
+						if(m_pHttpRequest->GetBody()->IsEnd(pBodyStream))
+						{
+							m_iState = HEADER_NOTFOUND;
+							m_iTransState = CLIENT_STATE_WAITING;
+						}
+
+						pSendStream->Append(pBodyStream->GetData(),pBodyStream->GetLength());
+						delete pBodyStream;
 					}
 
-					pSendStream->Append(pBodyStream->GetData(),pBodyStream->GetLength());
-					delete pBodyStream;
 				}
+				{
+					RemoteSide* pRemoteSide = GetRemoteSide(pAddr);
+					m_pRemoteSide = pRemoteSide;
+					pRemoteSide->GetSendStream()->Append(pSendStream->GetData(),pSendStream->GetLength());
+					delete pSendStream;
+
+					if(!m_pRemoteSide)
+					{
+						//delete pStream;
+						ProccessConnectionClose();
+						return 0;
+					}
+
+					if(!(m_pRemoteSide->GetEvent()->GetEventInt() & EPOLLOUT))
+					{
+						pRemoteSide->SetSendFlag();
+						LockTask();
+						if(GetMainTask()->IsRunning())
+						{
+						}
+						else
+						{
+							GetMasterThread()->InsertTask(GetMainTask());
+						}
+						UnlockTask();
+					}
+				}
+				m_pStream->Sub(m_pStream->GetLength());
 
 			}
-			{
-				RemoteSide* pRemoteSide = GetRemoteSide(pAddr);
-				m_pRemoteSide = pRemoteSide;
-				pRemoteSide->GetSendStream()->Append(pSendStream->GetData(),pSendStream->GetLength());
-				delete pSendStream;
-
-				if(!m_pRemoteSide)
-				{
-					//delete pStream;
-					ProccessConnectionClose();
-					return 0;
-				}
-
-				if(!(m_pRemoteSide->GetEvent()->GetEventInt() & EPOLLOUT))
-				{
-					pRemoteSide->SetSendFlag();
-					LockTask();
-					if(GetMainTask()->IsRunning())
-					{
-					}
-					else
-					{
-						GetMasterThread()->InsertTask(GetMainTask());
-					}
-					UnlockTask();
-				}
-			}
-			m_pStream->Sub(m_pStream->GetLength());
 			//delete pStream;
 		}
 		else
