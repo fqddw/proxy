@@ -105,9 +105,9 @@ int getip(char* purl)
 	memcpy(dnsflat+12, pStream->GetData(),pStream->GetLength());
 	*((short*)(dnsflat+12+pStream->GetLength())) = htons(1);
 	*((short*)(dnsflat+12+pStream->GetLength()+2)) = htons(1);
-	delete pStream;
 	socklen_t lent = sizeof(sai);
-	sendto(fd, dnsflat, 512, 0,(struct sockaddr*)&sai, lent);
+	sendto(fd, dnsflat, 12+pStream->GetLength()+2+2, 0,(struct sockaddr*)&sai, lent);
+	delete pStream;
 	char buf[1024] = {0};
 	socklen_t len = sizeof(sai);
 	ret = recvfrom(fd, buf,1024,0,(struct sockaddr*)&sai,&len);
@@ -147,6 +147,7 @@ InetSocketAddress* NetUtils::GetHostByName(char* pHostName,int port)
 			return NULL;
 	}
 	else{
+		return NULL;
 		int ip = getip(pHostName);
 		if(ip !=0)
 			g_pDNSCache->AddRecord(pHostName, ip, TRUE);

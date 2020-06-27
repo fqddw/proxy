@@ -5,7 +5,7 @@ CCFLAGS=-O3
 LDFLAGS=-L/usr/lib64/mysql/ 
 LIBS=-lmysqlclient -lpthread -lrt
 ELFNAME=main
-OBJECTS=Mysql.o HttpUrl.o Server.o EventPump.o NetEngine.o HttpBody.o NetUtils.o HttpRequest.o HttpRequestLine.o TaskQueue.o Stream.o ConnectionResetProccessor.o HttpResponseLine.o ClientSide.o RemoteSide.o MemList.o PublicCookie.o DNSCache.o HttpHeader.o ServerConfig.o InetSocketAddress.o QueuedNetTask.o Digest.o MD5imp.o MD5.o User.o TimeLib.o Task.o UserSession.o Auth.o AuthManager.o NetEngineTask.o BlackListIp.o UrlProject.o AdminServer.o AdminClient.o MasterThread.o WorkThread.o IOHandler.o IOEvent.o AccessLog.o MemStore.o ReceiveProccessor.o SendProccessor.o CriticalSection.o HttpResponse.o main.o
+OBJECTS=Mysql.o HttpUrl.o Server.o EventPump.o NetEngine.o HttpBody.o NetUtils.o HttpRequest.o HttpRequestLine.o TaskQueue.o Stream.o ConnectionResetProccessor.o HttpResponseLine.o ClientSide.o RemoteSide.o MemList.o PublicCookie.o DNSCache.o HttpHeader.o ServerConfig.o InetSocketAddress.o QueuedNetTask.o Digest.o MD5imp.o MD5.o User.o TimeLib.o Task.o UserSession.o Auth.o AuthManager.o NetEngineTask.o BlackListIp.o UrlProject.o AdminServer.o AdminClient.o MasterThread.o WorkThread.o IOHandler.o IOEvent.o AccessLog.o MemStore.o ReceiveProccessor.o SendProccessor.o CriticalSection.o HttpResponse.o DNSFetch.o main.o
 
 main: $(OBJECTS)
 	$(CC) $(CCFLAGS) -o $(ELFNAME) $(OBJECTS) $(LDFLAGS) $(LIBS)
@@ -104,6 +104,9 @@ CriticalSection.o: CriticalSection.cc
 	g++ -Wall -c -o CriticalSection.o CriticalSection.cc
 HttpResponse.o: HttpResponse.cc
 	g++ -Wall -c -o HttpResponse.o HttpResponse.cc
+DNSFetch.o: DNSFetch.cc
+	g++ -Wall -c -o DNSFetch.o DNSFetch.cc
+
 main.o: main.cc
 	g++ -Wall -c -o main.o main.cc
 

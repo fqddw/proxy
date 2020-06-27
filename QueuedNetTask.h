@@ -6,11 +6,12 @@
 #include "IOHandler.h"
 #include "ClientSide.h"
 #include "RemoteSide.h"
+#include "DNSFetch.h"
 #define CLIENT_RECVING 1
 #define CLIENT_SENDING 2
 #define REMOTE_RECVING 3
 #define REMOTE_SENDING 4
-#define DNS_ARRIVE 5
+#define DNS_ARRIVING 5
 class QueuedNetTask : public Task
 {
 	private:
@@ -23,6 +24,8 @@ class QueuedNetTask : public Task
 		CriticalSection* cs_;
 		int m_bRunning;
 		int m_iCount;
+		DNSFetch* m_pDNS;
+		int m_bDNSArriving;
 	public:
 		QueuedNetTask();
 		virtual ~QueuedNetTask();
@@ -33,13 +36,17 @@ class QueuedNetTask : public Task
 		int IsRunning();
 		void SetClient(ClientSide*);
 		void SetRemote(RemoteSide*);
+		void SetDNS(DNSFetch*);
 		ClientSide* GetClientSide();
 		RemoteSide* GetRemoteSide();
 		void SetClientRecving();
 		void SetClientSending();
 		void SetRemoteRecving();
 		void SetRemoteSending();
+
+		void SetDNSArriving();
 		int GetDataStream(IOHandler*, Stream**);
+		int GetDataGRAM(IOHandler*, Stream**);
 		void SetRunning();
 		int IssetClientRecving();
 		int IssetRemoteRecving();

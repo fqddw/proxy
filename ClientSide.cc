@@ -147,10 +147,77 @@ int ClientSide::SSLTransferCreate()
 	UnlockTask();
 	return TRUE;
 }
-/*
-int ClientSide::AfterDNS(){
+
+int ClientSide::AfterDNS(int ip){
+	if(m_pHttpRequest->GetHeader()->GetRequestLine()->GetMethod() == HTTP_METHOD_CONNECT)
+	{
+		//printf("%s", m_pStream->GetData());
+		SSLTransferCreate();
+		//ProccessConnectionReset();
+		return FALSE;
+	}
+
+	Stream* pSendStream = m_pHttpRequest->GetHeader()->ToHeader();
+	//GetEvent()->ModEvent(EPOLLOUT|EPOLLET);
+
+	int hasBody = m_pHttpRequest->HasBody();
+	if(!hasBody)
+	{
+		m_iState = HEADER_NOTFOUND;
+		m_iTransState = CLIENT_STATE_WAITING;
+	}
+	else
+	{
+		int bBodyLoad = m_pHttpRequest->LoadBody();
+		if(!bBodyLoad)
+		{
+			//printf("error here %s\n", pStream->GetData());
+			//delete pStream;
+			ProccessConnectionClose();
+			return 0;
+		}
+		Stream* pBodyStream = m_pStream->GetPartStream(m_pHttpRequest->GetHeader()->GetRawLength(),m_pStream->GetLength());
+		if(pBodyStream)
+		{
+			if(m_pHttpRequest->GetBody()->IsEnd(pBodyStream))
+			{
+				m_iState = HEADER_NOTFOUND;
+				m_iTransState = CLIENT_STATE_WAITING;
+			}
+
+			pSendStream->Append(pBodyStream->GetData(),pBodyStream->GetLength());
+			delete pBodyStream;
+		}
+
+	}
+	InetSocketAddress* pAddr = new InetSocketAddress(m_pHttpRequest->GetHeader()->GetRequestLine()->GetUrl()->GetPort(), ip);
+	RemoteSide* pRemoteSide = GetRemoteSide(pAddr);
+	m_pRemoteSide = pRemoteSide;
+	pRemoteSide->GetSendStream()->Append(pSendStream->GetData(),pSendStream->GetLength());
+
+	if(!m_pRemoteSide)
+	{
+		//delete pStream;
+		ProccessConnectionClose();
+		return 0;
+	}
+
+	if(!(m_pRemoteSide->GetEvent()->GetEventInt() & EPOLLOUT))
+	{
+		pRemoteSide->SetSendFlag();
+		LockTask();
+		if(GetMainTask()->IsRunning())
+		{
+		}
+		else
+		{
+			GetMasterThread()->InsertTask(GetMainTask());
+		}
+		UnlockTask();
+	}
+
 	return 0;
-}*/
+}
 #include "Digest.h"
 int ClientSide::ProccessReceive(Stream* pStream)
 {
@@ -206,7 +273,7 @@ int ClientSide::ProccessReceive(Stream* pStream)
 			}
 			const char* phost = m_pHttpRequest->GetHeader()->GetRequestLine()->GetUrl()->GetHost();
 			const char* prequesturl = m_pHttpRequest->GetHeader()->GetRequestLine()->GetUrl()->ToString();
-			cout<<phost<<endl;
+			//cout<<phost<<endl;
 			/*Stream* pStreamHost = new Stream(phost);
 			Stream* pStreamRequestURL = new Stream(prequesturl);
 			StoreItem* pStoreItem = NULL;
@@ -417,9 +484,16 @@ int ClientSide::ProccessReceive(Stream* pStream)
 				pAddr = NetUtils::GetHostByName(m_pHttpRequest->GetHeader()->GetRequestLine()->GetUrl()->GetHost(),m_pHttpRequest->GetHeader()->GetRequestLine()->GetUrl()->GetPort());
 			if(!pAddr)
 			{
-				char* pText = (char*)"HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n";
+				/*char* pText = (char*)"HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n";
 				send(GetEvent()->GetFD(),pText,strlen(pText),0);
 				ProccessConnectionReset();
+				return 0;*/
+				DNSFetch* pDNS = new DNSFetch();
+				pDNS->SetMasterThread(GetMasterThread());
+				pDNS->GetEvent()->SetNetEngine(GetEvent()->GetNetEngine());
+				pDNS->SetMainTask(GetMainTask());
+				pDNS->sendReq(m_pHttpRequest->GetHeader()->GetRequestLine()->GetUrl()->GetHost());
+				pDNS->GetEvent()->AddToEngine(EPOLLIN|EPOLLONESHOT);
 				return 0;
 			}
 			if(m_pHttpRequest->GetHeader()->GetRequestLine()->GetMethod() == HTTP_METHOD_CONNECT)

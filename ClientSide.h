@@ -46,6 +46,7 @@ class ClientSide : public IOHandler
 		void SetMainTask(QueuedNetTask*);
 		virtual int IsRecvScheduled();
 		int CanReplaceCookie();
+		int AfterDNS(int);
 
 
 		StoreItem* GetStoreItem();

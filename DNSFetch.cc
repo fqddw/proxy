@@ -1,15 +1,29 @@
-DNSFetch::DNSFetch()
+#include "DNSFetch.h"
+#include "stdio.h"
+#include "stdlib.h"
+#include "sys/socket.h"
+#include "arpa/inet.h"
+#include <netinet/in.h>
+#include "string.h"
+
+#include "QueuedNetTask.h"
+#include "fcntl.h"
+
+DNSFetch::DNSFetch():IOHandler()
 {
 	int fd = socket(AF_INET, SOCK_DGRAM, 0);
+
 	int cflags = fcntl(fd,F_GETFL,0);
 	fcntl(fd,F_SETFL, cflags|O_NONBLOCK);
 
 	GetEvent()->SetIOHandler(this);
 	GetEvent()->SetFD(fd);
+
 }
 
-int DNSFetch::sendReq(char* url)
+int DNSFetch::sendReq(char* purl)
 {
+	m_pUrl = purl;
 	int fd = GetEvent()->GetFD();
 	struct timeval tv_out;
 	tv_out.tv_sec = 1;
@@ -36,14 +50,19 @@ int DNSFetch::sendReq(char* url)
 	memcpy(dnsflat+12, pStream->GetData(),pStream->GetLength());
 	*((short*)(dnsflat+12+pStream->GetLength())) = htons(1);
 	*((short*)(dnsflat+12+pStream->GetLength()+2)) = htons(1);
-	delete pStream;
 	socklen_t lent = sizeof(sai);
-	sendto(fd, dnsflat, 512, 0,(struct sockaddr*)&sai, lent);
+	sendto(fd, dnsflat, 12+pStream->GetLength()+2+2, 0,(struct sockaddr*)&sai, lent);
+	delete pStream;
 	return 0;
 }
 
-long DNSFetch::getfirstip(char* resp)
+int DNSFetch::getfirstip(char* resp)
 {
+	if(resp[3] != 0xffffff80 || (resp[6] == 0 && resp[7] == 0))
+	{
+		return 0;
+	}
+
 	int i = 12;
 
 	int val = (int)resp[i];
@@ -55,6 +74,8 @@ long DNSFetch::getfirstip(char* resp)
 	i+=5;
 	char* pkg_start = resp+i;
 	int type= ntohs(*((unsigned short*)(pkg_start+2)));
+	int anscount = ntohs(*(unsigned short*)(resp+6));
+	int offset = 0;
 	while(type != 1)
 	{
 		int datalen = ntohs(*((unsigned short*)(pkg_start+10)));
@@ -62,6 +83,9 @@ long DNSFetch::getfirstip(char* resp)
 		pkg_start = pkg_start+12+datalen;
 		type= ntohs(*((unsigned short*)(pkg_start+2)));
 		//printf("type %d\n", type);
+		offset++;
+		if(offset >= anscount)
+			return 0;
 	}
 
 	long ip = *(int*)(pkg_start+12);
@@ -93,10 +117,26 @@ Stream* DNSFetch::getURLBuffer(char* url)
 	return pStream;
 }
 
-int DNSFetch::ProcessReceive(Stream* pStream)
+int DNSFetch::ProccessReceive(Stream* pStream)
 {
 	char* pData = pStream->GetData();
-	int ip = getip(pData);
+	int ip = getfirstip(pData);
 	return ip;
 }
 
+void DNSFetch::SetRecvFlag()
+{
+	GetMainTask()->SetDNSArriving();
+}
+void DNSFetch::SetMainTask(QueuedNetTask* pTask)
+{
+	IOHandler::SetMainTask(pTask);
+	if(pTask)
+		pTask->SetDNS(this);
+}
+
+
+char* DNSFetch::getUrl()
+{
+	return m_pUrl;
+}

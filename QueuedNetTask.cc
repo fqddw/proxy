@@ -1,6 +1,12 @@
 #include "QueuedNetTask.h"
 #include "errno.h"
 #include "NetEngineTask.h"
+#include "DNSCache.h"
+#include "arpa/inet.h"
+#include <netinet/in.h>
+#include "unistd.h"
+
+extern DNSCache* g_pDNSCache;
 int QueuedNetTask::Run()
 {
 	int flag = TRUE;
@@ -19,7 +25,8 @@ int QueuedNetTask::Run()
 					m_pRemoteSide->SetMainTask(NULL);
 					m_pRemoteSide->ProccessConnectionClose();
 				}
-				CancelRepeatable();
+				if(m_pDNS == NULL)
+					CancelRepeatable();
 			}
 			cs_->Leave();
 			int bRepeatable = Repeatable();
@@ -76,15 +83,28 @@ int QueuedNetTask::Run()
 					m_pRemoteSide->ProccessSend();
 				}
 				break;
-			/*case DNS_ARRIVE:
+			case DNS_ARRIVING:
 				{
 					Stream* pStream = NULL;
-					GetDataStream(m_pRemoteSide, &pStream);
-					int ip = m_pDNS->ProccessReceive(pStream);
-					if(ip)
-						m_pClientSide->AfterDNS(ip);
+					GetDataGRAM(m_pDNS, &pStream);
+					if(pStream)
+					{
+						int ip = m_pDNS->ProccessReceive(pStream);
+						if(ip)
+						{
+							g_pDNSCache->AddRecord(m_pDNS->getUrl(), ip, TRUE);
+							if(m_pClientSide)
+								m_pClientSide->AfterDNS(ip);
+							else
+								CancelRepeatable();
+						}
+					}
+					m_pDNS->GetEvent()->RemoveFromEngine();
+					close(m_pDNS->GetEvent()->GetFD());
+					delete m_pDNS;
+					m_pDNS=NULL;
 				}
-				break;*/
+				break;
 			default:
 				;
 
@@ -128,6 +148,48 @@ int QueuedNetTask::GetDataStream(IOHandler* pIOHandler, Stream** ppStream)
 	delete []buffer;
 	return 0;
 }
+int QueuedNetTask::GetDataGRAM(IOHandler* pIOHandler, Stream** ppStream)
+{
+	int sockfd = pIOHandler->GetEvent()->GetFD();
+	char* buffer = new char[1024];
+	int flag = TRUE;
+	int total = 0;
+	//while(flag)
+	{
+		flag = FALSE;
+	struct sockaddr_in sai={0};
+
+	sai.sin_family = AF_INET;
+	sai.sin_addr.s_addr = inet_addr("119.29.29.29");
+	sai.sin_port = htons(53);
+	socklen_t len=sizeof(sai);
+
+		int n = recvfrom(sockfd, buffer, 1024, 0,(struct sockaddr*)&sai,&len);
+		if(n > 0)
+		{
+			if(errno == EAGAIN)
+			{
+				//printf("%d %d\n", errno, n);
+			}
+			//printf("%s\n",buffer);
+			total+=n;
+			if(!*ppStream)
+				*ppStream = new Stream();
+			(*ppStream)->Append(buffer, n);
+		}
+		else
+		{
+			flag = FALSE;
+			//if(n == -1)
+			{
+				//printf("%d %d %d %d %d\n", n, errno, pIOHandler->GetSide(), pIOHandler->GetEvent()->GetFD(), pIOHandler->GetEvent()->GetEventInt());
+			}
+		}
+	}
+	delete []buffer;
+	return 0;
+}
+
 int QueuedNetTask::GetNextTask()
 {
 	if(m_bClientRecving)
@@ -153,6 +215,12 @@ int QueuedNetTask::GetNextTask()
 		m_bRemoteSending = FALSE;
 		return REMOTE_SENDING;
 	}
+	if(m_bDNSArriving)
+	{
+		m_bDNSArriving = FALSE;
+		return DNS_ARRIVING;
+	}
+
 	return FALSE;
 }
 
@@ -161,6 +229,7 @@ QueuedNetTask::QueuedNetTask():Task()
 {
 m_pClientSide = (NULL);
 m_pRemoteSide = (NULL);m_bClientRecving = (FALSE);m_bClientSending = (FALSE);m_bRemoteRecving = (FALSE);m_bRemoteSending = (FALSE),cs_ = (new CriticalSection());m_bRunning = (FALSE);m_iCount = (1);
+m_bDNSArriving = FALSE;
 }
 
 QueuedNetTask::~QueuedNetTask()
@@ -197,6 +266,11 @@ void QueuedNetTask::SetRemote(RemoteSide* pSide)
 {
 	m_pRemoteSide = pSide;
 }
+void QueuedNetTask::SetDNS(DNSFetch* pDNS)
+{
+	m_pDNS = pDNS;
+}
+
 
 void QueuedNetTask::SetClientRecving()
 {
@@ -217,6 +291,10 @@ void QueuedNetTask::SetRemoteRecving()
 void QueuedNetTask::SetRemoteSending()
 {
 	m_bRemoteSending = TRUE;
+}
+void QueuedNetTask::SetDNSArriving()
+{
+	m_bDNSArriving = TRUE;
 }
 
 void QueuedNetTask::SetRunning()
@@ -248,3 +326,5 @@ RemoteSide* QueuedNetTask::GetRemoteSide()
 {
 	return m_pRemoteSide;
 }
+
+

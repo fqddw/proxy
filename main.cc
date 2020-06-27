@@ -148,7 +148,7 @@ int main(int argc,char** argv)
 	pThread->Start();*/
 
 	MasterThread* pMasterThread = new MasterThread(new EventPump());
-	pMasterThread->SetWorkerCount(16);
+	pMasterThread->SetWorkerCount(40);
 	pMasterThread->Create();
 	pEngine->SetMasterThread(pMasterThread);
 	ServerStartTask* pServerStartTask = new ServerStartTask();
